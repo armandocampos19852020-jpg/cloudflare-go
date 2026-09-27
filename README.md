@@ -1,4 +1,4 @@
-# Cloudflare Go API Library
+.# Cloudflare Go API Library
 
 <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7"><img src="https://pkg.go.dev/badge/github.com/cloudflare/cloudflare-go/v4.svg" alt="Go Reference"></a>
 
