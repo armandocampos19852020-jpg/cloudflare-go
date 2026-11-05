@@ -37,11 +37,11 @@ func TestMarkdownNewWithOptionalParams(t *testing.T) {
 				ID:      cloudflare.F("id"),
 				Content: cloudflare.F("content"),
 				Type:    cloudflare.F("type"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AddStyleTag: cloudflare.F([]browser_rendering.MarkdownNewParamsBodyObjectAddStyleTag{{
 				Content: cloudflare.F("content"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AllowRequestPattern: cloudflare.F([]string{"string"}),
 			AllowResourceTypes:  cloudflare.F([]browser_rendering.MarkdownNewParamsBodyObjectAllowResourceType{browser_rendering.MarkdownNewParamsBodyObjectAllowResourceTypeDocument}),
@@ -73,6 +73,7 @@ func TestMarkdownNewWithOptionalParams(t *testing.T) {
 				Timeout:        cloudflare.F(60000.000000),
 				WaitUntil:      cloudflare.F[browser_rendering.MarkdownNewParamsBodyObjectGotoOptionsWaitUntilUnion](browser_rendering.MarkdownNewParamsBodyObjectGotoOptionsWaitUntilString(browser_rendering.MarkdownNewParamsBodyObjectGotoOptionsWaitUntilStringLoad)),
 			}),
+			HTML:                 cloudflare.F("html"),
 			RejectRequestPattern: cloudflare.F([]string{"string"}),
 			RejectResourceTypes:  cloudflare.F([]browser_rendering.MarkdownNewParamsBodyObjectRejectResourceType{browser_rendering.MarkdownNewParamsBodyObjectRejectResourceTypeDocument}),
 			SetExtraHTTPHeaders: cloudflare.F(map[string]string{
@@ -96,6 +97,7 @@ func TestMarkdownNewWithOptionalParams(t *testing.T) {
 			}),
 			WaitForTimeout: cloudflare.F(120000.000000),
 		},
+		Browser:  cloudflare.F(browser_rendering.MarkdownNewParamsBrowserKitesurf),
 		CacheTTL: cloudflare.F(0.000000),
 	})
 	if err != nil {

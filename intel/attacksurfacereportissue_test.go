@@ -41,6 +41,7 @@ func TestAttackSurfaceReportIssueListWithOptionalParams(t *testing.T) {
 		ProductNeq:    cloudflare.F([]string{"access", "dns"}),
 		Severity:      cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
 		SeverityNeq:   cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
+		Source:        cloudflare.F([]intel.AttackSurfaceReportIssueListParamsSource{intel.AttackSurfaceReportIssueListParamsSourceCloudflare}),
 		Subject:       cloudflare.F([]string{"example.com"}),
 		SubjectNeq:    cloudflare.F([]string{"example.com"}),
 	})
@@ -78,40 +79,10 @@ func TestAttackSurfaceReportIssueClassWithOptionalParams(t *testing.T) {
 		ProductNeq:    cloudflare.F([]string{"access", "dns"}),
 		Severity:      cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
 		SeverityNeq:   cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
+		Source:        cloudflare.F([]intel.AttackSurfaceReportIssueClassParamsSource{intel.AttackSurfaceReportIssueClassParamsSourceCloudflare}),
 		Subject:       cloudflare.F([]string{"example.com"}),
 		SubjectNeq:    cloudflare.F([]string{"example.com"}),
 	})
-	if err != nil {
-		var apierr *cloudflare.Error
-		if errors.As(err, &apierr) {
-			t.Log(string(apierr.DumpRequest(true)))
-		}
-		t.Fatalf("err should be nil: %s", err.Error())
-	}
-}
-
-func TestAttackSurfaceReportIssueDismissWithOptionalParams(t *testing.T) {
-	baseURL := "http://localhost:4010"
-	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
-		baseURL = envURL
-	}
-	if !testutil.CheckTestServer(t, baseURL) {
-		return
-	}
-	client := cloudflare.NewClient(
-		option.WithBaseURL(baseURL),
-		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
-		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
-		option.WithAPIEmail("user@example.com"),
-	)
-	_, err := client.Intel.AttackSurfaceReport.Issues.Dismiss(
-		context.TODO(),
-		"issue_id",
-		intel.AttackSurfaceReportIssueDismissParams{
-			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
-			Dismiss:   cloudflare.F(true),
-		},
-	)
 	if err != nil {
 		var apierr *cloudflare.Error
 		if errors.As(err, &apierr) {
@@ -146,6 +117,7 @@ func TestAttackSurfaceReportIssueSeverityWithOptionalParams(t *testing.T) {
 		ProductNeq:    cloudflare.F([]string{"access", "dns"}),
 		Severity:      cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
 		SeverityNeq:   cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
+		Source:        cloudflare.F([]intel.AttackSurfaceReportIssueSeverityParamsSource{intel.AttackSurfaceReportIssueSeverityParamsSourceCloudflare}),
 		Subject:       cloudflare.F([]string{"example.com"}),
 		SubjectNeq:    cloudflare.F([]string{"example.com"}),
 	})
@@ -183,6 +155,7 @@ func TestAttackSurfaceReportIssueTypeWithOptionalParams(t *testing.T) {
 		ProductNeq:    cloudflare.F([]string{"access", "dns"}),
 		Severity:      cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
 		SeverityNeq:   cloudflare.F([]intel.SeverityQueryParam{intel.SeverityQueryParamLow, intel.SeverityQueryParamModerate}),
+		Source:        cloudflare.F([]intel.AttackSurfaceReportIssueTypeParamsSource{intel.AttackSurfaceReportIssueTypeParamsSourceCloudflare}),
 		Subject:       cloudflare.F([]string{"example.com"}),
 		SubjectNeq:    cloudflare.F([]string{"example.com"}),
 	})

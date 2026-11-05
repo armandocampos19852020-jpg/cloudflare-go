@@ -3,8 +3,12 @@
 package workers_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -41,6 +45,7 @@ func TestBetaWorkerVersionNewWithOptionalParams(t *testing.T) {
 				}),
 				Assets: cloudflare.F(workers.VersionAssetsParam{
 					Config: cloudflare.F(workers.VersionAssetsConfigParam{
+						BasePath:         cloudflare.F("/docs/"),
 						HTMLHandling:     cloudflare.F(workers.VersionAssetsConfigHTMLHandlingAutoTrailingSlash),
 						NotFoundHandling: cloudflare.F(workers.VersionAssetsConfigNotFoundHandling404Page),
 						RunWorkerFirst:   cloudflare.F[workers.VersionAssetsConfigRunWorkerFirstUnionParam](shared.UnionBool(true)),
@@ -52,11 +57,42 @@ func TestBetaWorkerVersionNewWithOptionalParams(t *testing.T) {
 					Text: cloudflare.F("my_data"),
 					Type: cloudflare.F(workers.VersionBindingsWorkersBindingKindPlainTextTypePlainText),
 				}}),
-				CompatibilityDate:  cloudflare.F("2021-01-01"),
+				CacheOptions: cloudflare.F(workers.VersionCacheOptionsParam{
+					Enabled:           cloudflare.F(true),
+					CrossVersionCache: cloudflare.F(true),
+				}),
+				CompatibilityDate:  cloudflare.F("2021-01-01T00:00:00Z"),
 				CompatibilityFlags: cloudflare.F([]string{"nodejs_compat"}),
 				Containers: cloudflare.F([]workers.VersionContainerParam{{
 					ClassName: cloudflare.F("MyDurableObject"),
 				}}),
+				Exports: cloudflare.F(map[string]workers.VersionExportsUnionParam{
+					"Admin": workers.VersionExportsWorkersWorkerExportParam{
+						Type: cloudflare.F(workers.VersionExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers.VersionExportsWorkersWorkerExportCacheParam{
+							Enabled: cloudflare.F(true),
+						}),
+						State: cloudflare.F(workers.VersionExportsWorkersWorkerExportStateCreated),
+					},
+					"Counter": workers.VersionExportsWorkersDurableObjectExportParam{
+						Storage:   cloudflare.F(workers.VersionExportsWorkersDurableObjectExportStorageSqlite),
+						Type:      cloudflare.F(workers.VersionExportsWorkersDurableObjectExportTypeDurableObject),
+						Container: cloudflare.F("my-container"),
+						State:     cloudflare.F(workers.VersionExportsWorkersDurableObjectExportStateCreated),
+					},
+					"OldCounter": workers.VersionExportsWorkersDurableObjectRenamedExportParam{
+						RenamedTo: cloudflare.F("Counter"),
+						State:     cloudflare.F(workers.VersionExportsWorkersDurableObjectRenamedExportStateRenamed),
+						Type:      cloudflare.F(workers.VersionExportsWorkersDurableObjectRenamedExportTypeDurableObject),
+					},
+					"default": workers.VersionExportsWorkersWorkerExportParam{
+						Type: cloudflare.F(workers.VersionExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers.VersionExportsWorkersWorkerExportCacheParam{
+							Enabled: cloudflare.F(false),
+						}),
+						State: cloudflare.F(workers.VersionExportsWorkersWorkerExportStateCreated),
+					},
+				}),
 				Limits: cloudflare.F(workers.VersionLimitsParam{
 					CPUMs:       cloudflare.F(int64(50)),
 					Subrequests: cloudflare.F(int64(1000)),
@@ -82,6 +118,11 @@ func TestBetaWorkerVersionNewWithOptionalParams(t *testing.T) {
 					ContentBase64: cloudflare.F("ZXhwb3J0IGRlZmF1bHQgewogIGFzeW5jIGZldGNoKHJlcXVlc3QsIGVudiwgY3R4KSB7CiAgICByZXR1cm4gbmV3IFJlc3BvbnNlKCdIZWxsbyBXb3JsZCEnKQogIH0KfQ=="),
 					ContentType:   cloudflare.F("application/javascript+module"),
 					Name:          cloudflare.F("index.js"),
+				}}),
+				PackageDependencies: cloudflare.F([]workers.VersionPackageDependencyParam{{
+					InstalledVersion:   cloudflare.F("4.17.22"),
+					Name:               cloudflare.F("lodash"),
+					PackageJsonVersion: cloudflare.F("^4.17.21"),
 				}}),
 				Placement: cloudflare.F[workers.VersionPlacementUnionParam](workers.VersionPlacementModeParam{
 					Mode: cloudflare.F(workers.VersionPlacementModeModeSmart),
@@ -192,5 +233,52 @@ func TestBetaWorkerVersionGetWithOptionalParams(t *testing.T) {
 			t.Log(string(apierr.DumpRequest(true)))
 		}
 		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestBetaWorkerVersionProfileWithOptionalParams(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("abc"))
+	}))
+	defer server.Close()
+	baseURL := server.URL
+	client := cloudflare.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
+		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
+		option.WithAPIEmail("user@example.com"),
+	)
+	resp, err := client.Workers.Beta.Workers.Versions.Profile(
+		context.TODO(),
+		"worker_id",
+		"version_id",
+		workers.BetaWorkerVersionProfileParams{
+			AccountID:   cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			DurationMs:  cloudflare.F(int64(1000)),
+			ActorID:     cloudflare.F("actor_id"),
+			NamespaceID: cloudflare.F("namespace_id"),
+			ProfileType: cloudflare.F(workers.BetaWorkerVersionProfileParamsProfileTypeCPU),
+		},
+	)
+	if err != nil {
+		var apierr *cloudflare.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		var apierr *cloudflare.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+	if !bytes.Equal(b, []byte("abc")) {
+		t.Fatalf("return value not %s: %s", "abc", b)
 	}
 }

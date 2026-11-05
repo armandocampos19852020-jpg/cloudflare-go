@@ -28,6 +28,38 @@ Methods:
 
 - <code title="put /zones/{zone_id}/activation_check">client.Zones.ActivationCheck.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ActivationCheckService.Trigger">Trigger</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ActivationCheckTriggerParams">ActivationCheckTriggerParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ActivationCheckTriggerResponse">ActivationCheckTriggerResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## Observability
+
+### Tracing
+
+#### Settings
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingUpdateResponse">ObservabilityTracingSettingUpdateResponse</a>
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingDeleteResponse">ObservabilityTracingSettingDeleteResponse</a>
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingGetResponse">ObservabilityTracingSettingGetResponse</a>
+
+Methods:
+
+- <code title="patch /zones/{zone_id}/observability/tracing/settings">client.Zones.Observability.Tracing.Settings.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingUpdateParams">ObservabilityTracingSettingUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingUpdateResponse">ObservabilityTracingSettingUpdateResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /zones/{zone_id}/observability/tracing/settings">client.Zones.Observability.Tracing.Settings.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingDeleteParams">ObservabilityTracingSettingDeleteParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingDeleteResponse">ObservabilityTracingSettingDeleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/observability/tracing/settings">client.Zones.Observability.Tracing.Settings.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingGetParams">ObservabilityTracingSettingGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingSettingGetResponse">ObservabilityTracingSettingGetResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+#### Rules
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleUpdateResponse">ObservabilityTracingRuleUpdateResponse</a>
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleDeleteResponse">ObservabilityTracingRuleDeleteResponse</a>
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleGetResponse">ObservabilityTracingRuleGetResponse</a>
+
+Methods:
+
+- <code title="put /zones/{zone_id}/observability/tracing/rules">client.Zones.Observability.Tracing.Rules.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleService.Update">Update</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleUpdateParams">ObservabilityTracingRuleUpdateParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleUpdateResponse">ObservabilityTracingRuleUpdateResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="delete /zones/{zone_id}/observability/tracing/rules">client.Zones.Observability.Tracing.Rules.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleService.Delete">Delete</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleDeleteParams">ObservabilityTracingRuleDeleteParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleDeleteResponse">ObservabilityTracingRuleDeleteResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/observability/tracing/rules">client.Zones.Observability.Tracing.Rules.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleGetParams">ObservabilityTracingRuleGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#ObservabilityTracingRuleGetResponse">ObservabilityTracingRuleGetResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Settings
 
 Params Types:
@@ -109,6 +141,39 @@ Methods:
 - <code title="patch /zones/{zone_id}/settings/{setting_id}">client.Zones.Settings.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, settingID <a href="https://pkg.go.dev/builtin#string">string</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingEditParams">SettingEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingEditResponse">SettingEditResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /zones/{zone_id}/settings/{setting_id}">client.Zones.Settings.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, settingID <a href="https://pkg.go.dev/builtin#string">string</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingGetParams">SettingGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#SettingGetResponse">SettingGetResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+## TransformationsAllowedOrigins
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOrigins">TransformationsAllowedOrigins</a>
+
+Methods:
+
+- <code title="patch /zones/{zone_id}/settings/transformations_allowed_origins">client.Zones.TransformationsAllowedOrigins.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOriginService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOriginEditParams">TransformationsAllowedOriginEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOrigins">TransformationsAllowedOrigins</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/settings/transformations_allowed_origins">client.Zones.TransformationsAllowedOrigins.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOriginService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOriginGetParams">TransformationsAllowedOriginGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsAllowedOrigins">TransformationsAllowedOrigins</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## TransformationsC2pa
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2pa">TransformationsC2pa</a>
+
+Methods:
+
+- <code title="patch /zones/{zone_id}/settings/transformations_c2pa">client.Zones.TransformationsC2pa.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2paService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2paEditParams">TransformationsC2paEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2pa">TransformationsC2pa</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/settings/transformations_c2pa">client.Zones.TransformationsC2pa.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2paService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2paGetParams">TransformationsC2paGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#TransformationsC2pa">TransformationsC2pa</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## NEL
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#Setting">Setting</a>
+
+Methods:
+
+- <code title="patch /zones/{zone_id}/settings/nel">client.Zones.NEL.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#NELService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#NELEditParams">NELEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#Setting">Setting</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/settings/nel">client.Zones.NEL.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#NELService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#NELGetParams">NELGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#Setting">Setting</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
 ## Environments
 
 Response Types:
@@ -187,3 +252,26 @@ Response Types:
 Methods:
 
 - <code title="get /zones/{zone_id}/available_rate_plans">client.Zones.RatePlans.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#RatePlanService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#RatePlanGetParams">RatePlanGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/packages/pagination#SinglePage">SinglePage</a>[<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#RatePlanGetResponse">RatePlanGetResponse</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## Entitlements
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#EntitlementListResponse">EntitlementListResponse</a>
+
+Methods:
+
+- <code title="get /zones/{zone_id}/entitlements">client.Zones.Entitlements.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#EntitlementService.List">List</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#EntitlementListParams">EntitlementListParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/packages/pagination#SinglePage">SinglePage</a>[<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#EntitlementListResponse">EntitlementListResponse</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+## CT
+
+### Alerting
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingSubscription">CTAlertingSubscription</a>
+
+Methods:
+
+- <code title="patch /zones/{zone_id}/ct/alerting">client.Zones.CT.Alerting.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingService.Edit">Edit</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, params <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingEditParams">CTAlertingEditParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingSubscription">CTAlertingSubscription</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /zones/{zone_id}/ct/alerting">client.Zones.CT.Alerting.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingGetParams">CTAlertingGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones">zones</a>.<a href="https://pkg.go.dev/github.com/cloudflare/cloudflare-go/v7/zones#CTAlertingSubscription">CTAlertingSubscription</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>

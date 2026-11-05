@@ -25,6 +25,7 @@ import (
 // the [NewThreatEventCategoryService] method instead.
 type ThreatEventCategoryService struct {
 	Options []option.RequestOption
+	Catalog *ThreatEventCategoryCatalogService
 }
 
 // NewThreatEventCategoryService generates a new service that applies the given
@@ -33,10 +34,12 @@ type ThreatEventCategoryService struct {
 func NewThreatEventCategoryService(opts ...option.RequestOption) (r *ThreatEventCategoryService) {
 	r = &ThreatEventCategoryService{}
 	r.Options = opts
+	r.Catalog = NewThreatEventCategoryCatalogService(opts...)
 	return
 }
 
-// Creates a new category
+// Creates a new threat event category in Cloudforce One for organizing and
+// classifying threat events.
 func (r *ThreatEventCategoryService) New(ctx context.Context, params ThreatEventCategoryNewParams, opts ...option.RequestOption) (res *ThreatEventCategoryNewResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -48,7 +51,8 @@ func (r *ThreatEventCategoryService) New(ctx context.Context, params ThreatEvent
 	return res, err
 }
 
-// Lists categories across multiple datasets
+// Lists all threat event categories configured for classifying and organizing
+// threat events.
 func (r *ThreatEventCategoryService) List(ctx context.Context, params ThreatEventCategoryListParams, opts ...option.RequestOption) (res *[]ThreatEventCategoryListResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -60,7 +64,11 @@ func (r *ThreatEventCategoryService) List(ctx context.Context, params ThreatEven
 	return res, err
 }
 
-// Deletes a category
+// Deprecated; use DELETE /events/event-categories/by-id/{category_id}. Available
+// through 2026-11-28.
+//
+// Deprecated: Use DELETE /events/event-categories/by-id/{category_id} before
+// 2026-11-28.
 func (r *ThreatEventCategoryService) Delete(ctx context.Context, categoryID string, body ThreatEventCategoryDeleteParams, opts ...option.RequestOption) (res *ThreatEventCategoryDeleteResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if body.AccountID.Value == "" {
@@ -76,7 +84,11 @@ func (r *ThreatEventCategoryService) Delete(ctx context.Context, categoryID stri
 	return res, err
 }
 
-// Updates a category
+// Deprecated; use PATCH /events/event-categories/by-id/{category_id}. Available
+// through 2026-11-28.
+//
+// Deprecated: Use PATCH /events/event-categories/by-id/{category_id} before
+// 2026-11-28.
 func (r *ThreatEventCategoryService) Edit(ctx context.Context, categoryID string, params ThreatEventCategoryEditParams, opts ...option.RequestOption) (res *ThreatEventCategoryEditResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -92,7 +104,11 @@ func (r *ThreatEventCategoryService) Edit(ctx context.Context, categoryID string
 	return res, err
 }
 
-// Reads a category
+// Deprecated; use GET /events/event-categories/by-id/{category_id}. Available
+// through 2026-11-28.
+//
+// Deprecated: Use GET /events/event-categories/by-id/{category_id} before
+// 2026-11-28.
 func (r *ThreatEventCategoryService) Get(ctx context.Context, categoryID string, query ThreatEventCategoryGetParams, opts ...option.RequestOption) (res *ThreatEventCategoryGetResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if query.AccountID.Value == "" {

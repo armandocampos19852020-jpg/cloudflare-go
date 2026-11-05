@@ -239,6 +239,8 @@ type DHCPServer struct {
 	// A valid IPv4 address.
 	DHCPPoolStart string `json:"dhcp_pool_start"`
 	// A valid IPv4 address.
+	//
+	// Deprecated: deprecated
 	DNSServer  string   `json:"dns_server"`
 	DNSServers []string `json:"dns_servers"`
 	// Mapping of MAC addresses to IP addresses
@@ -334,6 +336,8 @@ type DHCPServerParam struct {
 	// A valid IPv4 address.
 	DHCPPoolStart param.Field[string] `json:"dhcp_pool_start"`
 	// A valid IPv4 address.
+	//
+	// Deprecated: deprecated
 	DNSServer  param.Field[string]   `json:"dns_server"`
 	DNSServers param.Field[[]string] `json:"dns_servers"`
 	// Mapping of MAC addresses to IP addresses
@@ -568,6 +572,9 @@ type SiteLANUpdateParams struct {
 	// Identifier
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	BondID    param.Field[int64]  `json:"bond_id"`
+	// mark true to use this LAN for HA probing. only works for site with HA turned on.
+	// only one LAN can be set as the ha_link.
+	HaLink param.Field[bool] `json:"ha_link"`
 	// mark true to use this LAN for source-based breakout traffic
 	IsBreakout param.Field[bool] `json:"is_breakout"`
 	// mark true to use this LAN for source-based prioritized traffic
@@ -688,6 +695,9 @@ type SiteLANEditParams struct {
 	// Identifier
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	BondID    param.Field[int64]  `json:"bond_id"`
+	// mark true to use this LAN for HA probing. only works for site with HA turned on.
+	// only one LAN can be set as the ha_link.
+	HaLink param.Field[bool] `json:"ha_link"`
 	// mark true to use this LAN for source-based breakout traffic
 	IsBreakout param.Field[bool] `json:"is_breakout"`
 	// mark true to use this LAN for source-based prioritized traffic

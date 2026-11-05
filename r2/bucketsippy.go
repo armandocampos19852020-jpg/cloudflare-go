@@ -35,11 +35,13 @@ func NewBucketSippyService(opts ...option.RequestOption) (r *BucketSippyService)
 	return
 }
 
-// Sets configuration for Sippy for an existing R2 bucket.
+// Configures and enables Sippy on-demand migration for an R2 bucket. When a
+// requested object is missing from R2, Sippy serves it from the configured source
+// storage provider and copies it to R2.
 func (r *BucketSippyService) Update(ctx context.Context, bucketName string, params BucketSippyUpdateParams, opts ...option.RequestOption) (res *Sippy, err error) {
 	var env BucketSippyUpdateResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -59,11 +61,13 @@ func (r *BucketSippyService) Update(ctx context.Context, bucketName string, para
 	return res, nil
 }
 
-// Disables Sippy on this bucket.
+// Disables Sippy on-demand migration for an R2 bucket. Requests no longer fetch
+// missing objects from the source storage provider. Objects already copied to R2
+// remain in the bucket.
 func (r *BucketSippyService) Delete(ctx context.Context, bucketName string, params BucketSippyDeleteParams, opts ...option.RequestOption) (res *BucketSippyDeleteResponse, err error) {
 	var env BucketSippyDeleteResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -86,8 +90,8 @@ func (r *BucketSippyService) Delete(ctx context.Context, bucketName string, para
 // Gets configuration for Sippy for an existing R2 bucket.
 func (r *BucketSippyService) Get(ctx context.Context, bucketName string, params BucketSippyGetParams, opts ...option.RequestOption) (res *Sippy, err error) {
 	var env BucketSippyGetResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -183,7 +187,9 @@ type SippySource struct {
 	// Name of the bucket on the provider (AWS, GCS only).
 	Bucket string `json:"bucket" api:"nullable"`
 	// S3-compatible URL (Generic S3-compatible providers only).
-	BucketURL string              `json:"bucketUrl" api:"nullable"`
+	BucketURL string `json:"bucketUrl" api:"nullable"`
+	// Name of the Azure Blob Storage container (Azure only).
+	Container string              `json:"container" api:"nullable"`
 	Provider  SippySourceProvider `json:"provider"`
 	// Region where the bucket resides (AWS only).
 	Region string          `json:"region" api:"nullable"`
@@ -194,6 +200,7 @@ type SippySource struct {
 type sippySourceJSON struct {
 	Bucket      apijson.Field
 	BucketURL   apijson.Field
+	Container   apijson.Field
 	Provider    apijson.Field
 	Region      apijson.Field
 	raw         string
@@ -211,14 +218,15 @@ func (r sippySourceJSON) RawJSON() string {
 type SippySourceProvider string
 
 const (
-	SippySourceProviderAws SippySourceProvider = "aws"
-	SippySourceProviderGcs SippySourceProvider = "gcs"
-	SippySourceProviderS3  SippySourceProvider = "s3"
+	SippySourceProviderAws   SippySourceProvider = "aws"
+	SippySourceProviderGcs   SippySourceProvider = "gcs"
+	SippySourceProviderS3    SippySourceProvider = "s3"
+	SippySourceProviderAzure SippySourceProvider = "azure"
 )
 
 func (r SippySourceProvider) IsKnown() bool {
 	switch r {
-	case SippySourceProviderAws, SippySourceProviderGcs, SippySourceProviderS3:
+	case SippySourceProviderAws, SippySourceProviderGcs, SippySourceProviderS3, SippySourceProviderAzure:
 		return true
 	}
 	return false
@@ -260,11 +268,10 @@ func (r BucketSippyDeleteResponseEnabled) IsKnown() bool {
 }
 
 type BucketSippyUpdateParams struct {
-	// Account ID.
-	AccountID param.Field[string]              `path:"account_id" api:"required"`
-	Body      BucketSippyUpdateParamsBodyUnion `json:"body" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketSippyUpdateParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                                  `path:"account_id" api:"required"`
+	Body             BucketSippyUpdateParamsBodyUnion                     `json:"body" api:"required"`
+	CfR2Jurisdiction param.Field[BucketSippyUpdateParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 func (r BucketSippyUpdateParams) MarshalJSON() (data []byte, err error) {
@@ -284,7 +291,9 @@ func (r BucketSippyUpdateParamsBody) implementsBucketSippyUpdateParamsBodyUnion(
 
 // Satisfied by [r2.BucketSippyUpdateParamsBodyR2EnableSippyAws],
 // [r2.BucketSippyUpdateParamsBodyR2EnableSippyGcs],
-// [r2.BucketSippyUpdateParamsBodyR2EnableSippyS3], [BucketSippyUpdateParamsBody].
+// [r2.BucketSippyUpdateParamsBodyR2EnableSippyS3],
+// [r2.BucketSippyUpdateParamsBodyR2EnableSippyAzure],
+// [BucketSippyUpdateParamsBody].
 type BucketSippyUpdateParamsBodyUnion interface {
 	implementsBucketSippyUpdateParamsBodyUnion()
 }
@@ -332,7 +341,7 @@ type BucketSippyUpdateParamsBodyR2EnableSippyAwsSource struct {
 	// Name of the AWS S3 bucket.
 	Bucket   param.Field[string]                                                    `json:"bucket"`
 	Provider param.Field[BucketSippyUpdateParamsBodyR2EnableSippyAwsSourceProvider] `json:"provider"`
-	// Name of the AWS availability zone.
+	// AWS region containing the source S3 bucket.
 	Region param.Field[string] `json:"region"`
 	// Secret Access Key of an IAM credential (ideally scoped to a single S3 bucket).
 	SecretAccessKey param.Field[string] `json:"secretAccessKey"`
@@ -486,18 +495,87 @@ func (r BucketSippyUpdateParamsBodyR2EnableSippyS3SourceProvider) IsKnown() bool
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
+type BucketSippyUpdateParamsBodyR2EnableSippyAzure struct {
+	// R2 bucket to copy objects to.
+	Destination param.Field[BucketSippyUpdateParamsBodyR2EnableSippyAzureDestination] `json:"destination"`
+	// Azure Blob Storage container to copy objects from.
+	Source param.Field[BucketSippyUpdateParamsBodyR2EnableSippyAzureSource] `json:"source"`
+}
+
+func (r BucketSippyUpdateParamsBodyR2EnableSippyAzure) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r BucketSippyUpdateParamsBodyR2EnableSippyAzure) implementsBucketSippyUpdateParamsBodyUnion() {}
+
+// R2 bucket to copy objects to.
+type BucketSippyUpdateParamsBodyR2EnableSippyAzureDestination struct {
+	// ID of a Cloudflare API token. This is the value labelled "Access Key ID" when
+	// creating an API. token from the
+	// [R2 dashboard](https://dash.cloudflare.com/?to=/:account/r2/api-tokens).
+	//
+	// Sippy will use this token when writing objects to R2, so it is best to scope
+	// this token to the bucket you're enabling Sippy for.
+	AccessKeyID param.Field[string]   `json:"accessKeyId"`
+	Provider    param.Field[Provider] `json:"provider"`
+	// Value of a Cloudflare API token. This is the value labelled "Secret Access Key"
+	// when creating an API. token from the
+	// [R2 dashboard](https://dash.cloudflare.com/?to=/:account/r2/api-tokens).
+	//
+	// Sippy will use this token when writing objects to R2, so it is best to scope
+	// this token to the bucket you're enabling Sippy for.
+	SecretAccessKey param.Field[string] `json:"secretAccessKey"`
+}
+
+func (r BucketSippyUpdateParamsBodyR2EnableSippyAzureDestination) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Azure Blob Storage container to copy objects from.
+type BucketSippyUpdateParamsBodyR2EnableSippyAzureSource struct {
+	// Access key for the Azure Storage account. Mutually exclusive with sasToken.
+	AccountKey param.Field[string] `json:"accountKey"`
+	// Name of the Azure Storage account.
+	AccountName param.Field[string] `json:"accountName"`
+	// Name of the Azure Blob Storage container.
+	Container param.Field[string]                                                      `json:"container"`
+	Provider  param.Field[BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProvider] `json:"provider"`
+	// Shared Access Signature token for the Azure Storage account. Mutually exclusive
+	// with accountKey.
+	SasToken param.Field[string] `json:"sasToken"`
+}
+
+func (r BucketSippyUpdateParamsBodyR2EnableSippyAzureSource) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProvider string
+
+const (
+	BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProviderAzure BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProvider = "azure"
+)
+
+func (r BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProvider) IsKnown() bool {
+	switch r {
+	case BucketSippyUpdateParamsBodyR2EnableSippyAzureSourceProviderAzure:
+		return true
+	}
+	return false
+}
+
 type BucketSippyUpdateParamsCfR2Jurisdiction string
 
 const (
-	BucketSippyUpdateParamsCfR2JurisdictionDefault BucketSippyUpdateParamsCfR2Jurisdiction = "default"
-	BucketSippyUpdateParamsCfR2JurisdictionEu      BucketSippyUpdateParamsCfR2Jurisdiction = "eu"
-	BucketSippyUpdateParamsCfR2JurisdictionFedramp BucketSippyUpdateParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyUpdateParamsCfR2JurisdictionDefault     BucketSippyUpdateParamsCfR2Jurisdiction = "default"
+	BucketSippyUpdateParamsCfR2JurisdictionEu          BucketSippyUpdateParamsCfR2Jurisdiction = "eu"
+	BucketSippyUpdateParamsCfR2JurisdictionUs          BucketSippyUpdateParamsCfR2Jurisdiction = "us"
+	BucketSippyUpdateParamsCfR2JurisdictionFedramp     BucketSippyUpdateParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyUpdateParamsCfR2JurisdictionFedrampHigh BucketSippyUpdateParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketSippyUpdateParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketSippyUpdateParamsCfR2JurisdictionDefault, BucketSippyUpdateParamsCfR2JurisdictionEu, BucketSippyUpdateParamsCfR2JurisdictionFedramp:
+	case BucketSippyUpdateParamsCfR2JurisdictionDefault, BucketSippyUpdateParamsCfR2JurisdictionEu, BucketSippyUpdateParamsCfR2JurisdictionUs, BucketSippyUpdateParamsCfR2JurisdictionFedramp, BucketSippyUpdateParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -547,24 +625,24 @@ func (r BucketSippyUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketSippyDeleteParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketSippyDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                                  `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketSippyDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketSippyDeleteParamsCfR2Jurisdiction string
 
 const (
-	BucketSippyDeleteParamsCfR2JurisdictionDefault BucketSippyDeleteParamsCfR2Jurisdiction = "default"
-	BucketSippyDeleteParamsCfR2JurisdictionEu      BucketSippyDeleteParamsCfR2Jurisdiction = "eu"
-	BucketSippyDeleteParamsCfR2JurisdictionFedramp BucketSippyDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyDeleteParamsCfR2JurisdictionDefault     BucketSippyDeleteParamsCfR2Jurisdiction = "default"
+	BucketSippyDeleteParamsCfR2JurisdictionEu          BucketSippyDeleteParamsCfR2Jurisdiction = "eu"
+	BucketSippyDeleteParamsCfR2JurisdictionUs          BucketSippyDeleteParamsCfR2Jurisdiction = "us"
+	BucketSippyDeleteParamsCfR2JurisdictionFedramp     BucketSippyDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyDeleteParamsCfR2JurisdictionFedrampHigh BucketSippyDeleteParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketSippyDeleteParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketSippyDeleteParamsCfR2JurisdictionDefault, BucketSippyDeleteParamsCfR2JurisdictionEu, BucketSippyDeleteParamsCfR2JurisdictionFedramp:
+	case BucketSippyDeleteParamsCfR2JurisdictionDefault, BucketSippyDeleteParamsCfR2JurisdictionEu, BucketSippyDeleteParamsCfR2JurisdictionUs, BucketSippyDeleteParamsCfR2JurisdictionFedramp, BucketSippyDeleteParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -614,24 +692,24 @@ func (r BucketSippyDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketSippyGetParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketSippyGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                               `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketSippyGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketSippyGetParamsCfR2Jurisdiction string
 
 const (
-	BucketSippyGetParamsCfR2JurisdictionDefault BucketSippyGetParamsCfR2Jurisdiction = "default"
-	BucketSippyGetParamsCfR2JurisdictionEu      BucketSippyGetParamsCfR2Jurisdiction = "eu"
-	BucketSippyGetParamsCfR2JurisdictionFedramp BucketSippyGetParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyGetParamsCfR2JurisdictionDefault     BucketSippyGetParamsCfR2Jurisdiction = "default"
+	BucketSippyGetParamsCfR2JurisdictionEu          BucketSippyGetParamsCfR2Jurisdiction = "eu"
+	BucketSippyGetParamsCfR2JurisdictionUs          BucketSippyGetParamsCfR2Jurisdiction = "us"
+	BucketSippyGetParamsCfR2JurisdictionFedramp     BucketSippyGetParamsCfR2Jurisdiction = "fedramp"
+	BucketSippyGetParamsCfR2JurisdictionFedrampHigh BucketSippyGetParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketSippyGetParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketSippyGetParamsCfR2JurisdictionDefault, BucketSippyGetParamsCfR2JurisdictionEu, BucketSippyGetParamsCfR2JurisdictionFedramp:
+	case BucketSippyGetParamsCfR2JurisdictionDefault, BucketSippyGetParamsCfR2JurisdictionEu, BucketSippyGetParamsCfR2JurisdictionUs, BucketSippyGetParamsCfR2JurisdictionFedramp, BucketSippyGetParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false

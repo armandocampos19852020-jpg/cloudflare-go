@@ -31,17 +31,17 @@ func TestLinkNewWithOptionalParams(t *testing.T) {
 	_, err := client.BrowserRendering.Links.New(context.TODO(), browser_rendering.LinkNewParams{
 		AccountID: cloudflare.F("account_id"),
 		Body: browser_rendering.LinkNewParamsBodyObject{
-			HTML:          cloudflare.F("x"),
+			URL:           cloudflare.F("https://www.example.com/"),
 			ActionTimeout: cloudflare.F(120000.000000),
 			AddScriptTag: cloudflare.F([]browser_rendering.LinkNewParamsBodyObjectAddScriptTag{{
 				ID:      cloudflare.F("id"),
 				Content: cloudflare.F("content"),
 				Type:    cloudflare.F("type"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AddStyleTag: cloudflare.F([]browser_rendering.LinkNewParamsBodyObjectAddStyleTag{{
 				Content: cloudflare.F("content"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AllowRequestPattern: cloudflare.F([]string{"string"}),
 			AllowResourceTypes:  cloudflare.F([]browser_rendering.LinkNewParamsBodyObjectAllowResourceType{browser_rendering.LinkNewParamsBodyObjectAllowResourceTypeDocument}),
@@ -74,6 +74,7 @@ func TestLinkNewWithOptionalParams(t *testing.T) {
 				Timeout:        cloudflare.F(60000.000000),
 				WaitUntil:      cloudflare.F[browser_rendering.LinkNewParamsBodyObjectGotoOptionsWaitUntilUnion](browser_rendering.LinkNewParamsBodyObjectGotoOptionsWaitUntilString(browser_rendering.LinkNewParamsBodyObjectGotoOptionsWaitUntilStringLoad)),
 			}),
+			HTML:                 cloudflare.F("html"),
 			RejectRequestPattern: cloudflare.F([]string{"string"}),
 			RejectResourceTypes:  cloudflare.F([]browser_rendering.LinkNewParamsBodyObjectRejectResourceType{browser_rendering.LinkNewParamsBodyObjectRejectResourceTypeDocument}),
 			SetExtraHTTPHeaders: cloudflare.F(map[string]string{
@@ -98,6 +99,7 @@ func TestLinkNewWithOptionalParams(t *testing.T) {
 			}),
 			WaitForTimeout: cloudflare.F(120000.000000),
 		},
+		Browser:  cloudflare.F(browser_rendering.LinkNewParamsBrowserKitesurf),
 		CacheTTL: cloudflare.F(0.000000),
 	})
 	if err != nil {

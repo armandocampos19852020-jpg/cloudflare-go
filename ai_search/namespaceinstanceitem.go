@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"time"
 
@@ -21,6 +22,8 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
 	"github.com/cloudflare/cloudflare-go/v7/packages/pagination"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
+	"github.com/tidwall/gjson"
 )
 
 // NamespaceInstanceItemService contains methods and other services that help with
@@ -77,7 +80,7 @@ func (r *NamespaceInstanceItemService) ListAutoPaging(ctx context.Context, name 
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, name, id, params, opts...))
 }
 
-// Deletes a file from a managed AI Search instance and triggers a reindex.
+// Deletes a file from a managed AI Search instance and removes its indexed data.
 func (r *NamespaceInstanceItemService) Delete(ctx context.Context, name string, id string, itemID string, body NamespaceInstanceItemDeleteParams, opts ...option.RequestOption) (res *NamespaceInstanceItemDeleteResponse, err error) {
 	var env NamespaceInstanceItemDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -274,8 +277,7 @@ func (r *NamespaceInstanceItemService) Sync(ctx context.Context, name string, id
 	return res, nil
 }
 
-// Uploads a file to a managed AI Search instance via multipart/form-data (max
-// 4MB).
+// Uploads a file to a managed AI Search instance via multipart/form-data.
 func (r *NamespaceInstanceItemService) Upload(ctx context.Context, name string, id string, params NamespaceInstanceItemUploadParams, opts ...option.RequestOption) (res *NamespaceInstanceItemUploadResponse, err error) {
 	var env NamespaceInstanceItemUploadResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -301,15 +303,17 @@ func (r *NamespaceInstanceItemService) Upload(ctx context.Context, name string, 
 }
 
 type NamespaceInstanceItemListResponse struct {
-	ID          string                                      `json:"id" api:"required"`
-	Checksum    string                                      `json:"checksum" api:"required"`
-	ChunksCount int64                                       `json:"chunks_count" api:"required,nullable"`
-	CreatedAt   time.Time                                   `json:"created_at" api:"required" format:"date-time"`
-	FileSize    float64                                     `json:"file_size" api:"required,nullable"`
-	Key         string                                      `json:"key" api:"required"`
-	LastSeenAt  time.Time                                   `json:"last_seen_at" api:"required" format:"date-time"`
-	Namespace   string                                      `json:"namespace" api:"required"`
-	NextAction  NamespaceInstanceItemListResponseNextAction `json:"next_action" api:"required,nullable"`
+	ID          string    `json:"id" api:"required"`
+	Checksum    string    `json:"checksum" api:"required"`
+	ChunksCount int64     `json:"chunks_count" api:"required,nullable"`
+	CreatedAt   time.Time `json:"created_at" api:"required" format:"date-time"`
+	FileSize    float64   `json:"file_size" api:"required,nullable"`
+	Key         string    `json:"key" api:"required"`
+	LastSeenAt  time.Time `json:"last_seen_at" api:"required" format:"date-time"`
+	// Built-in, configured filterable, and retained source metadata for the item.
+	Metadata   map[string]NamespaceInstanceItemListResponseMetadataUnion `json:"metadata" api:"required,nullable"`
+	Namespace  string                                                    `json:"namespace" api:"required"`
+	NextAction NamespaceInstanceItemListResponseNextAction               `json:"next_action" api:"required,nullable"`
 	// Identifies which data source this item belongs to. "builtin" for uploaded files,
 	// "{type}:{source}" for external sources, null for legacy items.
 	SourceID string                                  `json:"source_id" api:"required,nullable"`
@@ -328,6 +332,7 @@ type namespaceInstanceItemListResponseJSON struct {
 	FileSize    apijson.Field
 	Key         apijson.Field
 	LastSeenAt  apijson.Field
+	Metadata    apijson.Field
 	Namespace   apijson.Field
 	NextAction  apijson.Field
 	SourceID    apijson.Field
@@ -343,6 +348,35 @@ func (r *NamespaceInstanceItemListResponse) UnmarshalJSON(data []byte) (err erro
 
 func (r namespaceInstanceItemListResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type NamespaceInstanceItemListResponseMetadataUnion interface {
+	ImplementsNamespaceInstanceItemListResponseMetadataUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemListResponseMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
 }
 
 type NamespaceInstanceItemListResponseNextAction string
@@ -455,15 +489,17 @@ func (r namespaceInstanceItemChunksResponseItemJSON) RawJSON() string {
 }
 
 type NamespaceInstanceItemNewOrUpdateResponse struct {
-	ID          string                                             `json:"id" api:"required"`
-	Checksum    string                                             `json:"checksum" api:"required"`
-	ChunksCount int64                                              `json:"chunks_count" api:"required,nullable"`
-	CreatedAt   time.Time                                          `json:"created_at" api:"required" format:"date-time"`
-	FileSize    float64                                            `json:"file_size" api:"required,nullable"`
-	Key         string                                             `json:"key" api:"required"`
-	LastSeenAt  time.Time                                          `json:"last_seen_at" api:"required" format:"date-time"`
-	Namespace   string                                             `json:"namespace" api:"required"`
-	NextAction  NamespaceInstanceItemNewOrUpdateResponseNextAction `json:"next_action" api:"required,nullable"`
+	ID          string    `json:"id" api:"required"`
+	Checksum    string    `json:"checksum" api:"required"`
+	ChunksCount int64     `json:"chunks_count" api:"required,nullable"`
+	CreatedAt   time.Time `json:"created_at" api:"required" format:"date-time"`
+	FileSize    float64   `json:"file_size" api:"required,nullable"`
+	Key         string    `json:"key" api:"required"`
+	LastSeenAt  time.Time `json:"last_seen_at" api:"required" format:"date-time"`
+	// Built-in, configured filterable, and retained source metadata for the item.
+	Metadata   map[string]NamespaceInstanceItemNewOrUpdateResponseMetadataUnion `json:"metadata" api:"required,nullable"`
+	Namespace  string                                                           `json:"namespace" api:"required"`
+	NextAction NamespaceInstanceItemNewOrUpdateResponseNextAction               `json:"next_action" api:"required,nullable"`
 	// Identifies which data source this item belongs to. "builtin" for uploaded files,
 	// "{type}:{source}" for external sources, null for legacy items.
 	SourceID string                                         `json:"source_id" api:"required,nullable"`
@@ -482,6 +518,7 @@ type namespaceInstanceItemNewOrUpdateResponseJSON struct {
 	FileSize    apijson.Field
 	Key         apijson.Field
 	LastSeenAt  apijson.Field
+	Metadata    apijson.Field
 	Namespace   apijson.Field
 	NextAction  apijson.Field
 	SourceID    apijson.Field
@@ -497,6 +534,35 @@ func (r *NamespaceInstanceItemNewOrUpdateResponse) UnmarshalJSON(data []byte) (e
 
 func (r namespaceInstanceItemNewOrUpdateResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type NamespaceInstanceItemNewOrUpdateResponseMetadataUnion interface {
+	ImplementsNamespaceInstanceItemNewOrUpdateResponseMetadataUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemNewOrUpdateResponseMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
 }
 
 type NamespaceInstanceItemNewOrUpdateResponseNextAction string
@@ -534,15 +600,17 @@ func (r NamespaceInstanceItemNewOrUpdateResponseStatus) IsKnown() bool {
 }
 
 type NamespaceInstanceItemGetResponse struct {
-	ID          string                                     `json:"id" api:"required"`
-	Checksum    string                                     `json:"checksum" api:"required"`
-	ChunksCount int64                                      `json:"chunks_count" api:"required,nullable"`
-	CreatedAt   time.Time                                  `json:"created_at" api:"required" format:"date-time"`
-	FileSize    float64                                    `json:"file_size" api:"required,nullable"`
-	Key         string                                     `json:"key" api:"required"`
-	LastSeenAt  time.Time                                  `json:"last_seen_at" api:"required" format:"date-time"`
-	Namespace   string                                     `json:"namespace" api:"required"`
-	NextAction  NamespaceInstanceItemGetResponseNextAction `json:"next_action" api:"required,nullable"`
+	ID          string    `json:"id" api:"required"`
+	Checksum    string    `json:"checksum" api:"required"`
+	ChunksCount int64     `json:"chunks_count" api:"required,nullable"`
+	CreatedAt   time.Time `json:"created_at" api:"required" format:"date-time"`
+	FileSize    float64   `json:"file_size" api:"required,nullable"`
+	Key         string    `json:"key" api:"required"`
+	LastSeenAt  time.Time `json:"last_seen_at" api:"required" format:"date-time"`
+	// Built-in, configured filterable, and retained source metadata for the item.
+	Metadata   map[string]NamespaceInstanceItemGetResponseMetadataUnion `json:"metadata" api:"required,nullable"`
+	Namespace  string                                                   `json:"namespace" api:"required"`
+	NextAction NamespaceInstanceItemGetResponseNextAction               `json:"next_action" api:"required,nullable"`
 	// Identifies which data source this item belongs to. "builtin" for uploaded files,
 	// "{type}:{source}" for external sources, null for legacy items.
 	SourceID string                                 `json:"source_id" api:"required,nullable"`
@@ -561,6 +629,7 @@ type namespaceInstanceItemGetResponseJSON struct {
 	FileSize    apijson.Field
 	Key         apijson.Field
 	LastSeenAt  apijson.Field
+	Metadata    apijson.Field
 	Namespace   apijson.Field
 	NextAction  apijson.Field
 	SourceID    apijson.Field
@@ -576,6 +645,35 @@ func (r *NamespaceInstanceItemGetResponse) UnmarshalJSON(data []byte) (err error
 
 func (r namespaceInstanceItemGetResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type NamespaceInstanceItemGetResponseMetadataUnion interface {
+	ImplementsNamespaceInstanceItemGetResponseMetadataUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemGetResponseMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
 }
 
 type NamespaceInstanceItemGetResponseNextAction string
@@ -646,15 +744,17 @@ func (r namespaceInstanceItemLogsResponseJSON) RawJSON() string {
 }
 
 type NamespaceInstanceItemSyncResponse struct {
-	ID          string                                      `json:"id" api:"required"`
-	Checksum    string                                      `json:"checksum" api:"required"`
-	ChunksCount int64                                       `json:"chunks_count" api:"required,nullable"`
-	CreatedAt   time.Time                                   `json:"created_at" api:"required" format:"date-time"`
-	FileSize    float64                                     `json:"file_size" api:"required,nullable"`
-	Key         string                                      `json:"key" api:"required"`
-	LastSeenAt  time.Time                                   `json:"last_seen_at" api:"required" format:"date-time"`
-	Namespace   string                                      `json:"namespace" api:"required"`
-	NextAction  NamespaceInstanceItemSyncResponseNextAction `json:"next_action" api:"required,nullable"`
+	ID          string    `json:"id" api:"required"`
+	Checksum    string    `json:"checksum" api:"required"`
+	ChunksCount int64     `json:"chunks_count" api:"required,nullable"`
+	CreatedAt   time.Time `json:"created_at" api:"required" format:"date-time"`
+	FileSize    float64   `json:"file_size" api:"required,nullable"`
+	Key         string    `json:"key" api:"required"`
+	LastSeenAt  time.Time `json:"last_seen_at" api:"required" format:"date-time"`
+	// Built-in, configured filterable, and retained source metadata for the item.
+	Metadata   map[string]NamespaceInstanceItemSyncResponseMetadataUnion `json:"metadata" api:"required,nullable"`
+	Namespace  string                                                    `json:"namespace" api:"required"`
+	NextAction NamespaceInstanceItemSyncResponseNextAction               `json:"next_action" api:"required,nullable"`
 	// Identifies which data source this item belongs to. "builtin" for uploaded files,
 	// "{type}:{source}" for external sources, null for legacy items.
 	SourceID string                                  `json:"source_id" api:"required,nullable"`
@@ -673,6 +773,7 @@ type namespaceInstanceItemSyncResponseJSON struct {
 	FileSize    apijson.Field
 	Key         apijson.Field
 	LastSeenAt  apijson.Field
+	Metadata    apijson.Field
 	Namespace   apijson.Field
 	NextAction  apijson.Field
 	SourceID    apijson.Field
@@ -688,6 +789,35 @@ func (r *NamespaceInstanceItemSyncResponse) UnmarshalJSON(data []byte) (err erro
 
 func (r namespaceInstanceItemSyncResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type NamespaceInstanceItemSyncResponseMetadataUnion interface {
+	ImplementsNamespaceInstanceItemSyncResponseMetadataUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemSyncResponseMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
 }
 
 type NamespaceInstanceItemSyncResponseNextAction string
@@ -725,21 +855,24 @@ func (r NamespaceInstanceItemSyncResponseStatus) IsKnown() bool {
 }
 
 type NamespaceInstanceItemUploadResponse struct {
-	ID          string                                        `json:"id" api:"required"`
-	Checksum    string                                        `json:"checksum" api:"required"`
-	ChunksCount int64                                         `json:"chunks_count" api:"required,nullable"`
-	CreatedAt   time.Time                                     `json:"created_at" api:"required" format:"date-time"`
-	FileSize    float64                                       `json:"file_size" api:"required,nullable"`
-	Key         string                                        `json:"key" api:"required"`
-	LastSeenAt  time.Time                                     `json:"last_seen_at" api:"required" format:"date-time"`
-	Namespace   string                                        `json:"namespace" api:"required"`
-	NextAction  NamespaceInstanceItemUploadResponseNextAction `json:"next_action" api:"required,nullable"`
+	ID          string    `json:"id" api:"required"`
+	Checksum    string    `json:"checksum" api:"required"`
+	ChunksCount int64     `json:"chunks_count" api:"required,nullable"`
+	CreatedAt   time.Time `json:"created_at" api:"required" format:"date-time"`
+	FileSize    float64   `json:"file_size" api:"required,nullable"`
+	Key         string    `json:"key" api:"required"`
+	LastSeenAt  time.Time `json:"last_seen_at" api:"required" format:"date-time"`
+	// Built-in, configured filterable, and retained source metadata for the item.
+	Metadata   map[string]NamespaceInstanceItemUploadResponseMetadataUnion `json:"metadata" api:"required,nullable"`
+	Namespace  string                                                      `json:"namespace" api:"required"`
+	NextAction NamespaceInstanceItemUploadResponseNextAction               `json:"next_action" api:"required,nullable"`
 	// Identifies which data source this item belongs to. "builtin" for uploaded files,
 	// "{type}:{source}" for external sources, null for legacy items.
-	SourceID string                                    `json:"source_id" api:"required,nullable"`
-	Status   NamespaceInstanceItemUploadResponseStatus `json:"status" api:"required"`
-	Error    string                                    `json:"error"`
-	JSON     namespaceInstanceItemUploadResponseJSON   `json:"-"`
+	SourceID string                                       `json:"source_id" api:"required,nullable"`
+	Status   NamespaceInstanceItemUploadResponseStatus    `json:"status" api:"required"`
+	Error    string                                       `json:"error"`
+	Warnings []NamespaceInstanceItemUploadResponseWarning `json:"warnings"`
+	JSON     namespaceInstanceItemUploadResponseJSON      `json:"-"`
 }
 
 // namespaceInstanceItemUploadResponseJSON contains the JSON metadata for the
@@ -752,11 +885,13 @@ type namespaceInstanceItemUploadResponseJSON struct {
 	FileSize    apijson.Field
 	Key         apijson.Field
 	LastSeenAt  apijson.Field
+	Metadata    apijson.Field
 	Namespace   apijson.Field
 	NextAction  apijson.Field
 	SourceID    apijson.Field
 	Status      apijson.Field
 	Error       apijson.Field
+	Warnings    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -767,6 +902,35 @@ func (r *NamespaceInstanceItemUploadResponse) UnmarshalJSON(data []byte) (err er
 
 func (r namespaceInstanceItemUploadResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString], [shared.UnionFloat] or
+// [shared.UnionBool].
+type NamespaceInstanceItemUploadResponseMetadataUnion interface {
+	ImplementsNamespaceInstanceItemUploadResponseMetadataUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemUploadResponseMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(shared.UnionBool(false)),
+		},
+	)
 }
 
 type NamespaceInstanceItemUploadResponseNextAction string
@@ -803,10 +967,166 @@ func (r NamespaceInstanceItemUploadResponseStatus) IsKnown() bool {
 	return false
 }
 
+type NamespaceInstanceItemUploadResponseWarning struct {
+	Code         NamespaceInstanceItemUploadResponseWarningsCode         `json:"code" api:"required"`
+	Field        string                                                  `json:"field" api:"required"`
+	ExpectedType NamespaceInstanceItemUploadResponseWarningsExpectedType `json:"expected_type"`
+	JSON         namespaceInstanceItemUploadResponseWarningJSON          `json:"-"`
+	union        NamespaceInstanceItemUploadResponseWarningsUnion
+}
+
+// namespaceInstanceItemUploadResponseWarningJSON contains the JSON metadata for
+// the struct [NamespaceInstanceItemUploadResponseWarning]
+type namespaceInstanceItemUploadResponseWarningJSON struct {
+	Code         apijson.Field
+	Field        apijson.Field
+	ExpectedType apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r namespaceInstanceItemUploadResponseWarningJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *NamespaceInstanceItemUploadResponseWarning) UnmarshalJSON(data []byte) (err error) {
+	*r = NamespaceInstanceItemUploadResponseWarning{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [NamespaceInstanceItemUploadResponseWarningsUnion] interface
+// which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [NamespaceInstanceItemUploadResponseWarningsObject],
+// [NamespaceInstanceItemUploadResponseWarningsObject].
+func (r NamespaceInstanceItemUploadResponseWarning) AsUnion() NamespaceInstanceItemUploadResponseWarningsUnion {
+	return r.union
+}
+
+// Union satisfied by [NamespaceInstanceItemUploadResponseWarningsObject] or
+// [NamespaceInstanceItemUploadResponseWarningsObject].
+type NamespaceInstanceItemUploadResponseWarningsUnion interface {
+	implementsNamespaceInstanceItemUploadResponseWarning()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceInstanceItemUploadResponseWarningsUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceInstanceItemUploadResponseWarningsObject{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceInstanceItemUploadResponseWarningsObject{}),
+		},
+	)
+}
+
+type NamespaceInstanceItemUploadResponseWarningsObject struct {
+	Code         NamespaceInstanceItemUploadResponseWarningsObjectCode         `json:"code" api:"required"`
+	ExpectedType NamespaceInstanceItemUploadResponseWarningsObjectExpectedType `json:"expected_type" api:"required"`
+	Field        string                                                        `json:"field" api:"required"`
+	JSON         namespaceInstanceItemUploadResponseWarningsObjectJSON         `json:"-"`
+}
+
+// namespaceInstanceItemUploadResponseWarningsObjectJSON contains the JSON metadata
+// for the struct [NamespaceInstanceItemUploadResponseWarningsObject]
+type namespaceInstanceItemUploadResponseWarningsObjectJSON struct {
+	Code         apijson.Field
+	ExpectedType apijson.Field
+	Field        apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *NamespaceInstanceItemUploadResponseWarningsObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceInstanceItemUploadResponseWarningsObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r NamespaceInstanceItemUploadResponseWarningsObject) implementsNamespaceInstanceItemUploadResponseWarning() {
+}
+
+type NamespaceInstanceItemUploadResponseWarningsObjectCode string
+
+const (
+	NamespaceInstanceItemUploadResponseWarningsObjectCodeCustomMetadataValueNotIndexed NamespaceInstanceItemUploadResponseWarningsObjectCode = "custom_metadata_value_not_indexed"
+)
+
+func (r NamespaceInstanceItemUploadResponseWarningsObjectCode) IsKnown() bool {
+	switch r {
+	case NamespaceInstanceItemUploadResponseWarningsObjectCodeCustomMetadataValueNotIndexed:
+		return true
+	}
+	return false
+}
+
+type NamespaceInstanceItemUploadResponseWarningsObjectExpectedType string
+
+const (
+	NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeText     NamespaceInstanceItemUploadResponseWarningsObjectExpectedType = "text"
+	NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeNumber   NamespaceInstanceItemUploadResponseWarningsObjectExpectedType = "number"
+	NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeBoolean  NamespaceInstanceItemUploadResponseWarningsObjectExpectedType = "boolean"
+	NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeDatetime NamespaceInstanceItemUploadResponseWarningsObjectExpectedType = "datetime"
+)
+
+func (r NamespaceInstanceItemUploadResponseWarningsObjectExpectedType) IsKnown() bool {
+	switch r {
+	case NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeText, NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeNumber, NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeBoolean, NamespaceInstanceItemUploadResponseWarningsObjectExpectedTypeDatetime:
+		return true
+	}
+	return false
+}
+
+type NamespaceInstanceItemUploadResponseWarningsCode string
+
+const (
+	NamespaceInstanceItemUploadResponseWarningsCodeCustomMetadataValueNotIndexed    NamespaceInstanceItemUploadResponseWarningsCode = "custom_metadata_value_not_indexed"
+	NamespaceInstanceItemUploadResponseWarningsCodeCustomMetadataFieldNotFilterable NamespaceInstanceItemUploadResponseWarningsCode = "custom_metadata_field_not_filterable"
+)
+
+func (r NamespaceInstanceItemUploadResponseWarningsCode) IsKnown() bool {
+	switch r {
+	case NamespaceInstanceItemUploadResponseWarningsCodeCustomMetadataValueNotIndexed, NamespaceInstanceItemUploadResponseWarningsCodeCustomMetadataFieldNotFilterable:
+		return true
+	}
+	return false
+}
+
+type NamespaceInstanceItemUploadResponseWarningsExpectedType string
+
+const (
+	NamespaceInstanceItemUploadResponseWarningsExpectedTypeText     NamespaceInstanceItemUploadResponseWarningsExpectedType = "text"
+	NamespaceInstanceItemUploadResponseWarningsExpectedTypeNumber   NamespaceInstanceItemUploadResponseWarningsExpectedType = "number"
+	NamespaceInstanceItemUploadResponseWarningsExpectedTypeBoolean  NamespaceInstanceItemUploadResponseWarningsExpectedType = "boolean"
+	NamespaceInstanceItemUploadResponseWarningsExpectedTypeDatetime NamespaceInstanceItemUploadResponseWarningsExpectedType = "datetime"
+)
+
+func (r NamespaceInstanceItemUploadResponseWarningsExpectedType) IsKnown() bool {
+	switch r {
+	case NamespaceInstanceItemUploadResponseWarningsExpectedTypeText, NamespaceInstanceItemUploadResponseWarningsExpectedTypeNumber, NamespaceInstanceItemUploadResponseWarningsExpectedTypeBoolean, NamespaceInstanceItemUploadResponseWarningsExpectedTypeDatetime:
+		return true
+	}
+	return false
+}
+
 type NamespaceInstanceItemListParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Filter items by their unique ID. Returns at most one item.
 	ItemID param.Field[string] `query:"item_id"`
+	// Filter items by their exact key (object key / filename). Keys are unique per
+	// source, so combine with `source` to disambiguate across data sources.
+	Key param.Field[string] `query:"key"`
 	// JSON-encoded metadata filter using Vectorize filter syntax. Examples:
 	// {"folder":"reports/"},
 	// {"timestamp":{"$gte":1700000000000}}, {"folder":{"$in":["docs/","reports/"]}}
@@ -969,10 +1289,10 @@ type NamespaceInstanceItemNewOrUpdateParams struct {
 	// Item key / filename. Must not exceed 128 characters.
 	Key        param.Field[string]                                           `json:"key" api:"required"`
 	NextAction param.Field[NamespaceInstanceItemNewOrUpdateParamsNextAction] `json:"next_action" api:"required"`
-	// Wait for indexing to fully complete before responding. On RAGs with vector
-	// indexing enabled, this additionally waits for Vectorize ingestion confirmation
-	// (up to 40s) so the returned item reflects a queryable state. On timeout the item
-	// is returned in `running` state and the background alarm continues polling.
+	// Wait for indexing before responding. After processing, vector-indexed instances
+	// use any time remaining in a 25s wait budget to confirm Vectorize ingestion.
+	// Processing itself is not interrupted and can exceed that budget. If confirmation
+	// times out, the current item state is returned and background indexing continues.
 	// Defaults to false.
 	WaitForCompletion param.Field[bool] `json:"wait_for_completion"`
 }
@@ -1119,10 +1439,10 @@ func (r namespaceInstanceItemLogsResponseEnvelopeResultInfoJSON) RawJSON() strin
 type NamespaceInstanceItemSyncParams struct {
 	AccountID  param.Field[string]                                    `path:"account_id" api:"required"`
 	NextAction param.Field[NamespaceInstanceItemSyncParamsNextAction] `json:"next_action" api:"required"`
-	// Wait for indexing to fully complete before responding. On RAGs with vector
-	// indexing enabled, this additionally waits for Vectorize ingestion confirmation
-	// (up to 40s) so the returned item reflects a queryable state. On timeout the item
-	// is returned in `running` state and the background alarm continues polling.
+	// Wait for indexing before responding. After processing, vector-indexed instances
+	// use any time remaining in a 25s wait budget to confirm Vectorize ingestion.
+	// Processing itself is not interrupted and can exceed that budget. If confirmation
+	// times out, the current item state is returned and background indexing continues.
 	// Defaults to false.
 	WaitForCompletion param.Field[bool] `json:"wait_for_completion"`
 }
@@ -1189,14 +1509,14 @@ func (r NamespaceInstanceItemUploadParams) MarshalMultipart() (data []byte, cont
 }
 
 type NamespaceInstanceItemUploadParamsFile struct {
-	// The file to upload (max 4MB). Filename must not exceed 128 characters.
+	// The file to upload. Filename must not exceed 128 characters.
 	File param.Field[io.Reader] `json:"file" api:"required" format:"binary"`
 	// JSON string of custom metadata key-value pairs.
 	Metadata param.Field[string] `json:"metadata"`
-	// Wait for indexing to fully complete before responding. On RAGs with vector
-	// indexing enabled, this additionally waits for Vectorize ingestion confirmation
-	// (up to 40s) so the returned item reflects a queryable state. On timeout the item
-	// is returned in `running` state and the background alarm continues polling.
+	// Wait for indexing before responding. After processing, vector-indexed instances
+	// use any time remaining in a 25s wait budget to confirm Vectorize ingestion.
+	// Processing itself is not interrupted and can exceed that budget. If confirmation
+	// times out, the current item state is returned and background indexing continues.
 	// Defaults to false.
 	WaitForCompletion param.Field[bool] `json:"wait_for_completion"`
 }

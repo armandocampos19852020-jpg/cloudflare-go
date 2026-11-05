@@ -35,6 +35,8 @@ func TestCustomHostnameNewWithOptionalParams(t *testing.T) {
 		CustomMetadata: cloudflare.F(map[string]string{
 			"foo": "string",
 		}),
+		CustomOriginServer: cloudflare.F("origin2.example.com"),
+		CustomOriginSNI:    cloudflare.F("sni.example.com"),
 		SSL: cloudflare.F(custom_hostnames.CustomHostnameNewParamsSSL{
 			BundleMethod:         cloudflare.F(custom_hostnames.BundleMethodUbiquitous),
 			CertificateAuthority: cloudflare.F(shared.CertificateCAGoogle),
@@ -88,7 +90,9 @@ func TestCustomHostnameListWithOptionalParams(t *testing.T) {
 		CustomOriginServer:   cloudflare.F("origin2.example.com"),
 		Direction:            cloudflare.F(custom_hostnames.CustomHostnameListParamsDirectionDesc),
 		Hostname: cloudflare.F(custom_hostnames.CustomHostnameListParamsHostname{
-			Contain: cloudflare.F("example.com"),
+			Contain:    cloudflare.F("example.com"),
+			Exact:      cloudflare.F("app.example.com"),
+			StartsWith: cloudflare.F("app"),
 		}),
 		HostnameStatus: cloudflare.F(custom_hostnames.CustomHostnameListParamsHostnameStatusProvisioned),
 		Order:          cloudflare.F(custom_hostnames.CustomHostnameListParamsOrderSSL),
@@ -123,7 +127,7 @@ func TestCustomHostnameDelete(t *testing.T) {
 	)
 	_, err := client.CustomHostnames.Delete(
 		context.TODO(),
-		"023e105f4ecef8ad9ca31a8372d0c353",
+		"0d89c70d-ad9f-4843-b99f-6cc0252067e9",
 		custom_hostnames.CustomHostnameDeleteParams{
 			ZoneID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 		},
@@ -153,7 +157,7 @@ func TestCustomHostnameEditWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.CustomHostnames.Edit(
 		context.TODO(),
-		"023e105f4ecef8ad9ca31a8372d0c353",
+		"0d89c70d-ad9f-4843-b99f-6cc0252067e9",
 		custom_hostnames.CustomHostnameEditParams{
 			ZoneID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			CustomMetadata: cloudflare.F(map[string]string{
@@ -210,7 +214,7 @@ func TestCustomHostnameGet(t *testing.T) {
 	)
 	_, err := client.CustomHostnames.Get(
 		context.TODO(),
-		"023e105f4ecef8ad9ca31a8372d0c353",
+		"0d89c70d-ad9f-4843-b99f-6cc0252067e9",
 		custom_hostnames.CustomHostnameGetParams{
 			ZoneID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 		},

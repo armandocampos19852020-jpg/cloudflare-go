@@ -127,7 +127,7 @@ func (r *DLPDatasetService) Delete(ctx context.Context, datasetID string, body D
 	return err
 }
 
-// Fetch a specific dataset
+// Gets a dataset and its latest upload status.
 func (r *DLPDatasetService) Get(ctx context.Context, datasetID string, query DLPDatasetGetParams, opts ...option.RequestOption) (res *Dataset, err error) {
 	var env DLPDatasetGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)

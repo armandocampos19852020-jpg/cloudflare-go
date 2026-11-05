@@ -145,6 +145,8 @@ type ScrapeNewParams struct {
 	// Account ID.
 	AccountID param.Field[string]      `path:"account_id" api:"required"`
 	Body      ScrapeNewParamsBodyUnion `json:"body" api:"required"`
+	// Rendering backend. Set to `kitesurf` to use Kitesurf (beta).
+	Browser param.Field[ScrapeNewParamsBrowser] `query:"browser"`
 	// Cache TTL default is 5s. Set to 0 to disable.
 	CacheTTL param.Field[float64] `query:"cacheTTL"`
 }
@@ -162,7 +164,6 @@ func (r ScrapeNewParams) URLQuery() (v url.Values) {
 }
 
 type ScrapeNewParamsBody struct {
-	Elements param.Field[interface{}] `json:"elements" api:"required"`
 	// The maximum duration allowed for the browser action to complete after the page
 	// has loaded (such as taking screenshots, extracting content, or generating PDFs).
 	// If this time limit is exceeded, the action stops and returns a timeout error.
@@ -173,22 +174,20 @@ type ScrapeNewParamsBody struct {
 	AllowResourceTypes  param.Field[interface{}] `json:"allowResourceTypes"`
 	Authenticate        param.Field[interface{}] `json:"authenticate"`
 	// Attempt to proceed when 'awaited' events fail or timeout.
-	BestAttempt      param.Field[bool]        `json:"bestAttempt"`
-	Cookies          param.Field[interface{}] `json:"cookies"`
-	EmulateMediaType param.Field[string]      `json:"emulateMediaType"`
-	GotoOptions      param.Field[interface{}] `json:"gotoOptions"`
-	// Set the content of the page, eg: `<h1>Hello World!!</h1>`. Either `html` or
-	// `url` must be set.
+	BestAttempt          param.Field[bool]        `json:"bestAttempt"`
+	Cookies              param.Field[interface{}] `json:"cookies"`
+	Elements             param.Field[interface{}] `json:"elements"`
+	EmulateMediaType     param.Field[string]      `json:"emulateMediaType"`
+	GotoOptions          param.Field[interface{}] `json:"gotoOptions"`
 	HTML                 param.Field[string]      `json:"html"`
 	RejectRequestPattern param.Field[interface{}] `json:"rejectRequestPattern"`
 	RejectResourceTypes  param.Field[interface{}] `json:"rejectResourceTypes"`
 	SetExtraHTTPHeaders  param.Field[interface{}] `json:"setExtraHTTPHeaders"`
 	SetJavaScriptEnabled param.Field[bool]        `json:"setJavaScriptEnabled"`
-	// URL to navigate to, eg. `https://example.com`.
-	URL             param.Field[string]      `json:"url" format:"uri"`
-	UserAgent       param.Field[string]      `json:"userAgent"`
-	Viewport        param.Field[interface{}] `json:"viewport"`
-	WaitForSelector param.Field[interface{}] `json:"waitForSelector"`
+	URL                  param.Field[string]      `json:"url"`
+	UserAgent            param.Field[string]      `json:"userAgent"`
+	Viewport             param.Field[interface{}] `json:"viewport"`
+	WaitForSelector      param.Field[interface{}] `json:"waitForSelector"`
 	// Waits for a specified timeout before continuing.
 	WaitForTimeout param.Field[float64] `json:"waitForTimeout"`
 }
@@ -206,33 +205,33 @@ type ScrapeNewParamsBodyUnion interface {
 }
 
 type ScrapeNewParamsBodyObject struct {
-	Elements param.Field[[]ScrapeNewParamsBodyObjectElement] `json:"elements" api:"required"`
-	// Set the content of the page, eg: `<h1>Hello World!!</h1>`. Either `html` or
-	// `url` must be set.
-	HTML param.Field[string] `json:"html" api:"required"`
+	URL param.Field[string] `json:"url" api:"required"`
 	// The maximum duration allowed for the browser action to complete after the page
 	// has loaded (such as taking screenshots, extracting content, or generating PDFs).
 	// If this time limit is exceeded, the action stops and returns a timeout error.
 	ActionTimeout param.Field[float64] `json:"actionTimeout"`
-	// Adds a `<script>` tag into the page with the desired URL or content.
+	// Adds a script element into the page with the desired URL or content.
 	AddScriptTag param.Field[[]ScrapeNewParamsBodyObjectAddScriptTag] `json:"addScriptTag"`
 	// Adds a `<link rel="stylesheet">` tag into the page with the desired URL or a
 	// `<style type="text/css">` tag with the content.
 	AddStyleTag param.Field[[]ScrapeNewParamsBodyObjectAddStyleTag] `json:"addStyleTag"`
 	// Only allow requests that match the provided regex patterns, eg. '/^.\*\.(css)'.
+	// Reject rules are applied first.
 	AllowRequestPattern param.Field[[]string] `json:"allowRequestPattern"`
 	// Only allow requests that match the provided resource types, eg. 'image' or
-	// 'script'.
+	// 'script'. Reject rules are applied first.
 	AllowResourceTypes param.Field[[]ScrapeNewParamsBodyObjectAllowResourceType] `json:"allowResourceTypes"`
 	// Provide credentials for HTTP authentication.
 	Authenticate param.Field[ScrapeNewParamsBodyObjectAuthenticate] `json:"authenticate"`
 	// Attempt to proceed when 'awaited' events fail or timeout.
 	BestAttempt param.Field[bool] `json:"bestAttempt"`
 	// Check [options](https://pptr.dev/api/puppeteer.page.setcookie).
-	Cookies          param.Field[[]ScrapeNewParamsBodyObjectCookie] `json:"cookies"`
-	EmulateMediaType param.Field[string]                            `json:"emulateMediaType"`
+	Cookies          param.Field[[]ScrapeNewParamsBodyObjectCookie]  `json:"cookies"`
+	Elements         param.Field[[]ScrapeNewParamsBodyObjectElement] `json:"elements"`
+	EmulateMediaType param.Field[string]                             `json:"emulateMediaType"`
 	// Check [options](https://pptr.dev/api/puppeteer.gotooptions).
 	GotoOptions param.Field[ScrapeNewParamsBodyObjectGotoOptions] `json:"gotoOptions"`
+	HTML        param.Field[string]                               `json:"html"`
 	// Block undesired requests that match the provided regex patterns, eg.
 	// '/^.\*\.(css)'.
 	RejectRequestPattern param.Field[[]string] `json:"rejectRequestPattern"`
@@ -257,19 +256,11 @@ func (r ScrapeNewParamsBodyObject) MarshalJSON() (data []byte, err error) {
 
 func (r ScrapeNewParamsBodyObject) implementsScrapeNewParamsBodyUnion() {}
 
-type ScrapeNewParamsBodyObjectElement struct {
-	Selector param.Field[string] `json:"selector" api:"required"`
-}
-
-func (r ScrapeNewParamsBodyObjectElement) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type ScrapeNewParamsBodyObjectAddScriptTag struct {
 	ID      param.Field[string] `json:"id"`
 	Content param.Field[string] `json:"content"`
 	Type    param.Field[string] `json:"type"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r ScrapeNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err error) {
@@ -278,7 +269,7 @@ func (r ScrapeNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err e
 
 type ScrapeNewParamsBodyObjectAddStyleTag struct {
 	Content param.Field[string] `json:"content"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r ScrapeNewParamsBodyObjectAddStyleTag) MarshalJSON() (data []byte, err error) {
@@ -394,6 +385,14 @@ func (r ScrapeNewParamsBodyObjectCookiesSourceScheme) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type ScrapeNewParamsBodyObjectElement struct {
+	Selector param.Field[string] `json:"selector" api:"required"`
+}
+
+func (r ScrapeNewParamsBodyObjectElement) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 // Check [options](https://pptr.dev/api/puppeteer.gotooptions).
@@ -543,8 +542,24 @@ func (r ScrapeNewParamsBodyObjectWaitForSelectorVisible) IsKnown() bool {
 	return false
 }
 
+// Rendering backend. Set to `kitesurf` to use Kitesurf (beta).
+type ScrapeNewParamsBrowser string
+
+const (
+	ScrapeNewParamsBrowserKitesurf ScrapeNewParamsBrowser = "kitesurf"
+)
+
+func (r ScrapeNewParamsBrowser) IsKnown() bool {
+	switch r {
+	case ScrapeNewParamsBrowserKitesurf:
+		return true
+	}
+	return false
+}
+
 type ScrapeNewResponseEnvelope struct {
-	Result []ScrapeNewResponse `json:"result" api:"required"`
+	Meta   ScrapeNewResponseEnvelopeMeta `json:"meta" api:"required"`
+	Result []ScrapeNewResponse           `json:"result" api:"required"`
 	// Response status.
 	Success bool                              `json:"success" api:"required"`
 	Errors  []ScrapeNewResponseEnvelopeErrors `json:"errors"`
@@ -554,6 +569,7 @@ type ScrapeNewResponseEnvelope struct {
 // scrapeNewResponseEnvelopeJSON contains the JSON metadata for the struct
 // [ScrapeNewResponseEnvelope]
 type scrapeNewResponseEnvelopeJSON struct {
+	Meta        apijson.Field
 	Result      apijson.Field
 	Success     apijson.Field
 	Errors      apijson.Field
@@ -566,6 +582,71 @@ func (r *ScrapeNewResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r scrapeNewResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type ScrapeNewResponseEnvelopeMeta struct {
+	// URL that served the response, after any redirects the browser followed.
+	FinalURL string `json:"finalUrl"`
+	// Origin response headers, lowercased. Repeated headers are joined with a newline.
+	// Credential and transport-only headers that do not survive rendering are omitted.
+	Headers map[string]string `json:"headers"`
+	// HTTP redirects followed to reach `finalUrl`, oldest first. Omitted for direct
+	// navigation and for client-side redirects such as meta refresh. An empty array
+	// means redirects occurred but their intermediate responses could not be read.
+	RedirectChain []ScrapeNewResponseEnvelopeMetaRedirectChain `json:"redirectChain"`
+	// HTTP status returned by the origin.
+	Status float64 `json:"status"`
+	// Page title.
+	Title string                            `json:"title"`
+	JSON  scrapeNewResponseEnvelopeMetaJSON `json:"-"`
+}
+
+// scrapeNewResponseEnvelopeMetaJSON contains the JSON metadata for the struct
+// [ScrapeNewResponseEnvelopeMeta]
+type scrapeNewResponseEnvelopeMetaJSON struct {
+	FinalURL      apijson.Field
+	Headers       apijson.Field
+	RedirectChain apijson.Field
+	Status        apijson.Field
+	Title         apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *ScrapeNewResponseEnvelopeMeta) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r scrapeNewResponseEnvelopeMetaJSON) RawJSON() string {
+	return r.raw
+}
+
+type ScrapeNewResponseEnvelopeMetaRedirectChain struct {
+	// Redirect response headers, including `location`.
+	Headers map[string]string `json:"headers" api:"required"`
+	// HTTP status of the redirect.
+	Status float64 `json:"status" api:"required"`
+	// URL that returned the redirect.
+	URL  string                                         `json:"url" api:"required"`
+	JSON scrapeNewResponseEnvelopeMetaRedirectChainJSON `json:"-"`
+}
+
+// scrapeNewResponseEnvelopeMetaRedirectChainJSON contains the JSON metadata for
+// the struct [ScrapeNewResponseEnvelopeMetaRedirectChain]
+type scrapeNewResponseEnvelopeMetaRedirectChainJSON struct {
+	Headers     apijson.Field
+	Status      apijson.Field
+	URL         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ScrapeNewResponseEnvelopeMetaRedirectChain) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r scrapeNewResponseEnvelopeMetaRedirectChainJSON) RawJSON() string {
 	return r.raw
 }
 

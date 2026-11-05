@@ -35,7 +35,7 @@ func NewAIInferenceTimeseriesGroupSummaryService(opts ...option.RequestOption) (
 	return
 }
 
-// Retrieves the distribution of unique accounts by model over time.
+// Retrieves the distribution of the number of inferences by model over time.
 //
 // Deprecated: Use
 // [Radar AI Inference Timeseries Groups By Dimension](https://developers.cloudflare.com/api/resources/radar/subresources/ai/subresources/inference/methods/timeseries_groups_v2/)
@@ -52,7 +52,7 @@ func (r *AIInferenceTimeseriesGroupSummaryService) Model(ctx context.Context, qu
 	return res, nil
 }
 
-// Retrieves the distribution of unique accounts by task over time.
+// Retrieves the distribution of the number of inferences by task over time.
 //
 // Deprecated: Use
 // [Radar AI Inference Timeseries Groups By Dimension](https://developers.cloudflare.com/api/resources/radar/subresources/ai/subresources/inference/methods/timeseries_groups_v2/)
@@ -190,6 +190,7 @@ type AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotation 
 	IsInstantaneous bool                                                                           `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                         `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                      `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                       `json:"tags"`
 	JSON            aiInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -204,6 +205,7 @@ type aiInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationJ
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -259,7 +261,6 @@ func (r AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotati
 type AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -269,7 +270,7 @@ const (
 
 func (r AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupSummaryModelResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -490,6 +491,7 @@ type AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotation s
 	IsInstantaneous bool                                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                      `json:"tags"`
 	JSON            aiInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -504,6 +506,7 @@ type aiInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationJS
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -559,7 +562,6 @@ func (r AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotatio
 type AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -569,7 +571,7 @@ const (
 
 func (r AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupSummaryTaskResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -673,20 +675,40 @@ type AIInferenceTimeseriesGroupSummaryModelParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AIInferenceTimeseriesGroupSummaryModelParamsAggInterval] `query:"aggInterval"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIInferenceTimeseriesGroupSummaryModelParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Array of names used to label the series in the response.
 	Name param.Field[[]string] `query:"name"`
@@ -704,6 +726,9 @@ func (r AIInferenceTimeseriesGroupSummaryModelParams) URLQuery() (v url.Values) 
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AIInferenceTimeseriesGroupSummaryModelParamsAggInterval string
 
 const (
@@ -764,20 +789,40 @@ type AIInferenceTimeseriesGroupSummaryTaskParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AIInferenceTimeseriesGroupSummaryTaskParamsAggInterval] `query:"aggInterval"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIInferenceTimeseriesGroupSummaryTaskParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Array of names used to label the series in the response.
 	Name param.Field[[]string] `query:"name"`
@@ -795,6 +840,9 @@ func (r AIInferenceTimeseriesGroupSummaryTaskParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AIInferenceTimeseriesGroupSummaryTaskParamsAggInterval string
 
 const (

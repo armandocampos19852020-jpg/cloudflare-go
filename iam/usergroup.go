@@ -262,16 +262,36 @@ func (r userGroupNewResponsePoliciesPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type UserGroupNewResponsePoliciesPermissionGroupsMeta struct {
-	Key   string                                               `json:"key"`
-	Value string                                               `json:"value"`
-	JSON  userGroupNewResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                                               `json:"visibility"`
+	JSON       userGroupNewResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
 }
 
 // userGroupNewResponsePoliciesPermissionGroupsMetaJSON contains the JSON metadata
 // for the struct [UserGroupNewResponsePoliciesPermissionGroupsMeta]
 type userGroupNewResponsePoliciesPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -288,8 +308,8 @@ func (r userGroupNewResponsePoliciesPermissionGroupsMetaJSON) RawJSON() string {
 type UserGroupNewResponsePoliciesResourceGroup struct {
 	// Identifier of the resource group.
 	ID string `json:"id" api:"required"`
-	// The scope associated to the resource group
-	Scope []UserGroupNewResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
+	// A scope is a combination of scope objects which provides additional context.
+	Scope UserGroupNewResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
 	// Attributes associated to the resource group.
 	Meta UserGroupNewResponsePoliciesResourceGroupsMeta `json:"meta"`
 	// Name of the resource group.
@@ -507,16 +527,36 @@ func (r userGroupUpdateResponsePoliciesPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type UserGroupUpdateResponsePoliciesPermissionGroupsMeta struct {
-	Key   string                                                  `json:"key"`
-	Value string                                                  `json:"value"`
-	JSON  userGroupUpdateResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                                                  `json:"visibility"`
+	JSON       userGroupUpdateResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
 }
 
 // userGroupUpdateResponsePoliciesPermissionGroupsMetaJSON contains the JSON
 // metadata for the struct [UserGroupUpdateResponsePoliciesPermissionGroupsMeta]
 type userGroupUpdateResponsePoliciesPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -533,8 +573,8 @@ func (r userGroupUpdateResponsePoliciesPermissionGroupsMetaJSON) RawJSON() strin
 type UserGroupUpdateResponsePoliciesResourceGroup struct {
 	// Identifier of the resource group.
 	ID string `json:"id" api:"required"`
-	// The scope associated to the resource group
-	Scope []UserGroupUpdateResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
+	// A scope is a combination of scope objects which provides additional context.
+	Scope UserGroupUpdateResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
 	// Attributes associated to the resource group.
 	Meta UserGroupUpdateResponsePoliciesResourceGroupsMeta `json:"meta"`
 	// Name of the resource group.
@@ -753,16 +793,36 @@ func (r userGroupListResponsePoliciesPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type UserGroupListResponsePoliciesPermissionGroupsMeta struct {
-	Key   string                                                `json:"key"`
-	Value string                                                `json:"value"`
-	JSON  userGroupListResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                                                `json:"visibility"`
+	JSON       userGroupListResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
 }
 
 // userGroupListResponsePoliciesPermissionGroupsMetaJSON contains the JSON metadata
 // for the struct [UserGroupListResponsePoliciesPermissionGroupsMeta]
 type userGroupListResponsePoliciesPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -779,8 +839,8 @@ func (r userGroupListResponsePoliciesPermissionGroupsMetaJSON) RawJSON() string 
 type UserGroupListResponsePoliciesResourceGroup struct {
 	// Identifier of the resource group.
 	ID string `json:"id" api:"required"`
-	// The scope associated to the resource group
-	Scope []UserGroupListResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
+	// A scope is a combination of scope objects which provides additional context.
+	Scope UserGroupListResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
 	// Attributes associated to the resource group.
 	Meta UserGroupListResponsePoliciesResourceGroupsMeta `json:"meta"`
 	// Name of the resource group.
@@ -1020,16 +1080,36 @@ func (r userGroupGetResponsePoliciesPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type UserGroupGetResponsePoliciesPermissionGroupsMeta struct {
-	Key   string                                               `json:"key"`
-	Value string                                               `json:"value"`
-	JSON  userGroupGetResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                                               `json:"visibility"`
+	JSON       userGroupGetResponsePoliciesPermissionGroupsMetaJSON `json:"-"`
 }
 
 // userGroupGetResponsePoliciesPermissionGroupsMetaJSON contains the JSON metadata
 // for the struct [UserGroupGetResponsePoliciesPermissionGroupsMeta]
 type userGroupGetResponsePoliciesPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1046,8 +1126,8 @@ func (r userGroupGetResponsePoliciesPermissionGroupsMetaJSON) RawJSON() string {
 type UserGroupGetResponsePoliciesResourceGroup struct {
 	// Identifier of the resource group.
 	ID string `json:"id" api:"required"`
-	// The scope associated to the resource group
-	Scope []UserGroupGetResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
+	// A scope is a combination of scope objects which provides additional context.
+	Scope UserGroupGetResponsePoliciesResourceGroupsScope `json:"scope" api:"required"`
 	// Attributes associated to the resource group.
 	Meta UserGroupGetResponsePoliciesResourceGroupsMeta `json:"meta"`
 	// Name of the resource group.

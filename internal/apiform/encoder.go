@@ -50,9 +50,11 @@ type encoderField struct {
 }
 
 type encoderEntry struct {
-	typ        reflect.Type
-	dateFormat string
-	root       bool
+	typ           reflect.Type
+	dateFormat    string
+	root          bool
+	fieldsAsJSON  bool
+	objectsAsJSON bool
 }
 
 func (e *encoder) marshal(value interface{}, writer *multipart.Writer) error {
@@ -67,9 +69,11 @@ func (e *encoder) marshal(value interface{}, writer *multipart.Writer) error {
 
 func (e *encoder) typeEncoder(t reflect.Type) encoderFunc {
 	entry := encoderEntry{
-		typ:        t,
-		dateFormat: e.dateFormat,
-		root:       e.root,
+		typ:           t,
+		dateFormat:    e.dateFormat,
+		root:          e.root,
+		fieldsAsJSON:  e.fieldsAsJSON,
+		objectsAsJSON: e.objectsAsJSON,
 	}
 
 	if fi, ok := encoders.Load(entry); ok {
@@ -179,8 +183,11 @@ func (e *encoder) newArrayTypeEncoder(t reflect.Type) encoderFunc {
 	return func(key string, v reflect.Value, writer *multipart.Writer) error {
 		for i := 0; i < v.Len(); i++ {
 			newKey := key
-			if newKey != "" && !e.objectsAsJSON {
-				newKey = newKey + "." + strconv.Itoa(i)
+			if !e.objectsAsJSON {
+				if newKey != "" {
+					newKey += "."
+				}
+				newKey += strconv.Itoa(i)
 			}
 			err := itemEncoder(newKey, v.Index(i), writer)
 			if err != nil {

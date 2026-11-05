@@ -33,17 +33,17 @@ func TestPDFNewWithOptionalParams(t *testing.T) {
 	resp, err := client.BrowserRendering.PDF.New(context.TODO(), browser_rendering.PDFNewParams{
 		AccountID: cloudflare.F("account_id"),
 		Body: browser_rendering.PDFNewParamsBodyObject{
-			HTML:          cloudflare.F("x"),
+			URL:           cloudflare.F("https://www.example.com/"),
 			ActionTimeout: cloudflare.F(120000.000000),
 			AddScriptTag: cloudflare.F([]browser_rendering.PDFNewParamsBodyObjectAddScriptTag{{
 				ID:      cloudflare.F("id"),
 				Content: cloudflare.F("content"),
 				Type:    cloudflare.F("type"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AddStyleTag: cloudflare.F([]browser_rendering.PDFNewParamsBodyObjectAddStyleTag{{
 				Content: cloudflare.F("content"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AllowRequestPattern: cloudflare.F([]string{"string"}),
 			AllowResourceTypes:  cloudflare.F([]browser_rendering.PDFNewParamsBodyObjectAllowResourceType{browser_rendering.PDFNewParamsBodyObjectAllowResourceTypeDocument}),
@@ -75,6 +75,7 @@ func TestPDFNewWithOptionalParams(t *testing.T) {
 				Timeout:        cloudflare.F(60000.000000),
 				WaitUntil:      cloudflare.F[browser_rendering.PDFNewParamsBodyObjectGotoOptionsWaitUntilUnion](browser_rendering.PDFNewParamsBodyObjectGotoOptionsWaitUntilString(browser_rendering.PDFNewParamsBodyObjectGotoOptionsWaitUntilStringLoad)),
 			}),
+			HTML: cloudflare.F("html"),
 			PDFOptions: cloudflare.F(browser_rendering.PDFNewParamsBodyObjectPDFOptions{
 				DisplayHeaderFooter: cloudflare.F(true),
 				FooterTemplate:      cloudflare.F("footerTemplate"),
@@ -121,6 +122,7 @@ func TestPDFNewWithOptionalParams(t *testing.T) {
 			}),
 			WaitForTimeout: cloudflare.F(120000.000000),
 		},
+		Browser:  cloudflare.F(browser_rendering.PDFNewParamsBrowserKitesurf),
 		CacheTTL: cloudflare.F(0.000000),
 	})
 	if err != nil {

@@ -37,7 +37,9 @@ func NewTokenPermissionGroupService(opts ...option.RequestOption) (r *TokenPermi
 	return
 }
 
-// Find all available permission groups for Account Owned API Tokens
+// Find all available permission groups for Account Owned API Tokens. Each
+// permission group indicates whether the caller can select it when creating a
+// token. Token creation performs the authoritative permission check.
 func (r *TokenPermissionGroupService) List(ctx context.Context, params TokenPermissionGroupListParams, opts ...option.RequestOption) (res *pagination.SinglePage[TokenPermissionGroupListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -59,12 +61,16 @@ func (r *TokenPermissionGroupService) List(ctx context.Context, params TokenPerm
 	return res, nil
 }
 
-// Find all available permission groups for Account Owned API Tokens
+// Find all available permission groups for Account Owned API Tokens. Each
+// permission group indicates whether the caller can select it when creating a
+// token. Token creation performs the authoritative permission check.
 func (r *TokenPermissionGroupService) ListAutoPaging(ctx context.Context, params TokenPermissionGroupListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[TokenPermissionGroupListResponse] {
 	return pagination.NewSinglePageAutoPager(r.List(ctx, params, opts...))
 }
 
-// Find all available permission groups for Account Owned API Tokens
+// Find all available permission groups for Account Owned API Tokens. Each
+// permission group indicates whether the caller can select it when creating a
+// token. Token creation performs the authoritative permission check.
 func (r *TokenPermissionGroupService) Get(ctx context.Context, params TokenPermissionGroupGetParams, opts ...option.RequestOption) (res *[]TokenPermissionGroupGetResponse, err error) {
 	var env TokenPermissionGroupGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -84,6 +90,10 @@ func (r *TokenPermissionGroupService) Get(ctx context.Context, params TokenPermi
 type TokenPermissionGroupListResponse struct {
 	// Public ID.
 	ID string `json:"id"`
+	// Product category that this permission group belongs to.
+	Category TokenPermissionGroupListResponseCategory `json:"category"`
+	// Whether the caller can select this permission group when creating a token.
+	IsSelectable bool `json:"is_selectable"`
 	// Permission Group Name
 	Name string `json:"name"`
 	// Resources to which the Permission Group is scoped
@@ -94,11 +104,13 @@ type TokenPermissionGroupListResponse struct {
 // tokenPermissionGroupListResponseJSON contains the JSON metadata for the struct
 // [TokenPermissionGroupListResponse]
 type tokenPermissionGroupListResponseJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	Scopes      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID           apijson.Field
+	Category     apijson.Field
+	IsSelectable apijson.Field
+	Name         apijson.Field
+	Scopes       apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
 }
 
 func (r *TokenPermissionGroupListResponse) UnmarshalJSON(data []byte) (err error) {
@@ -107,6 +119,33 @@ func (r *TokenPermissionGroupListResponse) UnmarshalJSON(data []byte) (err error
 
 func (r tokenPermissionGroupListResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Product category that this permission group belongs to.
+type TokenPermissionGroupListResponseCategory string
+
+const (
+	TokenPermissionGroupListResponseCategoryDeveloperPlatform         TokenPermissionGroupListResponseCategory = "developer_platform"
+	TokenPermissionGroupListResponseCategoryAIAndMachineLearning      TokenPermissionGroupListResponseCategory = "ai_and_machine_learning"
+	TokenPermissionGroupListResponseCategoryDNSAndZones               TokenPermissionGroupListResponseCategory = "dns_and_zones"
+	TokenPermissionGroupListResponseCategoryAppSecurity               TokenPermissionGroupListResponseCategory = "app_security"
+	TokenPermissionGroupListResponseCategoryRulesAndConfiguration     TokenPermissionGroupListResponseCategory = "rules_and_configuration"
+	TokenPermissionGroupListResponseCategoryCloudflareOneAndZeroTrust TokenPermissionGroupListResponseCategory = "cloudflare_one_and_zero_trust"
+	TokenPermissionGroupListResponseCategoryAnalyticsAndLogs          TokenPermissionGroupListResponseCategory = "analytics_and_logs"
+	TokenPermissionGroupListResponseCategoryNetworkServices           TokenPermissionGroupListResponseCategory = "network_services"
+	TokenPermissionGroupListResponseCategoryMedia                     TokenPermissionGroupListResponseCategory = "media"
+	TokenPermissionGroupListResponseCategoryEmailAndMessaging         TokenPermissionGroupListResponseCategory = "email_and_messaging"
+	TokenPermissionGroupListResponseCategoryCacheAndPerformance       TokenPermissionGroupListResponseCategory = "cache_and_performance"
+	TokenPermissionGroupListResponseCategoryAccountAndBilling         TokenPermissionGroupListResponseCategory = "account_and_billing"
+	TokenPermissionGroupListResponseCategoryOther                     TokenPermissionGroupListResponseCategory = "other"
+)
+
+func (r TokenPermissionGroupListResponseCategory) IsKnown() bool {
+	switch r {
+	case TokenPermissionGroupListResponseCategoryDeveloperPlatform, TokenPermissionGroupListResponseCategoryAIAndMachineLearning, TokenPermissionGroupListResponseCategoryDNSAndZones, TokenPermissionGroupListResponseCategoryAppSecurity, TokenPermissionGroupListResponseCategoryRulesAndConfiguration, TokenPermissionGroupListResponseCategoryCloudflareOneAndZeroTrust, TokenPermissionGroupListResponseCategoryAnalyticsAndLogs, TokenPermissionGroupListResponseCategoryNetworkServices, TokenPermissionGroupListResponseCategoryMedia, TokenPermissionGroupListResponseCategoryEmailAndMessaging, TokenPermissionGroupListResponseCategoryCacheAndPerformance, TokenPermissionGroupListResponseCategoryAccountAndBilling, TokenPermissionGroupListResponseCategoryOther:
+		return true
+	}
+	return false
 }
 
 type TokenPermissionGroupListResponseScope string
@@ -129,6 +168,10 @@ func (r TokenPermissionGroupListResponseScope) IsKnown() bool {
 type TokenPermissionGroupGetResponse struct {
 	// Public ID.
 	ID string `json:"id"`
+	// Product category that this permission group belongs to.
+	Category TokenPermissionGroupGetResponseCategory `json:"category"`
+	// Whether the caller can select this permission group when creating a token.
+	IsSelectable bool `json:"is_selectable"`
 	// Permission Group Name
 	Name string `json:"name"`
 	// Resources to which the Permission Group is scoped
@@ -139,11 +182,13 @@ type TokenPermissionGroupGetResponse struct {
 // tokenPermissionGroupGetResponseJSON contains the JSON metadata for the struct
 // [TokenPermissionGroupGetResponse]
 type tokenPermissionGroupGetResponseJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	Scopes      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID           apijson.Field
+	Category     apijson.Field
+	IsSelectable apijson.Field
+	Name         apijson.Field
+	Scopes       apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
 }
 
 func (r *TokenPermissionGroupGetResponse) UnmarshalJSON(data []byte) (err error) {
@@ -152,6 +197,33 @@ func (r *TokenPermissionGroupGetResponse) UnmarshalJSON(data []byte) (err error)
 
 func (r tokenPermissionGroupGetResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+// Product category that this permission group belongs to.
+type TokenPermissionGroupGetResponseCategory string
+
+const (
+	TokenPermissionGroupGetResponseCategoryDeveloperPlatform         TokenPermissionGroupGetResponseCategory = "developer_platform"
+	TokenPermissionGroupGetResponseCategoryAIAndMachineLearning      TokenPermissionGroupGetResponseCategory = "ai_and_machine_learning"
+	TokenPermissionGroupGetResponseCategoryDNSAndZones               TokenPermissionGroupGetResponseCategory = "dns_and_zones"
+	TokenPermissionGroupGetResponseCategoryAppSecurity               TokenPermissionGroupGetResponseCategory = "app_security"
+	TokenPermissionGroupGetResponseCategoryRulesAndConfiguration     TokenPermissionGroupGetResponseCategory = "rules_and_configuration"
+	TokenPermissionGroupGetResponseCategoryCloudflareOneAndZeroTrust TokenPermissionGroupGetResponseCategory = "cloudflare_one_and_zero_trust"
+	TokenPermissionGroupGetResponseCategoryAnalyticsAndLogs          TokenPermissionGroupGetResponseCategory = "analytics_and_logs"
+	TokenPermissionGroupGetResponseCategoryNetworkServices           TokenPermissionGroupGetResponseCategory = "network_services"
+	TokenPermissionGroupGetResponseCategoryMedia                     TokenPermissionGroupGetResponseCategory = "media"
+	TokenPermissionGroupGetResponseCategoryEmailAndMessaging         TokenPermissionGroupGetResponseCategory = "email_and_messaging"
+	TokenPermissionGroupGetResponseCategoryCacheAndPerformance       TokenPermissionGroupGetResponseCategory = "cache_and_performance"
+	TokenPermissionGroupGetResponseCategoryAccountAndBilling         TokenPermissionGroupGetResponseCategory = "account_and_billing"
+	TokenPermissionGroupGetResponseCategoryOther                     TokenPermissionGroupGetResponseCategory = "other"
+)
+
+func (r TokenPermissionGroupGetResponseCategory) IsKnown() bool {
+	switch r {
+	case TokenPermissionGroupGetResponseCategoryDeveloperPlatform, TokenPermissionGroupGetResponseCategoryAIAndMachineLearning, TokenPermissionGroupGetResponseCategoryDNSAndZones, TokenPermissionGroupGetResponseCategoryAppSecurity, TokenPermissionGroupGetResponseCategoryRulesAndConfiguration, TokenPermissionGroupGetResponseCategoryCloudflareOneAndZeroTrust, TokenPermissionGroupGetResponseCategoryAnalyticsAndLogs, TokenPermissionGroupGetResponseCategoryNetworkServices, TokenPermissionGroupGetResponseCategoryMedia, TokenPermissionGroupGetResponseCategoryEmailAndMessaging, TokenPermissionGroupGetResponseCategoryCacheAndPerformance, TokenPermissionGroupGetResponseCategoryAccountAndBilling, TokenPermissionGroupGetResponseCategoryOther:
+		return true
+	}
+	return false
 }
 
 type TokenPermissionGroupGetResponseScope string

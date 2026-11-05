@@ -218,6 +218,9 @@ type LogpushJob struct {
 	// is recorded. On successful execution of a job the error_message and last_error
 	// are set to null.
 	ErrorMessage string `json:"error_message" api:"nullable"`
+	// When true, excludes DDoS attack traffic from logs. This option is supported for
+	// the `http_requests`, `firewall_events`, and `network_analytics_logs` datasets.
+	FilterAttackTraffic bool `json:"filter_attack_traffic"`
 	// This field is deprecated. Please use `max_upload_*` parameters instead. . The
 	// frequency at which Cloudflare sends batches of logs to your destination. Setting
 	// frequency to high sends your logs in larger quantities of smaller files. Setting
@@ -277,6 +280,7 @@ type logpushJobJSON struct {
 	DestinationConf          apijson.Field
 	Enabled                  apijson.Field
 	ErrorMessage             apijson.Field
+	FilterAttackTraffic      apijson.Field
 	Frequency                apijson.Field
 	Kind                     apijson.Field
 	LastComplete             apijson.Field
@@ -305,6 +309,7 @@ type LogpushJobDataset string
 
 const (
 	LogpushJobDatasetAccessRequests                  LogpushJobDataset = "access_requests"
+	LogpushJobDatasetAccountAbuseProtectionEvents    LogpushJobDataset = "account_abuse_protection_events"
 	LogpushJobDatasetAuditLogs                       LogpushJobDataset = "audit_logs"
 	LogpushJobDatasetAuditLogsV2                     LogpushJobDataset = "audit_logs_v2"
 	LogpushJobDatasetBISOUserActions                 LogpushJobDataset = "biso_user_actions"
@@ -323,6 +328,7 @@ const (
 	LogpushJobDatasetGatewayNetwork                  LogpushJobDataset = "gateway_network"
 	LogpushJobDatasetHTTPRequests                    LogpushJobDataset = "http_requests"
 	LogpushJobDatasetIPSECLogs                       LogpushJobDataset = "ipsec_logs"
+	LogpushJobDatasetMagicBGPLogs                    LogpushJobDataset = "magic_bgp_logs"
 	LogpushJobDatasetMagicIDsDetections              LogpushJobDataset = "magic_ids_detections"
 	LogpushJobDatasetMcpPortalLogs                   LogpushJobDataset = "mcp_portal_logs"
 	LogpushJobDatasetMNMFlowLogs                     LogpushJobDataset = "mnm_flow_logs"
@@ -332,8 +338,10 @@ const (
 	LogpushJobDatasetSinkholeHTTPLogs                LogpushJobDataset = "sinkhole_http_logs"
 	LogpushJobDatasetSpectrumEvents                  LogpushJobDataset = "spectrum_events"
 	LogpushJobDatasetSSHLogs                         LogpushJobDataset = "ssh_logs"
+	LogpushJobDatasetTurnstileEvents                 LogpushJobDataset = "turnstile_events"
 	LogpushJobDatasetWARPConfigChanges               LogpushJobDataset = "warp_config_changes"
 	LogpushJobDatasetWARPToggleChanges               LogpushJobDataset = "warp_toggle_changes"
+	LogpushJobDatasetWebsocketAnalytics              LogpushJobDataset = "websocket_analytics"
 	LogpushJobDatasetWorkersTraceEvents              LogpushJobDataset = "workers_trace_events"
 	LogpushJobDatasetZarazEvents                     LogpushJobDataset = "zaraz_events"
 	LogpushJobDatasetZeroTrustNetworkSessions        LogpushJobDataset = "zero_trust_network_sessions"
@@ -341,7 +349,7 @@ const (
 
 func (r LogpushJobDataset) IsKnown() bool {
 	switch r {
-	case LogpushJobDatasetAccessRequests, LogpushJobDatasetAuditLogs, LogpushJobDatasetAuditLogsV2, LogpushJobDatasetBISOUserActions, LogpushJobDatasetCasbFindings, LogpushJobDatasetDevicePostureResults, LogpushJobDatasetDEXApplicationTests, LogpushJobDatasetDEXDeviceStateEvents, LogpushJobDatasetDLPForensicCopies, LogpushJobDatasetDNSFirewallLogs, LogpushJobDatasetDNSLogs, LogpushJobDatasetEmailSecurityAlerts, LogpushJobDatasetEmailSecurityPostDeliveryEvents, LogpushJobDatasetFirewallEvents, LogpushJobDatasetGatewayDNS, LogpushJobDatasetGatewayHTTP, LogpushJobDatasetGatewayNetwork, LogpushJobDatasetHTTPRequests, LogpushJobDatasetIPSECLogs, LogpushJobDatasetMagicIDsDetections, LogpushJobDatasetMcpPortalLogs, LogpushJobDatasetMNMFlowLogs, LogpushJobDatasetNELReports, LogpushJobDatasetNetworkAnalyticsLogs, LogpushJobDatasetPageShieldEvents, LogpushJobDatasetSinkholeHTTPLogs, LogpushJobDatasetSpectrumEvents, LogpushJobDatasetSSHLogs, LogpushJobDatasetWARPConfigChanges, LogpushJobDatasetWARPToggleChanges, LogpushJobDatasetWorkersTraceEvents, LogpushJobDatasetZarazEvents, LogpushJobDatasetZeroTrustNetworkSessions:
+	case LogpushJobDatasetAccessRequests, LogpushJobDatasetAccountAbuseProtectionEvents, LogpushJobDatasetAuditLogs, LogpushJobDatasetAuditLogsV2, LogpushJobDatasetBISOUserActions, LogpushJobDatasetCasbFindings, LogpushJobDatasetDevicePostureResults, LogpushJobDatasetDEXApplicationTests, LogpushJobDatasetDEXDeviceStateEvents, LogpushJobDatasetDLPForensicCopies, LogpushJobDatasetDNSFirewallLogs, LogpushJobDatasetDNSLogs, LogpushJobDatasetEmailSecurityAlerts, LogpushJobDatasetEmailSecurityPostDeliveryEvents, LogpushJobDatasetFirewallEvents, LogpushJobDatasetGatewayDNS, LogpushJobDatasetGatewayHTTP, LogpushJobDatasetGatewayNetwork, LogpushJobDatasetHTTPRequests, LogpushJobDatasetIPSECLogs, LogpushJobDatasetMagicBGPLogs, LogpushJobDatasetMagicIDsDetections, LogpushJobDatasetMcpPortalLogs, LogpushJobDatasetMNMFlowLogs, LogpushJobDatasetNELReports, LogpushJobDatasetNetworkAnalyticsLogs, LogpushJobDatasetPageShieldEvents, LogpushJobDatasetSinkholeHTTPLogs, LogpushJobDatasetSpectrumEvents, LogpushJobDatasetSSHLogs, LogpushJobDatasetTurnstileEvents, LogpushJobDatasetWARPConfigChanges, LogpushJobDatasetWARPToggleChanges, LogpushJobDatasetWebsocketAnalytics, LogpushJobDatasetWorkersTraceEvents, LogpushJobDatasetZarazEvents, LogpushJobDatasetZeroTrustNetworkSessions:
 		return true
 	}
 	return false
@@ -471,8 +479,9 @@ type OutputOptions struct {
 	// well, otherwise they will end up as null. Format as a Go `text/template` without
 	// any standard functions, like conditionals, loops, sub-templates, etc.
 	RecordTemplate string `json:"record_template" api:"nullable"`
-	// Floating number to specify sampling rate. Sampling is applied on top of
-	// filtering, and regardless of the current `sample_interval` of the data.
+	// Specifies the sampling rate as a floating number greater than 0 and at most 1.
+	// Sampling is applied on top of filtering, and regardless of the current
+	// `sample_interval` of the data.
 	SampleRate float64 `json:"sample_rate" api:"nullable"`
 	// String to specify the format for timestamps, such as `unixnano`, `unix`,
 	// `rfc3339`, `rfc3339ms` or `rfc3339ns`.
@@ -579,8 +588,9 @@ type OutputOptionsParam struct {
 	// well, otherwise they will end up as null. Format as a Go `text/template` without
 	// any standard functions, like conditionals, loops, sub-templates, etc.
 	RecordTemplate param.Field[string] `json:"record_template"`
-	// Floating number to specify sampling rate. Sampling is applied on top of
-	// filtering, and regardless of the current `sample_interval` of the data.
+	// Specifies the sampling rate as a floating number greater than 0 and at most 1.
+	// Sampling is applied on top of filtering, and regardless of the current
+	// `sample_interval` of the data.
 	SampleRate param.Field[float64] `json:"sample_rate"`
 	// String to specify the format for timestamps, such as `unixnano`, `unix`,
 	// `rfc3339`, `rfc3339ms` or `rfc3339ns`.
@@ -631,6 +641,9 @@ type JobNewParams struct {
 	// more information, refer to
 	// [Filters](https://developers.cloudflare.com/logs/reference/filters/).
 	Filter param.Field[string] `json:"filter"`
+	// When true, excludes DDoS attack traffic from logs. This option is supported for
+	// the `http_requests`, `firewall_events`, and `network_analytics_logs` datasets.
+	FilterAttackTraffic param.Field[bool] `json:"filter_attack_traffic"`
 	// This field is deprecated. Please use `max_upload_*` parameters instead. . The
 	// frequency at which Cloudflare sends batches of logs to your destination. Setting
 	// frequency to high sends your logs in larger quantities of smaller files. Setting
@@ -681,6 +694,7 @@ type JobNewParamsDataset string
 
 const (
 	JobNewParamsDatasetAccessRequests                  JobNewParamsDataset = "access_requests"
+	JobNewParamsDatasetAccountAbuseProtectionEvents    JobNewParamsDataset = "account_abuse_protection_events"
 	JobNewParamsDatasetAuditLogs                       JobNewParamsDataset = "audit_logs"
 	JobNewParamsDatasetAuditLogsV2                     JobNewParamsDataset = "audit_logs_v2"
 	JobNewParamsDatasetBISOUserActions                 JobNewParamsDataset = "biso_user_actions"
@@ -699,6 +713,7 @@ const (
 	JobNewParamsDatasetGatewayNetwork                  JobNewParamsDataset = "gateway_network"
 	JobNewParamsDatasetHTTPRequests                    JobNewParamsDataset = "http_requests"
 	JobNewParamsDatasetIPSECLogs                       JobNewParamsDataset = "ipsec_logs"
+	JobNewParamsDatasetMagicBGPLogs                    JobNewParamsDataset = "magic_bgp_logs"
 	JobNewParamsDatasetMagicIDsDetections              JobNewParamsDataset = "magic_ids_detections"
 	JobNewParamsDatasetMcpPortalLogs                   JobNewParamsDataset = "mcp_portal_logs"
 	JobNewParamsDatasetMNMFlowLogs                     JobNewParamsDataset = "mnm_flow_logs"
@@ -708,8 +723,10 @@ const (
 	JobNewParamsDatasetSinkholeHTTPLogs                JobNewParamsDataset = "sinkhole_http_logs"
 	JobNewParamsDatasetSpectrumEvents                  JobNewParamsDataset = "spectrum_events"
 	JobNewParamsDatasetSSHLogs                         JobNewParamsDataset = "ssh_logs"
+	JobNewParamsDatasetTurnstileEvents                 JobNewParamsDataset = "turnstile_events"
 	JobNewParamsDatasetWARPConfigChanges               JobNewParamsDataset = "warp_config_changes"
 	JobNewParamsDatasetWARPToggleChanges               JobNewParamsDataset = "warp_toggle_changes"
+	JobNewParamsDatasetWebsocketAnalytics              JobNewParamsDataset = "websocket_analytics"
 	JobNewParamsDatasetWorkersTraceEvents              JobNewParamsDataset = "workers_trace_events"
 	JobNewParamsDatasetZarazEvents                     JobNewParamsDataset = "zaraz_events"
 	JobNewParamsDatasetZeroTrustNetworkSessions        JobNewParamsDataset = "zero_trust_network_sessions"
@@ -717,7 +734,7 @@ const (
 
 func (r JobNewParamsDataset) IsKnown() bool {
 	switch r {
-	case JobNewParamsDatasetAccessRequests, JobNewParamsDatasetAuditLogs, JobNewParamsDatasetAuditLogsV2, JobNewParamsDatasetBISOUserActions, JobNewParamsDatasetCasbFindings, JobNewParamsDatasetDevicePostureResults, JobNewParamsDatasetDEXApplicationTests, JobNewParamsDatasetDEXDeviceStateEvents, JobNewParamsDatasetDLPForensicCopies, JobNewParamsDatasetDNSFirewallLogs, JobNewParamsDatasetDNSLogs, JobNewParamsDatasetEmailSecurityAlerts, JobNewParamsDatasetEmailSecurityPostDeliveryEvents, JobNewParamsDatasetFirewallEvents, JobNewParamsDatasetGatewayDNS, JobNewParamsDatasetGatewayHTTP, JobNewParamsDatasetGatewayNetwork, JobNewParamsDatasetHTTPRequests, JobNewParamsDatasetIPSECLogs, JobNewParamsDatasetMagicIDsDetections, JobNewParamsDatasetMcpPortalLogs, JobNewParamsDatasetMNMFlowLogs, JobNewParamsDatasetNELReports, JobNewParamsDatasetNetworkAnalyticsLogs, JobNewParamsDatasetPageShieldEvents, JobNewParamsDatasetSinkholeHTTPLogs, JobNewParamsDatasetSpectrumEvents, JobNewParamsDatasetSSHLogs, JobNewParamsDatasetWARPConfigChanges, JobNewParamsDatasetWARPToggleChanges, JobNewParamsDatasetWorkersTraceEvents, JobNewParamsDatasetZarazEvents, JobNewParamsDatasetZeroTrustNetworkSessions:
+	case JobNewParamsDatasetAccessRequests, JobNewParamsDatasetAccountAbuseProtectionEvents, JobNewParamsDatasetAuditLogs, JobNewParamsDatasetAuditLogsV2, JobNewParamsDatasetBISOUserActions, JobNewParamsDatasetCasbFindings, JobNewParamsDatasetDevicePostureResults, JobNewParamsDatasetDEXApplicationTests, JobNewParamsDatasetDEXDeviceStateEvents, JobNewParamsDatasetDLPForensicCopies, JobNewParamsDatasetDNSFirewallLogs, JobNewParamsDatasetDNSLogs, JobNewParamsDatasetEmailSecurityAlerts, JobNewParamsDatasetEmailSecurityPostDeliveryEvents, JobNewParamsDatasetFirewallEvents, JobNewParamsDatasetGatewayDNS, JobNewParamsDatasetGatewayHTTP, JobNewParamsDatasetGatewayNetwork, JobNewParamsDatasetHTTPRequests, JobNewParamsDatasetIPSECLogs, JobNewParamsDatasetMagicBGPLogs, JobNewParamsDatasetMagicIDsDetections, JobNewParamsDatasetMcpPortalLogs, JobNewParamsDatasetMNMFlowLogs, JobNewParamsDatasetNELReports, JobNewParamsDatasetNetworkAnalyticsLogs, JobNewParamsDatasetPageShieldEvents, JobNewParamsDatasetSinkholeHTTPLogs, JobNewParamsDatasetSpectrumEvents, JobNewParamsDatasetSSHLogs, JobNewParamsDatasetTurnstileEvents, JobNewParamsDatasetWARPConfigChanges, JobNewParamsDatasetWARPToggleChanges, JobNewParamsDatasetWebsocketAnalytics, JobNewParamsDatasetWorkersTraceEvents, JobNewParamsDatasetZarazEvents, JobNewParamsDatasetZeroTrustNetworkSessions:
 		return true
 	}
 	return false
@@ -967,6 +984,9 @@ type JobUpdateParams struct {
 	// more information, refer to
 	// [Filters](https://developers.cloudflare.com/logs/reference/filters/).
 	Filter param.Field[string] `json:"filter"`
+	// When true, excludes DDoS attack traffic from logs. This option is supported for
+	// the `http_requests`, `firewall_events`, and `network_analytics_logs` datasets.
+	FilterAttackTraffic param.Field[bool] `json:"filter_attack_traffic"`
 	// This field is deprecated. Please use `max_upload_*` parameters instead. . The
 	// frequency at which Cloudflare sends batches of logs to your destination. Setting
 	// frequency to high sends your logs in larger quantities of smaller files. Setting

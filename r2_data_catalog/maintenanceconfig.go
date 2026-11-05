@@ -36,6 +36,10 @@ func NewMaintenanceConfigService(opts ...option.RequestOption) (r *MaintenanceCo
 
 // Update the maintenance configuration for a catalog. This allows you to enable or
 // disable compaction and adjust target file sizes for optimization.
+//
+// Deprecated: Use
+// `POST /accounts/{account_id}/basin-catalog/{bucket_name}/maintenance-configs`
+// instead.
 func (r *MaintenanceConfigService) Update(ctx context.Context, bucketName string, params MaintenanceConfigUpdateParams, opts ...option.RequestOption) (res *MaintenanceConfigUpdateResponse, err error) {
 	var env MaintenanceConfigUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -58,6 +62,10 @@ func (r *MaintenanceConfigService) Update(ctx context.Context, bucketName string
 
 // Retrieve the maintenance configuration for a specific catalog, including
 // compaction settings and credential status.
+//
+// Deprecated: Use
+// `GET /accounts/{account_id}/basin-catalog/{bucket_name}/maintenance-configs`
+// instead.
 func (r *MaintenanceConfigService) Get(ctx context.Context, bucketName string, query MaintenanceConfigGetParams, opts ...option.RequestOption) (res *MaintenanceConfigGetResponse, err error) {
 	var env MaintenanceConfigGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -82,6 +90,8 @@ func (r *MaintenanceConfigService) Get(ctx context.Context, bucketName string, q
 type MaintenanceConfigUpdateResponse struct {
 	// Configures compaction for catalog maintenance.
 	Compaction MaintenanceConfigUpdateResponseCompaction `json:"compaction"`
+	// Scheduling interval between normal table maintenance runs.
+	Interval string `json:"interval"`
 	// Configures snapshot expiration settings.
 	SnapshotExpiration MaintenanceConfigUpdateResponseSnapshotExpiration `json:"snapshot_expiration"`
 	JSON               maintenanceConfigUpdateResponseJSON               `json:"-"`
@@ -91,6 +101,7 @@ type MaintenanceConfigUpdateResponse struct {
 // [MaintenanceConfigUpdateResponse]
 type maintenanceConfigUpdateResponseJSON struct {
 	Compaction         apijson.Field
+	Interval           apijson.Field
 	SnapshotExpiration apijson.Field
 	raw                string
 	ExtraFields        map[string]apijson.Field
@@ -258,6 +269,8 @@ func (r MaintenanceConfigGetResponseCredentialStatus) IsKnown() bool {
 type MaintenanceConfigGetResponseMaintenanceConfig struct {
 	// Configures compaction for catalog maintenance.
 	Compaction MaintenanceConfigGetResponseMaintenanceConfigCompaction `json:"compaction"`
+	// Scheduling interval between normal table maintenance runs.
+	Interval string `json:"interval"`
 	// Configures snapshot expiration settings.
 	SnapshotExpiration MaintenanceConfigGetResponseMaintenanceConfigSnapshotExpiration `json:"snapshot_expiration"`
 	JSON               maintenanceConfigGetResponseMaintenanceConfigJSON               `json:"-"`
@@ -267,6 +280,7 @@ type MaintenanceConfigGetResponseMaintenanceConfig struct {
 // the struct [MaintenanceConfigGetResponseMaintenanceConfig]
 type maintenanceConfigGetResponseMaintenanceConfigJSON struct {
 	Compaction         apijson.Field
+	Interval           apijson.Field
 	SnapshotExpiration apijson.Field
 	raw                string
 	ExtraFields        map[string]apijson.Field
@@ -405,9 +419,9 @@ func (r MaintenanceConfigUpdateParams) MarshalJSON() (data []byte, err error) {
 
 // Updates compaction configuration (all fields optional).
 type MaintenanceConfigUpdateParamsCompaction struct {
-	// Updates the state optionally.
+	// Specifies the state of maintenance operations.
 	State param.Field[MaintenanceConfigUpdateParamsCompactionState] `json:"state"`
-	// Updates the target file size optionally.
+	// Sets the target file size for compaction in megabytes. Defaults to "128".
 	TargetSizeMB param.Field[MaintenanceConfigUpdateParamsCompactionTargetSizeMB] `json:"target_size_mb"`
 }
 
@@ -415,7 +429,7 @@ func (r MaintenanceConfigUpdateParamsCompaction) MarshalJSON() (data []byte, err
 	return apijson.MarshalRoot(r)
 }
 
-// Updates the state optionally.
+// Specifies the state of maintenance operations.
 type MaintenanceConfigUpdateParamsCompactionState string
 
 const (
@@ -431,7 +445,7 @@ func (r MaintenanceConfigUpdateParamsCompactionState) IsKnown() bool {
 	return false
 }
 
-// Updates the target file size optionally.
+// Sets the target file size for compaction in megabytes. Defaults to "128".
 type MaintenanceConfigUpdateParamsCompactionTargetSizeMB string
 
 const (
@@ -455,7 +469,7 @@ type MaintenanceConfigUpdateParamsSnapshotExpiration struct {
 	MaxSnapshotAge param.Field[string] `json:"max_snapshot_age"`
 	// Updates the minimum number of snapshots to retain optionally.
 	MinSnapshotsToKeep param.Field[int64] `json:"min_snapshots_to_keep"`
-	// Updates the state optionally.
+	// Specifies the state of maintenance operations.
 	State param.Field[MaintenanceConfigUpdateParamsSnapshotExpirationState] `json:"state"`
 }
 
@@ -463,7 +477,7 @@ func (r MaintenanceConfigUpdateParamsSnapshotExpiration) MarshalJSON() (data []b
 	return apijson.MarshalRoot(r)
 }
 
-// Updates the state optionally.
+// Specifies the state of maintenance operations.
 type MaintenanceConfigUpdateParamsSnapshotExpirationState string
 
 const (

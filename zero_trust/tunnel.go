@@ -181,7 +181,7 @@ func init() {
 	)
 }
 
-// A Warp Connector Tunnel that connects your origin to Cloudflare's edge.
+// A Mesh node that connects your origin to Cloudflare's edge.
 type TunnelListResponseTunnelWARPConnectorTunnel struct {
 	// UUID of the tunnel.
 	ID string `json:"id" format:"uuid"`
@@ -259,6 +259,9 @@ type TunnelListResponseTunnelWARPConnectorTunnelConnection struct {
 	// disconnect. This is an optimization to improve latency and reliability of
 	// reconnecting. If `true`, the connection has disconnected but is still being
 	// tracked. If `false`, the connection is actively serving traffic.
+	//
+	// Deprecated: This functionality has been removed. The is_pending_reconnect field
+	// will now always report false.
 	IsPendingReconnect bool `json:"is_pending_reconnect"`
 	// Timestamp of when the connection was established.
 	OpenedAt time.Time `json:"opened_at" format:"date-time"`

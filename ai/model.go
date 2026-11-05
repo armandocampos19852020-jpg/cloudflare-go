@@ -69,20 +69,23 @@ type ModelListResponse = interface{}
 
 type ModelListParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Filter by Author
+	// Filter by Author.
 	Author param.Field[string] `query:"author"`
 	// If set, return models in the requested marketplace format instead of the default
 	// response.
 	Format param.Field[ModelListParamsFormat] `query:"format"`
-	// Filter to hide experimental models
-	HideExperimental param.Field[bool]  `query:"hide_experimental"`
-	Page             param.Field[int64] `query:"page"`
-	PerPage          param.Field[int64] `query:"per_page"`
-	// Search
+	// Filter to hide experimental models.
+	HideExperimental param.Field[bool] `query:"hide_experimental"`
+	// If true, include models for up to three months after their deprecation date.
+	// Defaults to false.
+	IncludeDeprecated param.Field[bool]  `query:"include_deprecated"`
+	Page              param.Field[int64] `query:"page"`
+	PerPage           param.Field[int64] `query:"per_page"`
+	// Search.
 	Search param.Field[string] `query:"search"`
-	// Filter by Source Id
+	// Filter by Source Id.
 	Source param.Field[float64] `query:"source"`
-	// Filter by Task Name
+	// Filter by Task Name.
 	Task param.Field[string] `query:"task"`
 }
 

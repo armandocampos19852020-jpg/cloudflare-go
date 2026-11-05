@@ -40,7 +40,11 @@ type D1 struct {
 	// option is present, the location hint is ignored.
 	Jurisdiction D1Jurisdiction `json:"jurisdiction" api:"nullable"`
 	// D1 database name.
-	Name      string  `json:"name"`
+	Name string `json:"name"`
+	// The number of tables in the D1 database. This count is no longer accurate and
+	// should not be relied upon.
+	//
+	// Deprecated: deprecated
 	NumTables float64 `json:"num_tables"`
 	// Configuration for D1 read replication.
 	ReadReplication D1ReadReplication `json:"read_replication"`
@@ -79,11 +83,12 @@ type D1Jurisdiction string
 const (
 	D1JurisdictionEu      D1Jurisdiction = "eu"
 	D1JurisdictionFedramp D1Jurisdiction = "fedramp"
+	D1JurisdictionUs      D1Jurisdiction = "us"
 )
 
 func (r D1Jurisdiction) IsKnown() bool {
 	switch r {
-	case D1JurisdictionEu, D1JurisdictionFedramp:
+	case D1JurisdictionEu, D1JurisdictionFedramp, D1JurisdictionUs:
 		return true
 	}
 	return false

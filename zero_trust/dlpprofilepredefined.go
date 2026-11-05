@@ -160,10 +160,13 @@ type PredefinedProfileEntry struct {
 	CaseSensitive bool `json:"case_sensitive"`
 	// This field can have the runtime type of
 	// [PredefinedProfileEntriesPredefinedEntryConfidence].
-	Confidence  interface{} `json:"confidence"`
-	CreatedAt   time.Time   `json:"created_at" format:"date-time"`
-	Description string      `json:"description" api:"nullable"`
-	Pattern     Pattern     `json:"pattern"`
+	Confidence interface{} `json:"confidence"`
+	CreatedAt  time.Time   `json:"created_at" format:"date-time"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated  bool    `json:"deprecated"`
+	Description string  `json:"description" api:"nullable"`
+	Pattern     Pattern `json:"pattern"`
 	// Deprecated: deprecated
 	ProfileID string    `json:"profile_id" api:"nullable" format:"uuid"`
 	Secret    bool      `json:"secret"`
@@ -171,7 +174,7 @@ type PredefinedProfileEntry struct {
 	// This field can have the runtime type of
 	// [PredefinedProfileEntriesPredefinedEntryVariant].
 	Variant interface{} `json:"variant"`
-	// This field can have the runtime type of [interface{}].
+	// This field can have the runtime type of [[]string].
 	WordList interface{}                `json:"word_list"`
 	JSON     predefinedProfileEntryJSON `json:"-"`
 	union    PredefinedProfileEntriesUnion
@@ -187,6 +190,7 @@ type predefinedProfileEntryJSON struct {
 	CaseSensitive apijson.Field
 	Confidence    apijson.Field
 	CreatedAt     apijson.Field
+	Deprecated    apijson.Field
 	Description   apijson.Field
 	Pattern       apijson.Field
 	ProfileID     apijson.Field
@@ -334,7 +338,9 @@ type PredefinedProfileEntriesCustomPromptTopicEntry struct {
 	Name      string                                             `json:"name" api:"required"`
 	Type      PredefinedProfileEntriesCustomPromptTopicEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                                          `json:"updated_at" api:"required" format:"date-time"`
-	JSON      predefinedProfileEntriesCustomPromptTopicEntryJSON `json:"-"`
+	// The optional description of the custom prompt topic entry.
+	Description string                                             `json:"description" api:"nullable"`
+	JSON        predefinedProfileEntriesCustomPromptTopicEntryJSON `json:"-"`
 }
 
 // predefinedProfileEntriesCustomPromptTopicEntryJSON contains the JSON metadata
@@ -346,6 +352,7 @@ type predefinedProfileEntriesCustomPromptTopicEntryJSON struct {
 	Name        apijson.Field
 	Type        apijson.Field
 	UpdatedAt   apijson.Field
+	Description apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -380,6 +387,9 @@ type PredefinedProfileEntriesPredefinedEntry struct {
 	Enabled    bool                                              `json:"enabled" api:"required"`
 	Name       string                                            `json:"name" api:"required"`
 	Type       PredefinedProfileEntriesPredefinedEntryType       `json:"type" api:"required"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated bool `json:"deprecated"`
 	// Deprecated: deprecated
 	ProfileID string `json:"profile_id" api:"nullable" format:"uuid"`
 	// A Predefined AI prompt classification topic entry.
@@ -395,6 +405,7 @@ type predefinedProfileEntriesPredefinedEntryJSON struct {
 	Enabled     apijson.Field
 	Name        apijson.Field
 	Type        apijson.Field
+	Deprecated  apijson.Field
 	ProfileID   apijson.Field
 	Variant     apijson.Field
 	raw         string
@@ -668,7 +679,9 @@ type PredefinedProfileEntriesExactDataEntry struct {
 	Secret        bool                                       `json:"secret" api:"required"`
 	Type          PredefinedProfileEntriesExactDataEntryType `json:"type" api:"required"`
 	UpdatedAt     time.Time                                  `json:"updated_at" api:"required" format:"date-time"`
-	JSON          predefinedProfileEntriesExactDataEntryJSON `json:"-"`
+	// The optional description of the exact data entry.
+	Description string                                     `json:"description" api:"nullable"`
+	JSON        predefinedProfileEntriesExactDataEntryJSON `json:"-"`
 }
 
 // predefinedProfileEntriesExactDataEntryJSON contains the JSON metadata for the
@@ -682,6 +695,7 @@ type predefinedProfileEntriesExactDataEntryJSON struct {
 	Secret        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
+	Description   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
 }
@@ -717,7 +731,9 @@ type PredefinedProfileEntriesDocumentFingerprintEntry struct {
 	Name      string                                               `json:"name" api:"required"`
 	Type      PredefinedProfileEntriesDocumentFingerprintEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                                            `json:"updated_at" api:"required" format:"date-time"`
-	JSON      predefinedProfileEntriesDocumentFingerprintEntryJSON `json:"-"`
+	// The optional description of the document fingerprint entry.
+	Description string                                               `json:"description" api:"nullable"`
+	JSON        predefinedProfileEntriesDocumentFingerprintEntryJSON `json:"-"`
 }
 
 // predefinedProfileEntriesDocumentFingerprintEntryJSON contains the JSON metadata
@@ -729,6 +745,7 @@ type predefinedProfileEntriesDocumentFingerprintEntryJSON struct {
 	Name        apijson.Field
 	Type        apijson.Field
 	UpdatedAt   apijson.Field
+	Description apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -764,7 +781,7 @@ type PredefinedProfileEntriesWordListEntry struct {
 	Name      string                                    `json:"name" api:"required"`
 	Type      PredefinedProfileEntriesWordListEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                                 `json:"updated_at" api:"required" format:"date-time"`
-	WordList  interface{}                               `json:"word_list" api:"required"`
+	WordList  []string                                  `json:"word_list" api:"required"`
 	ProfileID string                                    `json:"profile_id" api:"nullable" format:"uuid"`
 	JSON      predefinedProfileEntriesWordListEntryJSON `json:"-"`
 }

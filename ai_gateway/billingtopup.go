@@ -36,7 +36,8 @@ func NewBillingTopupService(opts ...option.RequestOption) (r *BillingTopupServic
 	return
 }
 
-// Create a credit top-up via Stripe PaymentIntent for the given account.
+// Create a credit top-up for the given account, charged to the account's default
+// payment method.
 func (r *BillingTopupService) New(ctx context.Context, params BillingTopupNewParams, opts ...option.RequestOption) (res *BillingTopupNewResponse, err error) {
 	var env BillingTopupNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -146,6 +147,8 @@ type BillingTopupNewParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Top-up amount in cents (min 1000).
 	Amount param.Field[int64] `json:"amount" api:"required"`
+	// Stripe PaymentMethod to charge instead of the customer's default payment method.
+	PaymentMethodID param.Field[string] `json:"payment_method_id"`
 }
 
 func (r BillingTopupNewParams) MarshalJSON() (data []byte, err error) {

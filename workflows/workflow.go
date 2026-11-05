@@ -173,30 +173,35 @@ func (r workflowUpdateResponseJSON) RawJSON() string {
 }
 
 type WorkflowListResponse struct {
-	ID          string                        `json:"id" api:"required" format:"uuid"`
-	ClassName   string                        `json:"class_name" api:"required"`
-	CreatedOn   time.Time                     `json:"created_on" api:"required" format:"date-time"`
-	Instances   WorkflowListResponseInstances `json:"instances" api:"required"`
-	ModifiedOn  time.Time                     `json:"modified_on" api:"required" format:"date-time"`
-	Name        string                        `json:"name" api:"required"`
-	ScriptName  string                        `json:"script_name" api:"required"`
-	TriggeredOn time.Time                     `json:"triggered_on" api:"required,nullable" format:"date-time"`
-	JSON        workflowListResponseJSON      `json:"-"`
+	ID          string                         `json:"id" api:"required" format:"uuid"`
+	ClassName   string                         `json:"class_name" api:"required"`
+	CreatedOn   time.Time                      `json:"created_on" api:"required" format:"date-time"`
+	Instances   map[string]float64             `json:"instances" api:"required"`
+	ModifiedOn  time.Time                      `json:"modified_on" api:"required" format:"date-time"`
+	Name        string                         `json:"name" api:"required"`
+	ScriptName  string                         `json:"script_name" api:"required"`
+	TriggeredOn time.Time                      `json:"triggered_on" api:"required,nullable" format:"date-time"`
+	Schedules   []WorkflowListResponseSchedule `json:"schedules"`
+	// Whether the bound Worker was deleted, leaving this Workflow inactive.
+	ScriptDeleted bool                     `json:"script_deleted"`
+	JSON          workflowListResponseJSON `json:"-"`
 }
 
 // workflowListResponseJSON contains the JSON metadata for the struct
 // [WorkflowListResponse]
 type workflowListResponseJSON struct {
-	ID          apijson.Field
-	ClassName   apijson.Field
-	CreatedOn   apijson.Field
-	Instances   apijson.Field
-	ModifiedOn  apijson.Field
-	Name        apijson.Field
-	ScriptName  apijson.Field
-	TriggeredOn apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID            apijson.Field
+	ClassName     apijson.Field
+	CreatedOn     apijson.Field
+	Instances     apijson.Field
+	ModifiedOn    apijson.Field
+	Name          apijson.Field
+	ScriptName    apijson.Field
+	TriggeredOn   apijson.Field
+	Schedules     apijson.Field
+	ScriptDeleted apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *WorkflowListResponse) UnmarshalJSON(data []byte) (err error) {
@@ -207,38 +212,26 @@ func (r workflowListResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-type WorkflowListResponseInstances struct {
-	Complete        float64                           `json:"complete"`
-	Errored         float64                           `json:"errored"`
-	Paused          float64                           `json:"paused"`
-	Queued          float64                           `json:"queued"`
-	Running         float64                           `json:"running"`
-	Terminated      float64                           `json:"terminated"`
-	Waiting         float64                           `json:"waiting"`
-	WaitingForPause float64                           `json:"waitingForPause"`
-	JSON            workflowListResponseInstancesJSON `json:"-"`
+type WorkflowListResponseSchedule struct {
+	Cron         string                           `json:"cron" api:"required"`
+	NextInstance string                           `json:"next_instance" api:"required"`
+	JSON         workflowListResponseScheduleJSON `json:"-"`
 }
 
-// workflowListResponseInstancesJSON contains the JSON metadata for the struct
-// [WorkflowListResponseInstances]
-type workflowListResponseInstancesJSON struct {
-	Complete        apijson.Field
-	Errored         apijson.Field
-	Paused          apijson.Field
-	Queued          apijson.Field
-	Running         apijson.Field
-	Terminated      apijson.Field
-	Waiting         apijson.Field
-	WaitingForPause apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
+// workflowListResponseScheduleJSON contains the JSON metadata for the struct
+// [WorkflowListResponseSchedule]
+type workflowListResponseScheduleJSON struct {
+	Cron         apijson.Field
+	NextInstance apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
 }
 
-func (r *WorkflowListResponseInstances) UnmarshalJSON(data []byte) (err error) {
+func (r *WorkflowListResponseSchedule) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r workflowListResponseInstancesJSON) RawJSON() string {
+func (r workflowListResponseScheduleJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -280,30 +273,35 @@ func (r WorkflowDeleteResponseStatus) IsKnown() bool {
 }
 
 type WorkflowGetResponse struct {
-	ID          string                       `json:"id" api:"required" format:"uuid"`
-	ClassName   string                       `json:"class_name" api:"required"`
-	CreatedOn   time.Time                    `json:"created_on" api:"required" format:"date-time"`
-	Instances   WorkflowGetResponseInstances `json:"instances" api:"required"`
-	ModifiedOn  time.Time                    `json:"modified_on" api:"required" format:"date-time"`
-	Name        string                       `json:"name" api:"required"`
-	ScriptName  string                       `json:"script_name" api:"required"`
-	TriggeredOn time.Time                    `json:"triggered_on" api:"required,nullable" format:"date-time"`
-	JSON        workflowGetResponseJSON      `json:"-"`
+	ID          string                        `json:"id" api:"required" format:"uuid"`
+	ClassName   string                        `json:"class_name" api:"required"`
+	CreatedOn   time.Time                     `json:"created_on" api:"required" format:"date-time"`
+	Instances   map[string]float64            `json:"instances" api:"required"`
+	ModifiedOn  time.Time                     `json:"modified_on" api:"required" format:"date-time"`
+	Name        string                        `json:"name" api:"required"`
+	ScriptName  string                        `json:"script_name" api:"required"`
+	TriggeredOn time.Time                     `json:"triggered_on" api:"required,nullable" format:"date-time"`
+	Schedules   []WorkflowGetResponseSchedule `json:"schedules"`
+	// Whether the bound Worker was deleted, leaving this Workflow inactive.
+	ScriptDeleted bool                    `json:"script_deleted"`
+	JSON          workflowGetResponseJSON `json:"-"`
 }
 
 // workflowGetResponseJSON contains the JSON metadata for the struct
 // [WorkflowGetResponse]
 type workflowGetResponseJSON struct {
-	ID          apijson.Field
-	ClassName   apijson.Field
-	CreatedOn   apijson.Field
-	Instances   apijson.Field
-	ModifiedOn  apijson.Field
-	Name        apijson.Field
-	ScriptName  apijson.Field
-	TriggeredOn apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID            apijson.Field
+	ClassName     apijson.Field
+	CreatedOn     apijson.Field
+	Instances     apijson.Field
+	ModifiedOn    apijson.Field
+	Name          apijson.Field
+	ScriptName    apijson.Field
+	TriggeredOn   apijson.Field
+	Schedules     apijson.Field
+	ScriptDeleted apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *WorkflowGetResponse) UnmarshalJSON(data []byte) (err error) {
@@ -314,50 +312,81 @@ func (r workflowGetResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-type WorkflowGetResponseInstances struct {
-	Complete        float64                          `json:"complete"`
-	Errored         float64                          `json:"errored"`
-	Paused          float64                          `json:"paused"`
-	Queued          float64                          `json:"queued"`
-	Running         float64                          `json:"running"`
-	Terminated      float64                          `json:"terminated"`
-	Waiting         float64                          `json:"waiting"`
-	WaitingForPause float64                          `json:"waitingForPause"`
-	JSON            workflowGetResponseInstancesJSON `json:"-"`
+type WorkflowGetResponseSchedule struct {
+	Cron         string                          `json:"cron" api:"required"`
+	NextInstance string                          `json:"next_instance" api:"required"`
+	JSON         workflowGetResponseScheduleJSON `json:"-"`
 }
 
-// workflowGetResponseInstancesJSON contains the JSON metadata for the struct
-// [WorkflowGetResponseInstances]
-type workflowGetResponseInstancesJSON struct {
-	Complete        apijson.Field
-	Errored         apijson.Field
-	Paused          apijson.Field
-	Queued          apijson.Field
-	Running         apijson.Field
-	Terminated      apijson.Field
-	Waiting         apijson.Field
-	WaitingForPause apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
+// workflowGetResponseScheduleJSON contains the JSON metadata for the struct
+// [WorkflowGetResponseSchedule]
+type workflowGetResponseScheduleJSON struct {
+	Cron         apijson.Field
+	NextInstance apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
 }
 
-func (r *WorkflowGetResponseInstances) UnmarshalJSON(data []byte) (err error) {
+func (r *WorkflowGetResponseSchedule) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r workflowGetResponseInstancesJSON) RawJSON() string {
+func (r workflowGetResponseScheduleJSON) RawJSON() string {
 	return r.raw
 }
 
 type WorkflowUpdateParams struct {
-	AccountID  param.Field[string]                     `path:"account_id" api:"required"`
-	ClassName  param.Field[string]                     `json:"class_name" api:"required"`
-	ScriptName param.Field[string]                     `json:"script_name" api:"required"`
-	Limits     param.Field[WorkflowUpdateParamsLimits] `json:"limits"`
+	AccountID   param.Field[string]                          `path:"account_id" api:"required"`
+	ClassName   param.Field[string]                          `json:"class_name" api:"required"`
+	ScriptName  param.Field[string]                          `json:"script_name" api:"required"`
+	Concurrency param.Field[WorkflowUpdateParamsConcurrency] `json:"concurrency"`
+	// Default retention applied to instances of this version when they do not set
+	// their own retention.
+	DefaultRetention param.Field[WorkflowUpdateParamsDefaultRetention] `json:"default_retention"`
+	Limits           param.Field[WorkflowUpdateParamsLimits]           `json:"limits"`
+	Schedules        param.Field[[]WorkflowUpdateParamsSchedule]       `json:"schedules"`
 }
 
 func (r WorkflowUpdateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+type WorkflowUpdateParamsConcurrency struct {
+	// Maximum number of instances of this workflow that can run concurrently.
+	// Additional instances are queued and started as running instances complete. Must
+	// not exceed the account concurrency limit.
+	Limit param.Field[int64] `json:"limit"`
+}
+
+func (r WorkflowUpdateParamsConcurrency) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Default retention applied to instances of this version when they do not set
+// their own retention.
+type WorkflowUpdateParamsDefaultRetention struct {
+	// Specifies the duration in milliseconds or as a string like '5 minutes'.
+	ErrorRetention param.Field[WorkflowUpdateParamsDefaultRetentionErrorRetentionUnion] `json:"error_retention"`
+	// Specifies the duration in milliseconds or as a string like '5 minutes'.
+	SuccessRetention param.Field[WorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion] `json:"success_retention"`
+}
+
+func (r WorkflowUpdateParamsDefaultRetention) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Specifies the duration in milliseconds or as a string like '5 minutes'.
+//
+// Satisfied by [shared.UnionInt], [shared.UnionString].
+type WorkflowUpdateParamsDefaultRetentionErrorRetentionUnion interface {
+	ImplementsWorkflowUpdateParamsDefaultRetentionErrorRetentionUnion()
+}
+
+// Specifies the duration in milliseconds or as a string like '5 minutes'.
+//
+// Satisfied by [shared.UnionInt], [shared.UnionString].
+type WorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion interface {
+	ImplementsWorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion()
 }
 
 type WorkflowUpdateParamsLimits struct {
@@ -365,6 +394,14 @@ type WorkflowUpdateParamsLimits struct {
 }
 
 func (r WorkflowUpdateParamsLimits) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type WorkflowUpdateParamsSchedule struct {
+	Cron param.Field[string] `json:"cron" api:"required"`
+}
+
+func (r WorkflowUpdateParamsSchedule) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 

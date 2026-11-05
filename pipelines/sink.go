@@ -84,11 +84,11 @@ func (r *SinkService) ListAutoPaging(ctx context.Context, params SinkListParams,
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, params, opts...))
 }
 
-// Delete Pipeline in Account.
-func (r *SinkService) Delete(ctx context.Context, sinkID string, params SinkDeleteParams, opts ...option.RequestOption) (res *SinkDeleteResponse, err error) {
+// Delete Sink in Account.
+func (r *SinkService) Delete(ctx context.Context, sinkID string, body SinkDeleteParams, opts ...option.RequestOption) (res *SinkDeleteResponse, err error) {
 	var env SinkDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
-	if params.AccountID.Value == "" {
+	if body.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (r *SinkService) Delete(ctx context.Context, sinkID string, params SinkDele
 		err = errors.New("missing required sink_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("accounts/%s/pipelines/v1/sinks/%s", params.AccountID, sinkID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, params, &env, opts...)
+	path := fmt.Sprintf("accounts/%s/pipelines/v1/sinks/%s", body.AccountID, sinkID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &env, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,9 @@ type SinkNewResponse struct {
 	Type SinkNewResponseType `json:"type" api:"required"`
 	// R2 Data Catalog Sink
 	Config SinkNewResponseConfig `json:"config"`
+	// Defines the output data format of a sink.
 	Format SinkNewResponseFormat `json:"format"`
+	// Defines the schema of the events in the data stream.
 	Schema SinkNewResponseSchema `json:"schema"`
 	JSON   sinkNewResponseJSON   `json:"-"`
 }
@@ -170,11 +172,12 @@ type SinkNewResponseType string
 const (
 	SinkNewResponseTypeR2            SinkNewResponseType = "r2"
 	SinkNewResponseTypeR2DataCatalog SinkNewResponseType = "r2_data_catalog"
+	SinkNewResponseTypeBasinCatalog  SinkNewResponseType = "basin_catalog"
 )
 
 func (r SinkNewResponseType) IsKnown() bool {
 	switch r {
-	case SinkNewResponseTypeR2, SinkNewResponseTypeR2DataCatalog:
+	case SinkNewResponseTypeR2, SinkNewResponseTypeR2DataCatalog, SinkNewResponseTypeBasinCatalog:
 		return true
 	}
 	return false
@@ -521,8 +524,10 @@ func (r sinkNewResponseConfigCloudflarePipelinesR2DataCatalogTableRollingPolicyJ
 	return r.raw
 }
 
+// Defines the output data format of a sink.
 type SinkNewResponseFormat struct {
-	Type            SinkNewResponseFormatType            `json:"type" api:"required"`
+	Type SinkNewResponseFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
 	Compression     SinkNewResponseFormatCompression     `json:"compression"`
 	DecimalEncoding SinkNewResponseFormatDecimalEncoding `json:"decimal_encoding"`
 	RowGroupBytes   int64                                `json:"row_group_bytes" api:"nullable"`
@@ -561,14 +566,17 @@ func (r *SinkNewResponseFormat) UnmarshalJSON(data []byte) (err error) {
 // AsUnion returns a [SinkNewResponseFormatUnion] interface which you can cast to
 // the specific types for more type safety.
 //
-// Possible runtime types of the union are [SinkNewResponseFormatJson],
-// [SinkNewResponseFormatParquet].
+// Possible runtime types of the union are
+// [SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat],
+// [SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat].
 func (r SinkNewResponseFormat) AsUnion() SinkNewResponseFormatUnion {
 	return r.union
 }
 
-// Union satisfied by [SinkNewResponseFormatJson] or
-// [SinkNewResponseFormatParquet].
+// Defines the output data format of a sink.
+//
+// Union satisfied by [SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat] or
+// [SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat].
 type SinkNewResponseFormatUnion interface {
 	implementsSinkNewResponseFormat()
 }
@@ -579,29 +587,32 @@ func init() {
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseFormatJson{}),
+			Type:               reflect.TypeOf(SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat{}),
 			DiscriminatorValue: "json",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseFormatParquet{}),
+			Type:               reflect.TypeOf(SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat{}),
 			DiscriminatorValue: "parquet",
 		},
 	)
 }
 
-type SinkNewResponseFormatJson struct {
-	Type            SinkNewResponseFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkNewResponseFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkNewResponseFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                     `json:"unstructured"`
-	JSON            sinkNewResponseFormatJsonJSON            `json:"-"`
+type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat struct {
+	Type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
+	Compression     SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompression     `json:"compression"`
+	DecimalEncoding SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding `json:"decimal_encoding"`
+	TimestampFormat SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat `json:"timestamp_format"`
+	Unstructured    bool                                                                  `json:"unstructured"`
+	JSON            sinkNewResponseFormatCloudflarePipelinesSinkJsonFormatJSON            `json:"-"`
 }
 
-// sinkNewResponseFormatJsonJSON contains the JSON metadata for the struct
-// [SinkNewResponseFormatJson]
-type sinkNewResponseFormatJsonJSON struct {
+// sinkNewResponseFormatCloudflarePipelinesSinkJsonFormatJSON contains the JSON
+// metadata for the struct [SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat]
+type sinkNewResponseFormatCloudflarePipelinesSinkJsonFormatJSON struct {
 	Type            apijson.Field
+	Compression     apijson.Field
 	DecimalEncoding apijson.Field
 	TimestampFormat apijson.Field
 	Unstructured    apijson.Field
@@ -609,71 +620,88 @@ type sinkNewResponseFormatJsonJSON struct {
 	ExtraFields     map[string]apijson.Field
 }
 
-func (r *SinkNewResponseFormatJson) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkNewResponseFormatJsonJSON) RawJSON() string {
+func (r sinkNewResponseFormatCloudflarePipelinesSinkJsonFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkNewResponseFormatJson) implementsSinkNewResponseFormat() {}
+func (r SinkNewResponseFormatCloudflarePipelinesSinkJsonFormat) implementsSinkNewResponseFormat() {}
 
-type SinkNewResponseFormatJsonType string
+type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatType string
 
 const (
-	SinkNewResponseFormatJsonTypeJson SinkNewResponseFormatJsonType = "json"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatType = "json"
 )
 
-func (r SinkNewResponseFormatJsonType) IsKnown() bool {
+func (r SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatType) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatJsonTypeJson:
+	case SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson:
 		return true
 	}
 	return false
 }
 
-type SinkNewResponseFormatJsonDecimalEncoding string
+// Specifies the compression applied to JSON sink output.
+type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompression string
 
 const (
-	SinkNewResponseFormatJsonDecimalEncodingNumber SinkNewResponseFormatJsonDecimalEncoding = "number"
-	SinkNewResponseFormatJsonDecimalEncodingString SinkNewResponseFormatJsonDecimalEncoding = "string"
-	SinkNewResponseFormatJsonDecimalEncodingBytes  SinkNewResponseFormatJsonDecimalEncoding = "bytes"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "uncompressed"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip         SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "gzip"
 )
 
-func (r SinkNewResponseFormatJsonDecimalEncoding) IsKnown() bool {
+func (r SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatJsonDecimalEncodingNumber, SinkNewResponseFormatJsonDecimalEncodingString, SinkNewResponseFormatJsonDecimalEncodingBytes:
+	case SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed, SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip:
 		return true
 	}
 	return false
 }
 
-type SinkNewResponseFormatJsonTimestampFormat string
+type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding string
 
 const (
-	SinkNewResponseFormatJsonTimestampFormatRfc3339    SinkNewResponseFormatJsonTimestampFormat = "rfc3339"
-	SinkNewResponseFormatJsonTimestampFormatUnixMillis SinkNewResponseFormatJsonTimestampFormat = "unix_millis"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "number"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "string"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes  SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "bytes"
 )
 
-func (r SinkNewResponseFormatJsonTimestampFormat) IsKnown() bool {
+func (r SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatJsonTimestampFormatRfc3339, SinkNewResponseFormatJsonTimestampFormatUnixMillis:
+	case SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber, SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString, SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes:
 		return true
 	}
 	return false
 }
 
-type SinkNewResponseFormatParquet struct {
-	Type          SinkNewResponseFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkNewResponseFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                   `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkNewResponseFormatParquetJSON        `json:"-"`
+type SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat string
+
+const (
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339    SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "rfc3339"
+	SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "unix_millis"
+)
+
+func (r SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat) IsKnown() bool {
+	switch r {
+	case SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339, SinkNewResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis:
+		return true
+	}
+	return false
 }
 
-// sinkNewResponseFormatParquetJSON contains the JSON metadata for the struct
-// [SinkNewResponseFormatParquet]
-type sinkNewResponseFormatParquetJSON struct {
+type SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat struct {
+	Type          SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatType        `json:"type" api:"required"`
+	Compression   SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression `json:"compression"`
+	RowGroupBytes int64                                                                `json:"row_group_bytes" api:"nullable"`
+	JSON          sinkNewResponseFormatCloudflarePipelinesSinkParquetFormatJSON        `json:"-"`
+}
+
+// sinkNewResponseFormatCloudflarePipelinesSinkParquetFormatJSON contains the JSON
+// metadata for the struct
+// [SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat]
+type sinkNewResponseFormatCloudflarePipelinesSinkParquetFormatJSON struct {
 	Type          apijson.Field
 	Compression   apijson.Field
 	RowGroupBytes apijson.Field
@@ -681,43 +709,44 @@ type sinkNewResponseFormatParquetJSON struct {
 	ExtraFields   map[string]apijson.Field
 }
 
-func (r *SinkNewResponseFormatParquet) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkNewResponseFormatParquetJSON) RawJSON() string {
+func (r sinkNewResponseFormatCloudflarePipelinesSinkParquetFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkNewResponseFormatParquet) implementsSinkNewResponseFormat() {}
+func (r SinkNewResponseFormatCloudflarePipelinesSinkParquetFormat) implementsSinkNewResponseFormat() {
+}
 
-type SinkNewResponseFormatParquetType string
+type SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatType string
 
 const (
-	SinkNewResponseFormatParquetTypeParquet SinkNewResponseFormatParquetType = "parquet"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatType = "parquet"
 )
 
-func (r SinkNewResponseFormatParquetType) IsKnown() bool {
+func (r SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatType) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatParquetTypeParquet:
+	case SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet:
 		return true
 	}
 	return false
 }
 
-type SinkNewResponseFormatParquetCompression string
+type SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression string
 
 const (
-	SinkNewResponseFormatParquetCompressionUncompressed SinkNewResponseFormatParquetCompression = "uncompressed"
-	SinkNewResponseFormatParquetCompressionSnappy       SinkNewResponseFormatParquetCompression = "snappy"
-	SinkNewResponseFormatParquetCompressionGzip         SinkNewResponseFormatParquetCompression = "gzip"
-	SinkNewResponseFormatParquetCompressionZstd         SinkNewResponseFormatParquetCompression = "zstd"
-	SinkNewResponseFormatParquetCompressionLz4          SinkNewResponseFormatParquetCompression = "lz4"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "uncompressed"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy       SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "snappy"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip         SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "gzip"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd         SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "zstd"
+	SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4          SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "lz4"
 )
 
-func (r SinkNewResponseFormatParquetCompression) IsKnown() bool {
+func (r SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatParquetCompressionUncompressed, SinkNewResponseFormatParquetCompressionSnappy, SinkNewResponseFormatParquetCompressionGzip, SinkNewResponseFormatParquetCompressionZstd, SinkNewResponseFormatParquetCompressionLz4:
+	case SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed, SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy, SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip, SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd, SinkNewResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -738,19 +767,20 @@ func (r SinkNewResponseFormatType) IsKnown() bool {
 	return false
 }
 
+// Specifies the compression applied to JSON sink output.
 type SinkNewResponseFormatCompression string
 
 const (
 	SinkNewResponseFormatCompressionUncompressed SinkNewResponseFormatCompression = "uncompressed"
-	SinkNewResponseFormatCompressionSnappy       SinkNewResponseFormatCompression = "snappy"
 	SinkNewResponseFormatCompressionGzip         SinkNewResponseFormatCompression = "gzip"
+	SinkNewResponseFormatCompressionSnappy       SinkNewResponseFormatCompression = "snappy"
 	SinkNewResponseFormatCompressionZstd         SinkNewResponseFormatCompression = "zstd"
 	SinkNewResponseFormatCompressionLz4          SinkNewResponseFormatCompression = "lz4"
 )
 
 func (r SinkNewResponseFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewResponseFormatCompressionUncompressed, SinkNewResponseFormatCompressionSnappy, SinkNewResponseFormatCompressionGzip, SinkNewResponseFormatCompressionZstd, SinkNewResponseFormatCompressionLz4:
+	case SinkNewResponseFormatCompressionUncompressed, SinkNewResponseFormatCompressionGzip, SinkNewResponseFormatCompressionSnappy, SinkNewResponseFormatCompressionZstd, SinkNewResponseFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -787,18 +817,17 @@ func (r SinkNewResponseFormatTimestampFormat) IsKnown() bool {
 	return false
 }
 
+// Defines the schema of the events in the data stream.
 type SinkNewResponseSchema struct {
-	Fields   []SinkNewResponseSchemaField `json:"fields"`
-	Format   SinkNewResponseSchemaFormat  `json:"format"`
-	Inferred bool                         `json:"inferred" api:"nullable"`
-	JSON     sinkNewResponseSchemaJSON    `json:"-"`
+	Fields   []SourceField             `json:"fields"`
+	Inferred bool                      `json:"inferred" api:"nullable"`
+	JSON     sinkNewResponseSchemaJSON `json:"-"`
 }
 
 // sinkNewResponseSchemaJSON contains the JSON metadata for the struct
 // [SinkNewResponseSchema]
 type sinkNewResponseSchemaJSON struct {
 	Fields      apijson.Field
-	Format      apijson.Field
 	Inferred    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -812,901 +841,6 @@ func (r sinkNewResponseSchemaJSON) RawJSON() string {
 	return r.raw
 }
 
-type SinkNewResponseSchemaField struct {
-	Type        SinkNewResponseSchemaFieldsType `json:"type" api:"required"`
-	MetadataKey string                          `json:"metadata_key" api:"nullable"`
-	Name        string                          `json:"name"`
-	Required    bool                            `json:"required"`
-	SqlName     string                          `json:"sql_name"`
-	Unit        SinkNewResponseSchemaFieldsUnit `json:"unit"`
-	JSON        sinkNewResponseSchemaFieldJSON  `json:"-"`
-	union       SinkNewResponseSchemaFieldsUnion
-}
-
-// sinkNewResponseSchemaFieldJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaField]
-type sinkNewResponseSchemaFieldJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r sinkNewResponseSchemaFieldJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkNewResponseSchemaField) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkNewResponseSchemaField{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkNewResponseSchemaFieldsUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkNewResponseSchemaFieldsInt32],
-// [SinkNewResponseSchemaFieldsInt64], [SinkNewResponseSchemaFieldsFloat32],
-// [SinkNewResponseSchemaFieldsFloat64], [SinkNewResponseSchemaFieldsBool],
-// [SinkNewResponseSchemaFieldsString], [SinkNewResponseSchemaFieldsBinary],
-// [SinkNewResponseSchemaFieldsTimestamp], [SinkNewResponseSchemaFieldsJson],
-// [SinkNewResponseSchemaFieldsStruct], [SinkNewResponseSchemaFieldsList].
-func (r SinkNewResponseSchemaField) AsUnion() SinkNewResponseSchemaFieldsUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkNewResponseSchemaFieldsInt32],
-// [SinkNewResponseSchemaFieldsInt64], [SinkNewResponseSchemaFieldsFloat32],
-// [SinkNewResponseSchemaFieldsFloat64], [SinkNewResponseSchemaFieldsBool],
-// [SinkNewResponseSchemaFieldsString], [SinkNewResponseSchemaFieldsBinary],
-// [SinkNewResponseSchemaFieldsTimestamp], [SinkNewResponseSchemaFieldsJson],
-// [SinkNewResponseSchemaFieldsStruct] or [SinkNewResponseSchemaFieldsList].
-type SinkNewResponseSchemaFieldsUnion interface {
-	implementsSinkNewResponseSchemaField()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkNewResponseSchemaFieldsUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsInt32{}),
-			DiscriminatorValue: "int32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsInt64{}),
-			DiscriminatorValue: "int64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsFloat32{}),
-			DiscriminatorValue: "float32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsFloat64{}),
-			DiscriminatorValue: "float64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsBool{}),
-			DiscriminatorValue: "bool",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsString{}),
-			DiscriminatorValue: "string",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsBinary{}),
-			DiscriminatorValue: "binary",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsTimestamp{}),
-			DiscriminatorValue: "timestamp",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsStruct{}),
-			DiscriminatorValue: "struct",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFieldsList{}),
-			DiscriminatorValue: "list",
-		},
-	)
-}
-
-type SinkNewResponseSchemaFieldsInt32 struct {
-	Type        SinkNewResponseSchemaFieldsInt32Type `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsInt32JSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsInt32JSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsInt32]
-type sinkNewResponseSchemaFieldsInt32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsInt32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsInt32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsInt32) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsInt32Type string
-
-const (
-	SinkNewResponseSchemaFieldsInt32TypeInt32 SinkNewResponseSchemaFieldsInt32Type = "int32"
-)
-
-func (r SinkNewResponseSchemaFieldsInt32Type) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsInt32TypeInt32:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsInt64 struct {
-	Type        SinkNewResponseSchemaFieldsInt64Type `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsInt64JSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsInt64JSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsInt64]
-type sinkNewResponseSchemaFieldsInt64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsInt64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsInt64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsInt64) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsInt64Type string
-
-const (
-	SinkNewResponseSchemaFieldsInt64TypeInt64 SinkNewResponseSchemaFieldsInt64Type = "int64"
-)
-
-func (r SinkNewResponseSchemaFieldsInt64Type) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsInt64TypeInt64:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsFloat32 struct {
-	Type        SinkNewResponseSchemaFieldsFloat32Type `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsFloat32JSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsFloat32JSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsFloat32]
-type sinkNewResponseSchemaFieldsFloat32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsFloat32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsFloat32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsFloat32) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsFloat32Type string
-
-const (
-	SinkNewResponseSchemaFieldsFloat32TypeFloat32 SinkNewResponseSchemaFieldsFloat32Type = "float32"
-)
-
-func (r SinkNewResponseSchemaFieldsFloat32Type) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsFloat32TypeFloat32:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsFloat64 struct {
-	Type        SinkNewResponseSchemaFieldsFloat64Type `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsFloat64JSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsFloat64JSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsFloat64]
-type sinkNewResponseSchemaFieldsFloat64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsFloat64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsFloat64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsFloat64) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsFloat64Type string
-
-const (
-	SinkNewResponseSchemaFieldsFloat64TypeFloat64 SinkNewResponseSchemaFieldsFloat64Type = "float64"
-)
-
-func (r SinkNewResponseSchemaFieldsFloat64Type) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsFloat64TypeFloat64:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsBool struct {
-	Type        SinkNewResponseSchemaFieldsBoolType `json:"type" api:"required"`
-	MetadataKey string                              `json:"metadata_key" api:"nullable"`
-	Name        string                              `json:"name"`
-	Required    bool                                `json:"required"`
-	SqlName     string                              `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsBoolJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsBoolJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsBool]
-type sinkNewResponseSchemaFieldsBoolJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsBool) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsBoolJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsBool) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsBoolType string
-
-const (
-	SinkNewResponseSchemaFieldsBoolTypeBool SinkNewResponseSchemaFieldsBoolType = "bool"
-)
-
-func (r SinkNewResponseSchemaFieldsBoolType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsBoolTypeBool:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsString struct {
-	Type        SinkNewResponseSchemaFieldsStringType `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsStringJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsStringJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsString]
-type sinkNewResponseSchemaFieldsStringJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsString) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsStringJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsString) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsStringType string
-
-const (
-	SinkNewResponseSchemaFieldsStringTypeString SinkNewResponseSchemaFieldsStringType = "string"
-)
-
-func (r SinkNewResponseSchemaFieldsStringType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsStringTypeString:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsBinary struct {
-	Type        SinkNewResponseSchemaFieldsBinaryType `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsBinaryJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsBinaryJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsBinary]
-type sinkNewResponseSchemaFieldsBinaryJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsBinary) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsBinaryJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsBinary) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsBinaryType string
-
-const (
-	SinkNewResponseSchemaFieldsBinaryTypeBinary SinkNewResponseSchemaFieldsBinaryType = "binary"
-)
-
-func (r SinkNewResponseSchemaFieldsBinaryType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsBinaryTypeBinary:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsTimestamp struct {
-	Type        SinkNewResponseSchemaFieldsTimestampType `json:"type" api:"required"`
-	MetadataKey string                                   `json:"metadata_key" api:"nullable"`
-	Name        string                                   `json:"name"`
-	Required    bool                                     `json:"required"`
-	SqlName     string                                   `json:"sql_name"`
-	Unit        SinkNewResponseSchemaFieldsTimestampUnit `json:"unit"`
-	JSON        sinkNewResponseSchemaFieldsTimestampJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsTimestampJSON contains the JSON metadata for the
-// struct [SinkNewResponseSchemaFieldsTimestamp]
-type sinkNewResponseSchemaFieldsTimestampJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsTimestamp) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsTimestampJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsTimestamp) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsTimestampType string
-
-const (
-	SinkNewResponseSchemaFieldsTimestampTypeTimestamp SinkNewResponseSchemaFieldsTimestampType = "timestamp"
-)
-
-func (r SinkNewResponseSchemaFieldsTimestampType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsTimestampTypeTimestamp:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsTimestampUnit string
-
-const (
-	SinkNewResponseSchemaFieldsTimestampUnitSecond      SinkNewResponseSchemaFieldsTimestampUnit = "second"
-	SinkNewResponseSchemaFieldsTimestampUnitMillisecond SinkNewResponseSchemaFieldsTimestampUnit = "millisecond"
-	SinkNewResponseSchemaFieldsTimestampUnitMicrosecond SinkNewResponseSchemaFieldsTimestampUnit = "microsecond"
-	SinkNewResponseSchemaFieldsTimestampUnitNanosecond  SinkNewResponseSchemaFieldsTimestampUnit = "nanosecond"
-)
-
-func (r SinkNewResponseSchemaFieldsTimestampUnit) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsTimestampUnitSecond, SinkNewResponseSchemaFieldsTimestampUnitMillisecond, SinkNewResponseSchemaFieldsTimestampUnitMicrosecond, SinkNewResponseSchemaFieldsTimestampUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsJson struct {
-	Type        SinkNewResponseSchemaFieldsJsonType `json:"type" api:"required"`
-	MetadataKey string                              `json:"metadata_key" api:"nullable"`
-	Name        string                              `json:"name"`
-	Required    bool                                `json:"required"`
-	SqlName     string                              `json:"sql_name"`
-	JSON        sinkNewResponseSchemaFieldsJsonJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsJsonJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsJson]
-type sinkNewResponseSchemaFieldsJsonJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsJson) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsJsonType string
-
-const (
-	SinkNewResponseSchemaFieldsJsonTypeJson SinkNewResponseSchemaFieldsJsonType = "json"
-)
-
-func (r SinkNewResponseSchemaFieldsJsonType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsStruct struct {
-	JSON sinkNewResponseSchemaFieldsStructJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsStructJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsStruct]
-type sinkNewResponseSchemaFieldsStructJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsStruct) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsStructJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsStruct) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsList struct {
-	JSON sinkNewResponseSchemaFieldsListJSON `json:"-"`
-}
-
-// sinkNewResponseSchemaFieldsListJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFieldsList]
-type sinkNewResponseSchemaFieldsListJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFieldsList) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFieldsListJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFieldsList) implementsSinkNewResponseSchemaField() {}
-
-type SinkNewResponseSchemaFieldsType string
-
-const (
-	SinkNewResponseSchemaFieldsTypeInt32     SinkNewResponseSchemaFieldsType = "int32"
-	SinkNewResponseSchemaFieldsTypeInt64     SinkNewResponseSchemaFieldsType = "int64"
-	SinkNewResponseSchemaFieldsTypeFloat32   SinkNewResponseSchemaFieldsType = "float32"
-	SinkNewResponseSchemaFieldsTypeFloat64   SinkNewResponseSchemaFieldsType = "float64"
-	SinkNewResponseSchemaFieldsTypeBool      SinkNewResponseSchemaFieldsType = "bool"
-	SinkNewResponseSchemaFieldsTypeString    SinkNewResponseSchemaFieldsType = "string"
-	SinkNewResponseSchemaFieldsTypeBinary    SinkNewResponseSchemaFieldsType = "binary"
-	SinkNewResponseSchemaFieldsTypeTimestamp SinkNewResponseSchemaFieldsType = "timestamp"
-	SinkNewResponseSchemaFieldsTypeJson      SinkNewResponseSchemaFieldsType = "json"
-	SinkNewResponseSchemaFieldsTypeStruct    SinkNewResponseSchemaFieldsType = "struct"
-	SinkNewResponseSchemaFieldsTypeList      SinkNewResponseSchemaFieldsType = "list"
-)
-
-func (r SinkNewResponseSchemaFieldsType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsTypeInt32, SinkNewResponseSchemaFieldsTypeInt64, SinkNewResponseSchemaFieldsTypeFloat32, SinkNewResponseSchemaFieldsTypeFloat64, SinkNewResponseSchemaFieldsTypeBool, SinkNewResponseSchemaFieldsTypeString, SinkNewResponseSchemaFieldsTypeBinary, SinkNewResponseSchemaFieldsTypeTimestamp, SinkNewResponseSchemaFieldsTypeJson, SinkNewResponseSchemaFieldsTypeStruct, SinkNewResponseSchemaFieldsTypeList:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFieldsUnit string
-
-const (
-	SinkNewResponseSchemaFieldsUnitSecond      SinkNewResponseSchemaFieldsUnit = "second"
-	SinkNewResponseSchemaFieldsUnitMillisecond SinkNewResponseSchemaFieldsUnit = "millisecond"
-	SinkNewResponseSchemaFieldsUnitMicrosecond SinkNewResponseSchemaFieldsUnit = "microsecond"
-	SinkNewResponseSchemaFieldsUnitNanosecond  SinkNewResponseSchemaFieldsUnit = "nanosecond"
-)
-
-func (r SinkNewResponseSchemaFieldsUnit) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFieldsUnitSecond, SinkNewResponseSchemaFieldsUnitMillisecond, SinkNewResponseSchemaFieldsUnitMicrosecond, SinkNewResponseSchemaFieldsUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormat struct {
-	Type            SinkNewResponseSchemaFormatType            `json:"type" api:"required"`
-	Compression     SinkNewResponseSchemaFormatCompression     `json:"compression"`
-	DecimalEncoding SinkNewResponseSchemaFormatDecimalEncoding `json:"decimal_encoding"`
-	RowGroupBytes   int64                                      `json:"row_group_bytes" api:"nullable"`
-	TimestampFormat SinkNewResponseSchemaFormatTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                       `json:"unstructured"`
-	JSON            sinkNewResponseSchemaFormatJSON            `json:"-"`
-	union           SinkNewResponseSchemaFormatUnion
-}
-
-// sinkNewResponseSchemaFormatJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFormat]
-type sinkNewResponseSchemaFormatJSON struct {
-	Type            apijson.Field
-	Compression     apijson.Field
-	DecimalEncoding apijson.Field
-	RowGroupBytes   apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r sinkNewResponseSchemaFormatJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkNewResponseSchemaFormat) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkNewResponseSchemaFormat{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkNewResponseSchemaFormatUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkNewResponseSchemaFormatJson],
-// [SinkNewResponseSchemaFormatParquet].
-func (r SinkNewResponseSchemaFormat) AsUnion() SinkNewResponseSchemaFormatUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkNewResponseSchemaFormatJson] or
-// [SinkNewResponseSchemaFormatParquet].
-type SinkNewResponseSchemaFormatUnion interface {
-	implementsSinkNewResponseSchemaFormat()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkNewResponseSchemaFormatUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFormatJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkNewResponseSchemaFormatParquet{}),
-			DiscriminatorValue: "parquet",
-		},
-	)
-}
-
-type SinkNewResponseSchemaFormatJson struct {
-	Type            SinkNewResponseSchemaFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkNewResponseSchemaFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkNewResponseSchemaFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                           `json:"unstructured"`
-	JSON            sinkNewResponseSchemaFormatJsonJSON            `json:"-"`
-}
-
-// sinkNewResponseSchemaFormatJsonJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFormatJson]
-type sinkNewResponseSchemaFormatJsonJSON struct {
-	Type            apijson.Field
-	DecimalEncoding apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFormatJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFormatJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFormatJson) implementsSinkNewResponseSchemaFormat() {}
-
-type SinkNewResponseSchemaFormatJsonType string
-
-const (
-	SinkNewResponseSchemaFormatJsonTypeJson SinkNewResponseSchemaFormatJsonType = "json"
-)
-
-func (r SinkNewResponseSchemaFormatJsonType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatJsonDecimalEncoding string
-
-const (
-	SinkNewResponseSchemaFormatJsonDecimalEncodingNumber SinkNewResponseSchemaFormatJsonDecimalEncoding = "number"
-	SinkNewResponseSchemaFormatJsonDecimalEncodingString SinkNewResponseSchemaFormatJsonDecimalEncoding = "string"
-	SinkNewResponseSchemaFormatJsonDecimalEncodingBytes  SinkNewResponseSchemaFormatJsonDecimalEncoding = "bytes"
-)
-
-func (r SinkNewResponseSchemaFormatJsonDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatJsonDecimalEncodingNumber, SinkNewResponseSchemaFormatJsonDecimalEncodingString, SinkNewResponseSchemaFormatJsonDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatJsonTimestampFormat string
-
-const (
-	SinkNewResponseSchemaFormatJsonTimestampFormatRfc3339    SinkNewResponseSchemaFormatJsonTimestampFormat = "rfc3339"
-	SinkNewResponseSchemaFormatJsonTimestampFormatUnixMillis SinkNewResponseSchemaFormatJsonTimestampFormat = "unix_millis"
-)
-
-func (r SinkNewResponseSchemaFormatJsonTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatJsonTimestampFormatRfc3339, SinkNewResponseSchemaFormatJsonTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatParquet struct {
-	Type          SinkNewResponseSchemaFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkNewResponseSchemaFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                         `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkNewResponseSchemaFormatParquetJSON        `json:"-"`
-}
-
-// sinkNewResponseSchemaFormatParquetJSON contains the JSON metadata for the struct
-// [SinkNewResponseSchemaFormatParquet]
-type sinkNewResponseSchemaFormatParquetJSON struct {
-	Type          apijson.Field
-	Compression   apijson.Field
-	RowGroupBytes apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *SinkNewResponseSchemaFormatParquet) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkNewResponseSchemaFormatParquetJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkNewResponseSchemaFormatParquet) implementsSinkNewResponseSchemaFormat() {}
-
-type SinkNewResponseSchemaFormatParquetType string
-
-const (
-	SinkNewResponseSchemaFormatParquetTypeParquet SinkNewResponseSchemaFormatParquetType = "parquet"
-)
-
-func (r SinkNewResponseSchemaFormatParquetType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatParquetTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatParquetCompression string
-
-const (
-	SinkNewResponseSchemaFormatParquetCompressionUncompressed SinkNewResponseSchemaFormatParquetCompression = "uncompressed"
-	SinkNewResponseSchemaFormatParquetCompressionSnappy       SinkNewResponseSchemaFormatParquetCompression = "snappy"
-	SinkNewResponseSchemaFormatParquetCompressionGzip         SinkNewResponseSchemaFormatParquetCompression = "gzip"
-	SinkNewResponseSchemaFormatParquetCompressionZstd         SinkNewResponseSchemaFormatParquetCompression = "zstd"
-	SinkNewResponseSchemaFormatParquetCompressionLz4          SinkNewResponseSchemaFormatParquetCompression = "lz4"
-)
-
-func (r SinkNewResponseSchemaFormatParquetCompression) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatParquetCompressionUncompressed, SinkNewResponseSchemaFormatParquetCompressionSnappy, SinkNewResponseSchemaFormatParquetCompressionGzip, SinkNewResponseSchemaFormatParquetCompressionZstd, SinkNewResponseSchemaFormatParquetCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatType string
-
-const (
-	SinkNewResponseSchemaFormatTypeJson    SinkNewResponseSchemaFormatType = "json"
-	SinkNewResponseSchemaFormatTypeParquet SinkNewResponseSchemaFormatType = "parquet"
-)
-
-func (r SinkNewResponseSchemaFormatType) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatTypeJson, SinkNewResponseSchemaFormatTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatCompression string
-
-const (
-	SinkNewResponseSchemaFormatCompressionUncompressed SinkNewResponseSchemaFormatCompression = "uncompressed"
-	SinkNewResponseSchemaFormatCompressionSnappy       SinkNewResponseSchemaFormatCompression = "snappy"
-	SinkNewResponseSchemaFormatCompressionGzip         SinkNewResponseSchemaFormatCompression = "gzip"
-	SinkNewResponseSchemaFormatCompressionZstd         SinkNewResponseSchemaFormatCompression = "zstd"
-	SinkNewResponseSchemaFormatCompressionLz4          SinkNewResponseSchemaFormatCompression = "lz4"
-)
-
-func (r SinkNewResponseSchemaFormatCompression) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatCompressionUncompressed, SinkNewResponseSchemaFormatCompressionSnappy, SinkNewResponseSchemaFormatCompressionGzip, SinkNewResponseSchemaFormatCompressionZstd, SinkNewResponseSchemaFormatCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatDecimalEncoding string
-
-const (
-	SinkNewResponseSchemaFormatDecimalEncodingNumber SinkNewResponseSchemaFormatDecimalEncoding = "number"
-	SinkNewResponseSchemaFormatDecimalEncodingString SinkNewResponseSchemaFormatDecimalEncoding = "string"
-	SinkNewResponseSchemaFormatDecimalEncodingBytes  SinkNewResponseSchemaFormatDecimalEncoding = "bytes"
-)
-
-func (r SinkNewResponseSchemaFormatDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatDecimalEncodingNumber, SinkNewResponseSchemaFormatDecimalEncodingString, SinkNewResponseSchemaFormatDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkNewResponseSchemaFormatTimestampFormat string
-
-const (
-	SinkNewResponseSchemaFormatTimestampFormatRfc3339    SinkNewResponseSchemaFormatTimestampFormat = "rfc3339"
-	SinkNewResponseSchemaFormatTimestampFormatUnixMillis SinkNewResponseSchemaFormatTimestampFormat = "unix_millis"
-)
-
-func (r SinkNewResponseSchemaFormatTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkNewResponseSchemaFormatTimestampFormatRfc3339, SinkNewResponseSchemaFormatTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
 type SinkListResponse struct {
 	// Indicates a unique identifier for this sink.
 	ID         string    `json:"id" api:"required"`
@@ -1718,7 +852,9 @@ type SinkListResponse struct {
 	Type SinkListResponseType `json:"type" api:"required"`
 	// Defines the configuration of the R2 Sink.
 	Config SinkListResponseConfig `json:"config"`
+	// Defines the output data format of a sink.
 	Format SinkListResponseFormat `json:"format"`
+	// Defines the schema of the events in the data stream.
 	Schema SinkListResponseSchema `json:"schema"`
 	JSON   sinkListResponseJSON   `json:"-"`
 }
@@ -1752,11 +888,12 @@ type SinkListResponseType string
 const (
 	SinkListResponseTypeR2            SinkListResponseType = "r2"
 	SinkListResponseTypeR2DataCatalog SinkListResponseType = "r2_data_catalog"
+	SinkListResponseTypeBasinCatalog  SinkListResponseType = "basin_catalog"
 )
 
 func (r SinkListResponseType) IsKnown() bool {
 	switch r {
-	case SinkListResponseTypeR2, SinkListResponseTypeR2DataCatalog:
+	case SinkListResponseTypeR2, SinkListResponseTypeR2DataCatalog, SinkListResponseTypeBasinCatalog:
 		return true
 	}
 	return false
@@ -2066,8 +1203,10 @@ func (r sinkListResponseConfigCloudflarePipelinesR2DataCatalogTablePublicRolling
 	return r.raw
 }
 
+// Defines the output data format of a sink.
 type SinkListResponseFormat struct {
-	Type            SinkListResponseFormatType            `json:"type" api:"required"`
+	Type SinkListResponseFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
 	Compression     SinkListResponseFormatCompression     `json:"compression"`
 	DecimalEncoding SinkListResponseFormatDecimalEncoding `json:"decimal_encoding"`
 	RowGroupBytes   int64                                 `json:"row_group_bytes" api:"nullable"`
@@ -2106,14 +1245,17 @@ func (r *SinkListResponseFormat) UnmarshalJSON(data []byte) (err error) {
 // AsUnion returns a [SinkListResponseFormatUnion] interface which you can cast to
 // the specific types for more type safety.
 //
-// Possible runtime types of the union are [SinkListResponseFormatJson],
-// [SinkListResponseFormatParquet].
+// Possible runtime types of the union are
+// [SinkListResponseFormatCloudflarePipelinesSinkJsonFormat],
+// [SinkListResponseFormatCloudflarePipelinesSinkParquetFormat].
 func (r SinkListResponseFormat) AsUnion() SinkListResponseFormatUnion {
 	return r.union
 }
 
-// Union satisfied by [SinkListResponseFormatJson] or
-// [SinkListResponseFormatParquet].
+// Defines the output data format of a sink.
+//
+// Union satisfied by [SinkListResponseFormatCloudflarePipelinesSinkJsonFormat] or
+// [SinkListResponseFormatCloudflarePipelinesSinkParquetFormat].
 type SinkListResponseFormatUnion interface {
 	implementsSinkListResponseFormat()
 }
@@ -2124,29 +1266,33 @@ func init() {
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseFormatJson{}),
+			Type:               reflect.TypeOf(SinkListResponseFormatCloudflarePipelinesSinkJsonFormat{}),
 			DiscriminatorValue: "json",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseFormatParquet{}),
+			Type:               reflect.TypeOf(SinkListResponseFormatCloudflarePipelinesSinkParquetFormat{}),
 			DiscriminatorValue: "parquet",
 		},
 	)
 }
 
-type SinkListResponseFormatJson struct {
-	Type            SinkListResponseFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkListResponseFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkListResponseFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                      `json:"unstructured"`
-	JSON            sinkListResponseFormatJsonJSON            `json:"-"`
+type SinkListResponseFormatCloudflarePipelinesSinkJsonFormat struct {
+	Type SinkListResponseFormatCloudflarePipelinesSinkJsonFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
+	Compression     SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompression     `json:"compression"`
+	DecimalEncoding SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding `json:"decimal_encoding"`
+	TimestampFormat SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat `json:"timestamp_format"`
+	Unstructured    bool                                                                   `json:"unstructured"`
+	JSON            sinkListResponseFormatCloudflarePipelinesSinkJsonFormatJSON            `json:"-"`
 }
 
-// sinkListResponseFormatJsonJSON contains the JSON metadata for the struct
-// [SinkListResponseFormatJson]
-type sinkListResponseFormatJsonJSON struct {
+// sinkListResponseFormatCloudflarePipelinesSinkJsonFormatJSON contains the JSON
+// metadata for the struct
+// [SinkListResponseFormatCloudflarePipelinesSinkJsonFormat]
+type sinkListResponseFormatCloudflarePipelinesSinkJsonFormatJSON struct {
 	Type            apijson.Field
+	Compression     apijson.Field
 	DecimalEncoding apijson.Field
 	TimestampFormat apijson.Field
 	Unstructured    apijson.Field
@@ -2154,71 +1300,88 @@ type sinkListResponseFormatJsonJSON struct {
 	ExtraFields     map[string]apijson.Field
 }
 
-func (r *SinkListResponseFormatJson) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkListResponseFormatCloudflarePipelinesSinkJsonFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkListResponseFormatJsonJSON) RawJSON() string {
+func (r sinkListResponseFormatCloudflarePipelinesSinkJsonFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkListResponseFormatJson) implementsSinkListResponseFormat() {}
+func (r SinkListResponseFormatCloudflarePipelinesSinkJsonFormat) implementsSinkListResponseFormat() {}
 
-type SinkListResponseFormatJsonType string
+type SinkListResponseFormatCloudflarePipelinesSinkJsonFormatType string
 
 const (
-	SinkListResponseFormatJsonTypeJson SinkListResponseFormatJsonType = "json"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson SinkListResponseFormatCloudflarePipelinesSinkJsonFormatType = "json"
 )
 
-func (r SinkListResponseFormatJsonType) IsKnown() bool {
+func (r SinkListResponseFormatCloudflarePipelinesSinkJsonFormatType) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatJsonTypeJson:
+	case SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson:
 		return true
 	}
 	return false
 }
 
-type SinkListResponseFormatJsonDecimalEncoding string
+// Specifies the compression applied to JSON sink output.
+type SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompression string
 
 const (
-	SinkListResponseFormatJsonDecimalEncodingNumber SinkListResponseFormatJsonDecimalEncoding = "number"
-	SinkListResponseFormatJsonDecimalEncodingString SinkListResponseFormatJsonDecimalEncoding = "string"
-	SinkListResponseFormatJsonDecimalEncodingBytes  SinkListResponseFormatJsonDecimalEncoding = "bytes"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "uncompressed"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip         SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "gzip"
 )
 
-func (r SinkListResponseFormatJsonDecimalEncoding) IsKnown() bool {
+func (r SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatJsonDecimalEncodingNumber, SinkListResponseFormatJsonDecimalEncodingString, SinkListResponseFormatJsonDecimalEncodingBytes:
+	case SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed, SinkListResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip:
 		return true
 	}
 	return false
 }
 
-type SinkListResponseFormatJsonTimestampFormat string
+type SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding string
 
 const (
-	SinkListResponseFormatJsonTimestampFormatRfc3339    SinkListResponseFormatJsonTimestampFormat = "rfc3339"
-	SinkListResponseFormatJsonTimestampFormatUnixMillis SinkListResponseFormatJsonTimestampFormat = "unix_millis"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "number"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "string"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes  SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "bytes"
 )
 
-func (r SinkListResponseFormatJsonTimestampFormat) IsKnown() bool {
+func (r SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatJsonTimestampFormatRfc3339, SinkListResponseFormatJsonTimestampFormatUnixMillis:
+	case SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber, SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString, SinkListResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes:
 		return true
 	}
 	return false
 }
 
-type SinkListResponseFormatParquet struct {
-	Type          SinkListResponseFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkListResponseFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                    `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkListResponseFormatParquetJSON        `json:"-"`
+type SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat string
+
+const (
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339    SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "rfc3339"
+	SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "unix_millis"
+)
+
+func (r SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat) IsKnown() bool {
+	switch r {
+	case SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339, SinkListResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis:
+		return true
+	}
+	return false
 }
 
-// sinkListResponseFormatParquetJSON contains the JSON metadata for the struct
-// [SinkListResponseFormatParquet]
-type sinkListResponseFormatParquetJSON struct {
+type SinkListResponseFormatCloudflarePipelinesSinkParquetFormat struct {
+	Type          SinkListResponseFormatCloudflarePipelinesSinkParquetFormatType        `json:"type" api:"required"`
+	Compression   SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression `json:"compression"`
+	RowGroupBytes int64                                                                 `json:"row_group_bytes" api:"nullable"`
+	JSON          sinkListResponseFormatCloudflarePipelinesSinkParquetFormatJSON        `json:"-"`
+}
+
+// sinkListResponseFormatCloudflarePipelinesSinkParquetFormatJSON contains the JSON
+// metadata for the struct
+// [SinkListResponseFormatCloudflarePipelinesSinkParquetFormat]
+type sinkListResponseFormatCloudflarePipelinesSinkParquetFormatJSON struct {
 	Type          apijson.Field
 	Compression   apijson.Field
 	RowGroupBytes apijson.Field
@@ -2226,43 +1389,44 @@ type sinkListResponseFormatParquetJSON struct {
 	ExtraFields   map[string]apijson.Field
 }
 
-func (r *SinkListResponseFormatParquet) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkListResponseFormatCloudflarePipelinesSinkParquetFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkListResponseFormatParquetJSON) RawJSON() string {
+func (r sinkListResponseFormatCloudflarePipelinesSinkParquetFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkListResponseFormatParquet) implementsSinkListResponseFormat() {}
+func (r SinkListResponseFormatCloudflarePipelinesSinkParquetFormat) implementsSinkListResponseFormat() {
+}
 
-type SinkListResponseFormatParquetType string
+type SinkListResponseFormatCloudflarePipelinesSinkParquetFormatType string
 
 const (
-	SinkListResponseFormatParquetTypeParquet SinkListResponseFormatParquetType = "parquet"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet SinkListResponseFormatCloudflarePipelinesSinkParquetFormatType = "parquet"
 )
 
-func (r SinkListResponseFormatParquetType) IsKnown() bool {
+func (r SinkListResponseFormatCloudflarePipelinesSinkParquetFormatType) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatParquetTypeParquet:
+	case SinkListResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet:
 		return true
 	}
 	return false
 }
 
-type SinkListResponseFormatParquetCompression string
+type SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression string
 
 const (
-	SinkListResponseFormatParquetCompressionUncompressed SinkListResponseFormatParquetCompression = "uncompressed"
-	SinkListResponseFormatParquetCompressionSnappy       SinkListResponseFormatParquetCompression = "snappy"
-	SinkListResponseFormatParquetCompressionGzip         SinkListResponseFormatParquetCompression = "gzip"
-	SinkListResponseFormatParquetCompressionZstd         SinkListResponseFormatParquetCompression = "zstd"
-	SinkListResponseFormatParquetCompressionLz4          SinkListResponseFormatParquetCompression = "lz4"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "uncompressed"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy       SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "snappy"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip         SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "gzip"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd         SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "zstd"
+	SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4          SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "lz4"
 )
 
-func (r SinkListResponseFormatParquetCompression) IsKnown() bool {
+func (r SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatParquetCompressionUncompressed, SinkListResponseFormatParquetCompressionSnappy, SinkListResponseFormatParquetCompressionGzip, SinkListResponseFormatParquetCompressionZstd, SinkListResponseFormatParquetCompressionLz4:
+	case SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed, SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy, SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip, SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd, SinkListResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -2283,19 +1447,20 @@ func (r SinkListResponseFormatType) IsKnown() bool {
 	return false
 }
 
+// Specifies the compression applied to JSON sink output.
 type SinkListResponseFormatCompression string
 
 const (
 	SinkListResponseFormatCompressionUncompressed SinkListResponseFormatCompression = "uncompressed"
-	SinkListResponseFormatCompressionSnappy       SinkListResponseFormatCompression = "snappy"
 	SinkListResponseFormatCompressionGzip         SinkListResponseFormatCompression = "gzip"
+	SinkListResponseFormatCompressionSnappy       SinkListResponseFormatCompression = "snappy"
 	SinkListResponseFormatCompressionZstd         SinkListResponseFormatCompression = "zstd"
 	SinkListResponseFormatCompressionLz4          SinkListResponseFormatCompression = "lz4"
 )
 
 func (r SinkListResponseFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkListResponseFormatCompressionUncompressed, SinkListResponseFormatCompressionSnappy, SinkListResponseFormatCompressionGzip, SinkListResponseFormatCompressionZstd, SinkListResponseFormatCompressionLz4:
+	case SinkListResponseFormatCompressionUncompressed, SinkListResponseFormatCompressionGzip, SinkListResponseFormatCompressionSnappy, SinkListResponseFormatCompressionZstd, SinkListResponseFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -2332,18 +1497,17 @@ func (r SinkListResponseFormatTimestampFormat) IsKnown() bool {
 	return false
 }
 
+// Defines the schema of the events in the data stream.
 type SinkListResponseSchema struct {
-	Fields   []SinkListResponseSchemaField `json:"fields"`
-	Format   SinkListResponseSchemaFormat  `json:"format"`
-	Inferred bool                          `json:"inferred" api:"nullable"`
-	JSON     sinkListResponseSchemaJSON    `json:"-"`
+	Fields   []SourceField              `json:"fields"`
+	Inferred bool                       `json:"inferred" api:"nullable"`
+	JSON     sinkListResponseSchemaJSON `json:"-"`
 }
 
 // sinkListResponseSchemaJSON contains the JSON metadata for the struct
 // [SinkListResponseSchema]
 type sinkListResponseSchemaJSON struct {
 	Fields      apijson.Field
-	Format      apijson.Field
 	Inferred    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -2355,901 +1519,6 @@ func (r *SinkListResponseSchema) UnmarshalJSON(data []byte) (err error) {
 
 func (r sinkListResponseSchemaJSON) RawJSON() string {
 	return r.raw
-}
-
-type SinkListResponseSchemaField struct {
-	Type        SinkListResponseSchemaFieldsType `json:"type" api:"required"`
-	MetadataKey string                           `json:"metadata_key" api:"nullable"`
-	Name        string                           `json:"name"`
-	Required    bool                             `json:"required"`
-	SqlName     string                           `json:"sql_name"`
-	Unit        SinkListResponseSchemaFieldsUnit `json:"unit"`
-	JSON        sinkListResponseSchemaFieldJSON  `json:"-"`
-	union       SinkListResponseSchemaFieldsUnion
-}
-
-// sinkListResponseSchemaFieldJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaField]
-type sinkListResponseSchemaFieldJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r sinkListResponseSchemaFieldJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkListResponseSchemaField) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkListResponseSchemaField{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkListResponseSchemaFieldsUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkListResponseSchemaFieldsInt32],
-// [SinkListResponseSchemaFieldsInt64], [SinkListResponseSchemaFieldsFloat32],
-// [SinkListResponseSchemaFieldsFloat64], [SinkListResponseSchemaFieldsBool],
-// [SinkListResponseSchemaFieldsString], [SinkListResponseSchemaFieldsBinary],
-// [SinkListResponseSchemaFieldsTimestamp], [SinkListResponseSchemaFieldsJson],
-// [SinkListResponseSchemaFieldsStruct], [SinkListResponseSchemaFieldsList].
-func (r SinkListResponseSchemaField) AsUnion() SinkListResponseSchemaFieldsUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkListResponseSchemaFieldsInt32],
-// [SinkListResponseSchemaFieldsInt64], [SinkListResponseSchemaFieldsFloat32],
-// [SinkListResponseSchemaFieldsFloat64], [SinkListResponseSchemaFieldsBool],
-// [SinkListResponseSchemaFieldsString], [SinkListResponseSchemaFieldsBinary],
-// [SinkListResponseSchemaFieldsTimestamp], [SinkListResponseSchemaFieldsJson],
-// [SinkListResponseSchemaFieldsStruct] or [SinkListResponseSchemaFieldsList].
-type SinkListResponseSchemaFieldsUnion interface {
-	implementsSinkListResponseSchemaField()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkListResponseSchemaFieldsUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsInt32{}),
-			DiscriminatorValue: "int32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsInt64{}),
-			DiscriminatorValue: "int64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsFloat32{}),
-			DiscriminatorValue: "float32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsFloat64{}),
-			DiscriminatorValue: "float64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsBool{}),
-			DiscriminatorValue: "bool",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsString{}),
-			DiscriminatorValue: "string",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsBinary{}),
-			DiscriminatorValue: "binary",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsTimestamp{}),
-			DiscriminatorValue: "timestamp",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsStruct{}),
-			DiscriminatorValue: "struct",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFieldsList{}),
-			DiscriminatorValue: "list",
-		},
-	)
-}
-
-type SinkListResponseSchemaFieldsInt32 struct {
-	Type        SinkListResponseSchemaFieldsInt32Type `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsInt32JSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsInt32JSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsInt32]
-type sinkListResponseSchemaFieldsInt32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsInt32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsInt32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsInt32) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsInt32Type string
-
-const (
-	SinkListResponseSchemaFieldsInt32TypeInt32 SinkListResponseSchemaFieldsInt32Type = "int32"
-)
-
-func (r SinkListResponseSchemaFieldsInt32Type) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsInt32TypeInt32:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsInt64 struct {
-	Type        SinkListResponseSchemaFieldsInt64Type `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsInt64JSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsInt64JSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsInt64]
-type sinkListResponseSchemaFieldsInt64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsInt64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsInt64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsInt64) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsInt64Type string
-
-const (
-	SinkListResponseSchemaFieldsInt64TypeInt64 SinkListResponseSchemaFieldsInt64Type = "int64"
-)
-
-func (r SinkListResponseSchemaFieldsInt64Type) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsInt64TypeInt64:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsFloat32 struct {
-	Type        SinkListResponseSchemaFieldsFloat32Type `json:"type" api:"required"`
-	MetadataKey string                                  `json:"metadata_key" api:"nullable"`
-	Name        string                                  `json:"name"`
-	Required    bool                                    `json:"required"`
-	SqlName     string                                  `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsFloat32JSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsFloat32JSON contains the JSON metadata for the
-// struct [SinkListResponseSchemaFieldsFloat32]
-type sinkListResponseSchemaFieldsFloat32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsFloat32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsFloat32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsFloat32) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsFloat32Type string
-
-const (
-	SinkListResponseSchemaFieldsFloat32TypeFloat32 SinkListResponseSchemaFieldsFloat32Type = "float32"
-)
-
-func (r SinkListResponseSchemaFieldsFloat32Type) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsFloat32TypeFloat32:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsFloat64 struct {
-	Type        SinkListResponseSchemaFieldsFloat64Type `json:"type" api:"required"`
-	MetadataKey string                                  `json:"metadata_key" api:"nullable"`
-	Name        string                                  `json:"name"`
-	Required    bool                                    `json:"required"`
-	SqlName     string                                  `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsFloat64JSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsFloat64JSON contains the JSON metadata for the
-// struct [SinkListResponseSchemaFieldsFloat64]
-type sinkListResponseSchemaFieldsFloat64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsFloat64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsFloat64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsFloat64) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsFloat64Type string
-
-const (
-	SinkListResponseSchemaFieldsFloat64TypeFloat64 SinkListResponseSchemaFieldsFloat64Type = "float64"
-)
-
-func (r SinkListResponseSchemaFieldsFloat64Type) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsFloat64TypeFloat64:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsBool struct {
-	Type        SinkListResponseSchemaFieldsBoolType `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsBoolJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsBoolJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsBool]
-type sinkListResponseSchemaFieldsBoolJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsBool) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsBoolJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsBool) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsBoolType string
-
-const (
-	SinkListResponseSchemaFieldsBoolTypeBool SinkListResponseSchemaFieldsBoolType = "bool"
-)
-
-func (r SinkListResponseSchemaFieldsBoolType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsBoolTypeBool:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsString struct {
-	Type        SinkListResponseSchemaFieldsStringType `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsStringJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsStringJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsString]
-type sinkListResponseSchemaFieldsStringJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsString) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsStringJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsString) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsStringType string
-
-const (
-	SinkListResponseSchemaFieldsStringTypeString SinkListResponseSchemaFieldsStringType = "string"
-)
-
-func (r SinkListResponseSchemaFieldsStringType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsStringTypeString:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsBinary struct {
-	Type        SinkListResponseSchemaFieldsBinaryType `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsBinaryJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsBinaryJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsBinary]
-type sinkListResponseSchemaFieldsBinaryJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsBinary) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsBinaryJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsBinary) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsBinaryType string
-
-const (
-	SinkListResponseSchemaFieldsBinaryTypeBinary SinkListResponseSchemaFieldsBinaryType = "binary"
-)
-
-func (r SinkListResponseSchemaFieldsBinaryType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsBinaryTypeBinary:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsTimestamp struct {
-	Type        SinkListResponseSchemaFieldsTimestampType `json:"type" api:"required"`
-	MetadataKey string                                    `json:"metadata_key" api:"nullable"`
-	Name        string                                    `json:"name"`
-	Required    bool                                      `json:"required"`
-	SqlName     string                                    `json:"sql_name"`
-	Unit        SinkListResponseSchemaFieldsTimestampUnit `json:"unit"`
-	JSON        sinkListResponseSchemaFieldsTimestampJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsTimestampJSON contains the JSON metadata for the
-// struct [SinkListResponseSchemaFieldsTimestamp]
-type sinkListResponseSchemaFieldsTimestampJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsTimestamp) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsTimestampJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsTimestamp) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsTimestampType string
-
-const (
-	SinkListResponseSchemaFieldsTimestampTypeTimestamp SinkListResponseSchemaFieldsTimestampType = "timestamp"
-)
-
-func (r SinkListResponseSchemaFieldsTimestampType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsTimestampTypeTimestamp:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsTimestampUnit string
-
-const (
-	SinkListResponseSchemaFieldsTimestampUnitSecond      SinkListResponseSchemaFieldsTimestampUnit = "second"
-	SinkListResponseSchemaFieldsTimestampUnitMillisecond SinkListResponseSchemaFieldsTimestampUnit = "millisecond"
-	SinkListResponseSchemaFieldsTimestampUnitMicrosecond SinkListResponseSchemaFieldsTimestampUnit = "microsecond"
-	SinkListResponseSchemaFieldsTimestampUnitNanosecond  SinkListResponseSchemaFieldsTimestampUnit = "nanosecond"
-)
-
-func (r SinkListResponseSchemaFieldsTimestampUnit) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsTimestampUnitSecond, SinkListResponseSchemaFieldsTimestampUnitMillisecond, SinkListResponseSchemaFieldsTimestampUnitMicrosecond, SinkListResponseSchemaFieldsTimestampUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsJson struct {
-	Type        SinkListResponseSchemaFieldsJsonType `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkListResponseSchemaFieldsJsonJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsJsonJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsJson]
-type sinkListResponseSchemaFieldsJsonJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsJson) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsJsonType string
-
-const (
-	SinkListResponseSchemaFieldsJsonTypeJson SinkListResponseSchemaFieldsJsonType = "json"
-)
-
-func (r SinkListResponseSchemaFieldsJsonType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsStruct struct {
-	JSON sinkListResponseSchemaFieldsStructJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsStructJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsStruct]
-type sinkListResponseSchemaFieldsStructJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsStruct) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsStructJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsStruct) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsList struct {
-	JSON sinkListResponseSchemaFieldsListJSON `json:"-"`
-}
-
-// sinkListResponseSchemaFieldsListJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFieldsList]
-type sinkListResponseSchemaFieldsListJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFieldsList) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFieldsListJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFieldsList) implementsSinkListResponseSchemaField() {}
-
-type SinkListResponseSchemaFieldsType string
-
-const (
-	SinkListResponseSchemaFieldsTypeInt32     SinkListResponseSchemaFieldsType = "int32"
-	SinkListResponseSchemaFieldsTypeInt64     SinkListResponseSchemaFieldsType = "int64"
-	SinkListResponseSchemaFieldsTypeFloat32   SinkListResponseSchemaFieldsType = "float32"
-	SinkListResponseSchemaFieldsTypeFloat64   SinkListResponseSchemaFieldsType = "float64"
-	SinkListResponseSchemaFieldsTypeBool      SinkListResponseSchemaFieldsType = "bool"
-	SinkListResponseSchemaFieldsTypeString    SinkListResponseSchemaFieldsType = "string"
-	SinkListResponseSchemaFieldsTypeBinary    SinkListResponseSchemaFieldsType = "binary"
-	SinkListResponseSchemaFieldsTypeTimestamp SinkListResponseSchemaFieldsType = "timestamp"
-	SinkListResponseSchemaFieldsTypeJson      SinkListResponseSchemaFieldsType = "json"
-	SinkListResponseSchemaFieldsTypeStruct    SinkListResponseSchemaFieldsType = "struct"
-	SinkListResponseSchemaFieldsTypeList      SinkListResponseSchemaFieldsType = "list"
-)
-
-func (r SinkListResponseSchemaFieldsType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsTypeInt32, SinkListResponseSchemaFieldsTypeInt64, SinkListResponseSchemaFieldsTypeFloat32, SinkListResponseSchemaFieldsTypeFloat64, SinkListResponseSchemaFieldsTypeBool, SinkListResponseSchemaFieldsTypeString, SinkListResponseSchemaFieldsTypeBinary, SinkListResponseSchemaFieldsTypeTimestamp, SinkListResponseSchemaFieldsTypeJson, SinkListResponseSchemaFieldsTypeStruct, SinkListResponseSchemaFieldsTypeList:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFieldsUnit string
-
-const (
-	SinkListResponseSchemaFieldsUnitSecond      SinkListResponseSchemaFieldsUnit = "second"
-	SinkListResponseSchemaFieldsUnitMillisecond SinkListResponseSchemaFieldsUnit = "millisecond"
-	SinkListResponseSchemaFieldsUnitMicrosecond SinkListResponseSchemaFieldsUnit = "microsecond"
-	SinkListResponseSchemaFieldsUnitNanosecond  SinkListResponseSchemaFieldsUnit = "nanosecond"
-)
-
-func (r SinkListResponseSchemaFieldsUnit) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFieldsUnitSecond, SinkListResponseSchemaFieldsUnitMillisecond, SinkListResponseSchemaFieldsUnitMicrosecond, SinkListResponseSchemaFieldsUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormat struct {
-	Type            SinkListResponseSchemaFormatType            `json:"type" api:"required"`
-	Compression     SinkListResponseSchemaFormatCompression     `json:"compression"`
-	DecimalEncoding SinkListResponseSchemaFormatDecimalEncoding `json:"decimal_encoding"`
-	RowGroupBytes   int64                                       `json:"row_group_bytes" api:"nullable"`
-	TimestampFormat SinkListResponseSchemaFormatTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                        `json:"unstructured"`
-	JSON            sinkListResponseSchemaFormatJSON            `json:"-"`
-	union           SinkListResponseSchemaFormatUnion
-}
-
-// sinkListResponseSchemaFormatJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFormat]
-type sinkListResponseSchemaFormatJSON struct {
-	Type            apijson.Field
-	Compression     apijson.Field
-	DecimalEncoding apijson.Field
-	RowGroupBytes   apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r sinkListResponseSchemaFormatJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkListResponseSchemaFormat) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkListResponseSchemaFormat{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkListResponseSchemaFormatUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkListResponseSchemaFormatJson],
-// [SinkListResponseSchemaFormatParquet].
-func (r SinkListResponseSchemaFormat) AsUnion() SinkListResponseSchemaFormatUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkListResponseSchemaFormatJson] or
-// [SinkListResponseSchemaFormatParquet].
-type SinkListResponseSchemaFormatUnion interface {
-	implementsSinkListResponseSchemaFormat()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkListResponseSchemaFormatUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFormatJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkListResponseSchemaFormatParquet{}),
-			DiscriminatorValue: "parquet",
-		},
-	)
-}
-
-type SinkListResponseSchemaFormatJson struct {
-	Type            SinkListResponseSchemaFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkListResponseSchemaFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkListResponseSchemaFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                            `json:"unstructured"`
-	JSON            sinkListResponseSchemaFormatJsonJSON            `json:"-"`
-}
-
-// sinkListResponseSchemaFormatJsonJSON contains the JSON metadata for the struct
-// [SinkListResponseSchemaFormatJson]
-type sinkListResponseSchemaFormatJsonJSON struct {
-	Type            apijson.Field
-	DecimalEncoding apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFormatJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFormatJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFormatJson) implementsSinkListResponseSchemaFormat() {}
-
-type SinkListResponseSchemaFormatJsonType string
-
-const (
-	SinkListResponseSchemaFormatJsonTypeJson SinkListResponseSchemaFormatJsonType = "json"
-)
-
-func (r SinkListResponseSchemaFormatJsonType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatJsonDecimalEncoding string
-
-const (
-	SinkListResponseSchemaFormatJsonDecimalEncodingNumber SinkListResponseSchemaFormatJsonDecimalEncoding = "number"
-	SinkListResponseSchemaFormatJsonDecimalEncodingString SinkListResponseSchemaFormatJsonDecimalEncoding = "string"
-	SinkListResponseSchemaFormatJsonDecimalEncodingBytes  SinkListResponseSchemaFormatJsonDecimalEncoding = "bytes"
-)
-
-func (r SinkListResponseSchemaFormatJsonDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatJsonDecimalEncodingNumber, SinkListResponseSchemaFormatJsonDecimalEncodingString, SinkListResponseSchemaFormatJsonDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatJsonTimestampFormat string
-
-const (
-	SinkListResponseSchemaFormatJsonTimestampFormatRfc3339    SinkListResponseSchemaFormatJsonTimestampFormat = "rfc3339"
-	SinkListResponseSchemaFormatJsonTimestampFormatUnixMillis SinkListResponseSchemaFormatJsonTimestampFormat = "unix_millis"
-)
-
-func (r SinkListResponseSchemaFormatJsonTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatJsonTimestampFormatRfc3339, SinkListResponseSchemaFormatJsonTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatParquet struct {
-	Type          SinkListResponseSchemaFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkListResponseSchemaFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                          `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkListResponseSchemaFormatParquetJSON        `json:"-"`
-}
-
-// sinkListResponseSchemaFormatParquetJSON contains the JSON metadata for the
-// struct [SinkListResponseSchemaFormatParquet]
-type sinkListResponseSchemaFormatParquetJSON struct {
-	Type          apijson.Field
-	Compression   apijson.Field
-	RowGroupBytes apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *SinkListResponseSchemaFormatParquet) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkListResponseSchemaFormatParquetJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkListResponseSchemaFormatParquet) implementsSinkListResponseSchemaFormat() {}
-
-type SinkListResponseSchemaFormatParquetType string
-
-const (
-	SinkListResponseSchemaFormatParquetTypeParquet SinkListResponseSchemaFormatParquetType = "parquet"
-)
-
-func (r SinkListResponseSchemaFormatParquetType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatParquetTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatParquetCompression string
-
-const (
-	SinkListResponseSchemaFormatParquetCompressionUncompressed SinkListResponseSchemaFormatParquetCompression = "uncompressed"
-	SinkListResponseSchemaFormatParquetCompressionSnappy       SinkListResponseSchemaFormatParquetCompression = "snappy"
-	SinkListResponseSchemaFormatParquetCompressionGzip         SinkListResponseSchemaFormatParquetCompression = "gzip"
-	SinkListResponseSchemaFormatParquetCompressionZstd         SinkListResponseSchemaFormatParquetCompression = "zstd"
-	SinkListResponseSchemaFormatParquetCompressionLz4          SinkListResponseSchemaFormatParquetCompression = "lz4"
-)
-
-func (r SinkListResponseSchemaFormatParquetCompression) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatParquetCompressionUncompressed, SinkListResponseSchemaFormatParquetCompressionSnappy, SinkListResponseSchemaFormatParquetCompressionGzip, SinkListResponseSchemaFormatParquetCompressionZstd, SinkListResponseSchemaFormatParquetCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatType string
-
-const (
-	SinkListResponseSchemaFormatTypeJson    SinkListResponseSchemaFormatType = "json"
-	SinkListResponseSchemaFormatTypeParquet SinkListResponseSchemaFormatType = "parquet"
-)
-
-func (r SinkListResponseSchemaFormatType) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatTypeJson, SinkListResponseSchemaFormatTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatCompression string
-
-const (
-	SinkListResponseSchemaFormatCompressionUncompressed SinkListResponseSchemaFormatCompression = "uncompressed"
-	SinkListResponseSchemaFormatCompressionSnappy       SinkListResponseSchemaFormatCompression = "snappy"
-	SinkListResponseSchemaFormatCompressionGzip         SinkListResponseSchemaFormatCompression = "gzip"
-	SinkListResponseSchemaFormatCompressionZstd         SinkListResponseSchemaFormatCompression = "zstd"
-	SinkListResponseSchemaFormatCompressionLz4          SinkListResponseSchemaFormatCompression = "lz4"
-)
-
-func (r SinkListResponseSchemaFormatCompression) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatCompressionUncompressed, SinkListResponseSchemaFormatCompressionSnappy, SinkListResponseSchemaFormatCompressionGzip, SinkListResponseSchemaFormatCompressionZstd, SinkListResponseSchemaFormatCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatDecimalEncoding string
-
-const (
-	SinkListResponseSchemaFormatDecimalEncodingNumber SinkListResponseSchemaFormatDecimalEncoding = "number"
-	SinkListResponseSchemaFormatDecimalEncodingString SinkListResponseSchemaFormatDecimalEncoding = "string"
-	SinkListResponseSchemaFormatDecimalEncodingBytes  SinkListResponseSchemaFormatDecimalEncoding = "bytes"
-)
-
-func (r SinkListResponseSchemaFormatDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatDecimalEncodingNumber, SinkListResponseSchemaFormatDecimalEncodingString, SinkListResponseSchemaFormatDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkListResponseSchemaFormatTimestampFormat string
-
-const (
-	SinkListResponseSchemaFormatTimestampFormatRfc3339    SinkListResponseSchemaFormatTimestampFormat = "rfc3339"
-	SinkListResponseSchemaFormatTimestampFormatUnixMillis SinkListResponseSchemaFormatTimestampFormat = "unix_millis"
-)
-
-func (r SinkListResponseSchemaFormatTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkListResponseSchemaFormatTimestampFormatRfc3339, SinkListResponseSchemaFormatTimestampFormatUnixMillis:
-		return true
-	}
-	return false
 }
 
 type SinkDeleteResponse = interface{}
@@ -3265,7 +1534,9 @@ type SinkGetResponse struct {
 	Type SinkGetResponseType `json:"type" api:"required"`
 	// Defines the configuration of the R2 Sink.
 	Config SinkGetResponseConfig `json:"config"`
+	// Defines the output data format of a sink.
 	Format SinkGetResponseFormat `json:"format"`
+	// Defines the schema of the events in the data stream.
 	Schema SinkGetResponseSchema `json:"schema"`
 	JSON   sinkGetResponseJSON   `json:"-"`
 }
@@ -3298,11 +1569,12 @@ type SinkGetResponseType string
 const (
 	SinkGetResponseTypeR2            SinkGetResponseType = "r2"
 	SinkGetResponseTypeR2DataCatalog SinkGetResponseType = "r2_data_catalog"
+	SinkGetResponseTypeBasinCatalog  SinkGetResponseType = "basin_catalog"
 )
 
 func (r SinkGetResponseType) IsKnown() bool {
 	switch r {
-	case SinkGetResponseTypeR2, SinkGetResponseTypeR2DataCatalog:
+	case SinkGetResponseTypeR2, SinkGetResponseTypeR2DataCatalog, SinkGetResponseTypeBasinCatalog:
 		return true
 	}
 	return false
@@ -3612,8 +1884,10 @@ func (r sinkGetResponseConfigCloudflarePipelinesR2DataCatalogTablePublicRollingP
 	return r.raw
 }
 
+// Defines the output data format of a sink.
 type SinkGetResponseFormat struct {
-	Type            SinkGetResponseFormatType            `json:"type" api:"required"`
+	Type SinkGetResponseFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
 	Compression     SinkGetResponseFormatCompression     `json:"compression"`
 	DecimalEncoding SinkGetResponseFormatDecimalEncoding `json:"decimal_encoding"`
 	RowGroupBytes   int64                                `json:"row_group_bytes" api:"nullable"`
@@ -3652,14 +1926,17 @@ func (r *SinkGetResponseFormat) UnmarshalJSON(data []byte) (err error) {
 // AsUnion returns a [SinkGetResponseFormatUnion] interface which you can cast to
 // the specific types for more type safety.
 //
-// Possible runtime types of the union are [SinkGetResponseFormatJson],
-// [SinkGetResponseFormatParquet].
+// Possible runtime types of the union are
+// [SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat],
+// [SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat].
 func (r SinkGetResponseFormat) AsUnion() SinkGetResponseFormatUnion {
 	return r.union
 }
 
-// Union satisfied by [SinkGetResponseFormatJson] or
-// [SinkGetResponseFormatParquet].
+// Defines the output data format of a sink.
+//
+// Union satisfied by [SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat] or
+// [SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat].
 type SinkGetResponseFormatUnion interface {
 	implementsSinkGetResponseFormat()
 }
@@ -3670,29 +1947,32 @@ func init() {
 		"type",
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseFormatJson{}),
+			Type:               reflect.TypeOf(SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat{}),
 			DiscriminatorValue: "json",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseFormatParquet{}),
+			Type:               reflect.TypeOf(SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat{}),
 			DiscriminatorValue: "parquet",
 		},
 	)
 }
 
-type SinkGetResponseFormatJson struct {
-	Type            SinkGetResponseFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkGetResponseFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkGetResponseFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                     `json:"unstructured"`
-	JSON            sinkGetResponseFormatJsonJSON            `json:"-"`
+type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat struct {
+	Type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatType `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
+	Compression     SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompression     `json:"compression"`
+	DecimalEncoding SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding `json:"decimal_encoding"`
+	TimestampFormat SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat `json:"timestamp_format"`
+	Unstructured    bool                                                                  `json:"unstructured"`
+	JSON            sinkGetResponseFormatCloudflarePipelinesSinkJsonFormatJSON            `json:"-"`
 }
 
-// sinkGetResponseFormatJsonJSON contains the JSON metadata for the struct
-// [SinkGetResponseFormatJson]
-type sinkGetResponseFormatJsonJSON struct {
+// sinkGetResponseFormatCloudflarePipelinesSinkJsonFormatJSON contains the JSON
+// metadata for the struct [SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat]
+type sinkGetResponseFormatCloudflarePipelinesSinkJsonFormatJSON struct {
 	Type            apijson.Field
+	Compression     apijson.Field
 	DecimalEncoding apijson.Field
 	TimestampFormat apijson.Field
 	Unstructured    apijson.Field
@@ -3700,71 +1980,88 @@ type sinkGetResponseFormatJsonJSON struct {
 	ExtraFields     map[string]apijson.Field
 }
 
-func (r *SinkGetResponseFormatJson) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkGetResponseFormatJsonJSON) RawJSON() string {
+func (r sinkGetResponseFormatCloudflarePipelinesSinkJsonFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkGetResponseFormatJson) implementsSinkGetResponseFormat() {}
+func (r SinkGetResponseFormatCloudflarePipelinesSinkJsonFormat) implementsSinkGetResponseFormat() {}
 
-type SinkGetResponseFormatJsonType string
+type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatType string
 
 const (
-	SinkGetResponseFormatJsonTypeJson SinkGetResponseFormatJsonType = "json"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatType = "json"
 )
 
-func (r SinkGetResponseFormatJsonType) IsKnown() bool {
+func (r SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatType) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatJsonTypeJson:
+	case SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTypeJson:
 		return true
 	}
 	return false
 }
 
-type SinkGetResponseFormatJsonDecimalEncoding string
+// Specifies the compression applied to JSON sink output.
+type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompression string
 
 const (
-	SinkGetResponseFormatJsonDecimalEncodingNumber SinkGetResponseFormatJsonDecimalEncoding = "number"
-	SinkGetResponseFormatJsonDecimalEncodingString SinkGetResponseFormatJsonDecimalEncoding = "string"
-	SinkGetResponseFormatJsonDecimalEncodingBytes  SinkGetResponseFormatJsonDecimalEncoding = "bytes"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "uncompressed"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip         SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompression = "gzip"
 )
 
-func (r SinkGetResponseFormatJsonDecimalEncoding) IsKnown() bool {
+func (r SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatJsonDecimalEncodingNumber, SinkGetResponseFormatJsonDecimalEncodingString, SinkGetResponseFormatJsonDecimalEncodingBytes:
+	case SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed, SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatCompressionGzip:
 		return true
 	}
 	return false
 }
 
-type SinkGetResponseFormatJsonTimestampFormat string
+type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding string
 
 const (
-	SinkGetResponseFormatJsonTimestampFormatRfc3339    SinkGetResponseFormatJsonTimestampFormat = "rfc3339"
-	SinkGetResponseFormatJsonTimestampFormatUnixMillis SinkGetResponseFormatJsonTimestampFormat = "unix_millis"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "number"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "string"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes  SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "bytes"
 )
 
-func (r SinkGetResponseFormatJsonTimestampFormat) IsKnown() bool {
+func (r SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatJsonTimestampFormatRfc3339, SinkGetResponseFormatJsonTimestampFormatUnixMillis:
+	case SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber, SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString, SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes:
 		return true
 	}
 	return false
 }
 
-type SinkGetResponseFormatParquet struct {
-	Type          SinkGetResponseFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkGetResponseFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                   `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkGetResponseFormatParquetJSON        `json:"-"`
+type SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat string
+
+const (
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339    SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "rfc3339"
+	SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "unix_millis"
+)
+
+func (r SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormat) IsKnown() bool {
+	switch r {
+	case SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339, SinkGetResponseFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis:
+		return true
+	}
+	return false
 }
 
-// sinkGetResponseFormatParquetJSON contains the JSON metadata for the struct
-// [SinkGetResponseFormatParquet]
-type sinkGetResponseFormatParquetJSON struct {
+type SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat struct {
+	Type          SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatType        `json:"type" api:"required"`
+	Compression   SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression `json:"compression"`
+	RowGroupBytes int64                                                                `json:"row_group_bytes" api:"nullable"`
+	JSON          sinkGetResponseFormatCloudflarePipelinesSinkParquetFormatJSON        `json:"-"`
+}
+
+// sinkGetResponseFormatCloudflarePipelinesSinkParquetFormatJSON contains the JSON
+// metadata for the struct
+// [SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat]
+type sinkGetResponseFormatCloudflarePipelinesSinkParquetFormatJSON struct {
 	Type          apijson.Field
 	Compression   apijson.Field
 	RowGroupBytes apijson.Field
@@ -3772,43 +2069,44 @@ type sinkGetResponseFormatParquetJSON struct {
 	ExtraFields   map[string]apijson.Field
 }
 
-func (r *SinkGetResponseFormatParquet) UnmarshalJSON(data []byte) (err error) {
+func (r *SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r sinkGetResponseFormatParquetJSON) RawJSON() string {
+func (r sinkGetResponseFormatCloudflarePipelinesSinkParquetFormatJSON) RawJSON() string {
 	return r.raw
 }
 
-func (r SinkGetResponseFormatParquet) implementsSinkGetResponseFormat() {}
+func (r SinkGetResponseFormatCloudflarePipelinesSinkParquetFormat) implementsSinkGetResponseFormat() {
+}
 
-type SinkGetResponseFormatParquetType string
+type SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatType string
 
 const (
-	SinkGetResponseFormatParquetTypeParquet SinkGetResponseFormatParquetType = "parquet"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatType = "parquet"
 )
 
-func (r SinkGetResponseFormatParquetType) IsKnown() bool {
+func (r SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatType) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatParquetTypeParquet:
+	case SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatTypeParquet:
 		return true
 	}
 	return false
 }
 
-type SinkGetResponseFormatParquetCompression string
+type SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression string
 
 const (
-	SinkGetResponseFormatParquetCompressionUncompressed SinkGetResponseFormatParquetCompression = "uncompressed"
-	SinkGetResponseFormatParquetCompressionSnappy       SinkGetResponseFormatParquetCompression = "snappy"
-	SinkGetResponseFormatParquetCompressionGzip         SinkGetResponseFormatParquetCompression = "gzip"
-	SinkGetResponseFormatParquetCompressionZstd         SinkGetResponseFormatParquetCompression = "zstd"
-	SinkGetResponseFormatParquetCompressionLz4          SinkGetResponseFormatParquetCompression = "lz4"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "uncompressed"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy       SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "snappy"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip         SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "gzip"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd         SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "zstd"
+	SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4          SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression = "lz4"
 )
 
-func (r SinkGetResponseFormatParquetCompression) IsKnown() bool {
+func (r SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatParquetCompressionUncompressed, SinkGetResponseFormatParquetCompressionSnappy, SinkGetResponseFormatParquetCompressionGzip, SinkGetResponseFormatParquetCompressionZstd, SinkGetResponseFormatParquetCompressionLz4:
+	case SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed, SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy, SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionGzip, SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionZstd, SinkGetResponseFormatCloudflarePipelinesSinkParquetFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -3829,19 +2127,20 @@ func (r SinkGetResponseFormatType) IsKnown() bool {
 	return false
 }
 
+// Specifies the compression applied to JSON sink output.
 type SinkGetResponseFormatCompression string
 
 const (
 	SinkGetResponseFormatCompressionUncompressed SinkGetResponseFormatCompression = "uncompressed"
-	SinkGetResponseFormatCompressionSnappy       SinkGetResponseFormatCompression = "snappy"
 	SinkGetResponseFormatCompressionGzip         SinkGetResponseFormatCompression = "gzip"
+	SinkGetResponseFormatCompressionSnappy       SinkGetResponseFormatCompression = "snappy"
 	SinkGetResponseFormatCompressionZstd         SinkGetResponseFormatCompression = "zstd"
 	SinkGetResponseFormatCompressionLz4          SinkGetResponseFormatCompression = "lz4"
 )
 
 func (r SinkGetResponseFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkGetResponseFormatCompressionUncompressed, SinkGetResponseFormatCompressionSnappy, SinkGetResponseFormatCompressionGzip, SinkGetResponseFormatCompressionZstd, SinkGetResponseFormatCompressionLz4:
+	case SinkGetResponseFormatCompressionUncompressed, SinkGetResponseFormatCompressionGzip, SinkGetResponseFormatCompressionSnappy, SinkGetResponseFormatCompressionZstd, SinkGetResponseFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -3878,18 +2177,17 @@ func (r SinkGetResponseFormatTimestampFormat) IsKnown() bool {
 	return false
 }
 
+// Defines the schema of the events in the data stream.
 type SinkGetResponseSchema struct {
-	Fields   []SinkGetResponseSchemaField `json:"fields"`
-	Format   SinkGetResponseSchemaFormat  `json:"format"`
-	Inferred bool                         `json:"inferred" api:"nullable"`
-	JSON     sinkGetResponseSchemaJSON    `json:"-"`
+	Fields   []SourceField             `json:"fields"`
+	Inferred bool                      `json:"inferred" api:"nullable"`
+	JSON     sinkGetResponseSchemaJSON `json:"-"`
 }
 
 // sinkGetResponseSchemaJSON contains the JSON metadata for the struct
 // [SinkGetResponseSchema]
 type sinkGetResponseSchemaJSON struct {
 	Fields      apijson.Field
-	Format      apijson.Field
 	Inferred    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -3903,901 +2201,6 @@ func (r sinkGetResponseSchemaJSON) RawJSON() string {
 	return r.raw
 }
 
-type SinkGetResponseSchemaField struct {
-	Type        SinkGetResponseSchemaFieldsType `json:"type" api:"required"`
-	MetadataKey string                          `json:"metadata_key" api:"nullable"`
-	Name        string                          `json:"name"`
-	Required    bool                            `json:"required"`
-	SqlName     string                          `json:"sql_name"`
-	Unit        SinkGetResponseSchemaFieldsUnit `json:"unit"`
-	JSON        sinkGetResponseSchemaFieldJSON  `json:"-"`
-	union       SinkGetResponseSchemaFieldsUnion
-}
-
-// sinkGetResponseSchemaFieldJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaField]
-type sinkGetResponseSchemaFieldJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r sinkGetResponseSchemaFieldJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkGetResponseSchemaField) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkGetResponseSchemaField{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkGetResponseSchemaFieldsUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkGetResponseSchemaFieldsInt32],
-// [SinkGetResponseSchemaFieldsInt64], [SinkGetResponseSchemaFieldsFloat32],
-// [SinkGetResponseSchemaFieldsFloat64], [SinkGetResponseSchemaFieldsBool],
-// [SinkGetResponseSchemaFieldsString], [SinkGetResponseSchemaFieldsBinary],
-// [SinkGetResponseSchemaFieldsTimestamp], [SinkGetResponseSchemaFieldsJson],
-// [SinkGetResponseSchemaFieldsStruct], [SinkGetResponseSchemaFieldsList].
-func (r SinkGetResponseSchemaField) AsUnion() SinkGetResponseSchemaFieldsUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkGetResponseSchemaFieldsInt32],
-// [SinkGetResponseSchemaFieldsInt64], [SinkGetResponseSchemaFieldsFloat32],
-// [SinkGetResponseSchemaFieldsFloat64], [SinkGetResponseSchemaFieldsBool],
-// [SinkGetResponseSchemaFieldsString], [SinkGetResponseSchemaFieldsBinary],
-// [SinkGetResponseSchemaFieldsTimestamp], [SinkGetResponseSchemaFieldsJson],
-// [SinkGetResponseSchemaFieldsStruct] or [SinkGetResponseSchemaFieldsList].
-type SinkGetResponseSchemaFieldsUnion interface {
-	implementsSinkGetResponseSchemaField()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkGetResponseSchemaFieldsUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsInt32{}),
-			DiscriminatorValue: "int32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsInt64{}),
-			DiscriminatorValue: "int64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsFloat32{}),
-			DiscriminatorValue: "float32",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsFloat64{}),
-			DiscriminatorValue: "float64",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsBool{}),
-			DiscriminatorValue: "bool",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsString{}),
-			DiscriminatorValue: "string",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsBinary{}),
-			DiscriminatorValue: "binary",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsTimestamp{}),
-			DiscriminatorValue: "timestamp",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsStruct{}),
-			DiscriminatorValue: "struct",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFieldsList{}),
-			DiscriminatorValue: "list",
-		},
-	)
-}
-
-type SinkGetResponseSchemaFieldsInt32 struct {
-	Type        SinkGetResponseSchemaFieldsInt32Type `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsInt32JSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsInt32JSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsInt32]
-type sinkGetResponseSchemaFieldsInt32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsInt32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsInt32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsInt32) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsInt32Type string
-
-const (
-	SinkGetResponseSchemaFieldsInt32TypeInt32 SinkGetResponseSchemaFieldsInt32Type = "int32"
-)
-
-func (r SinkGetResponseSchemaFieldsInt32Type) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsInt32TypeInt32:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsInt64 struct {
-	Type        SinkGetResponseSchemaFieldsInt64Type `json:"type" api:"required"`
-	MetadataKey string                               `json:"metadata_key" api:"nullable"`
-	Name        string                               `json:"name"`
-	Required    bool                                 `json:"required"`
-	SqlName     string                               `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsInt64JSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsInt64JSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsInt64]
-type sinkGetResponseSchemaFieldsInt64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsInt64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsInt64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsInt64) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsInt64Type string
-
-const (
-	SinkGetResponseSchemaFieldsInt64TypeInt64 SinkGetResponseSchemaFieldsInt64Type = "int64"
-)
-
-func (r SinkGetResponseSchemaFieldsInt64Type) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsInt64TypeInt64:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsFloat32 struct {
-	Type        SinkGetResponseSchemaFieldsFloat32Type `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsFloat32JSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsFloat32JSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsFloat32]
-type sinkGetResponseSchemaFieldsFloat32JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsFloat32) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsFloat32JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsFloat32) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsFloat32Type string
-
-const (
-	SinkGetResponseSchemaFieldsFloat32TypeFloat32 SinkGetResponseSchemaFieldsFloat32Type = "float32"
-)
-
-func (r SinkGetResponseSchemaFieldsFloat32Type) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsFloat32TypeFloat32:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsFloat64 struct {
-	Type        SinkGetResponseSchemaFieldsFloat64Type `json:"type" api:"required"`
-	MetadataKey string                                 `json:"metadata_key" api:"nullable"`
-	Name        string                                 `json:"name"`
-	Required    bool                                   `json:"required"`
-	SqlName     string                                 `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsFloat64JSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsFloat64JSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsFloat64]
-type sinkGetResponseSchemaFieldsFloat64JSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsFloat64) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsFloat64JSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsFloat64) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsFloat64Type string
-
-const (
-	SinkGetResponseSchemaFieldsFloat64TypeFloat64 SinkGetResponseSchemaFieldsFloat64Type = "float64"
-)
-
-func (r SinkGetResponseSchemaFieldsFloat64Type) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsFloat64TypeFloat64:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsBool struct {
-	Type        SinkGetResponseSchemaFieldsBoolType `json:"type" api:"required"`
-	MetadataKey string                              `json:"metadata_key" api:"nullable"`
-	Name        string                              `json:"name"`
-	Required    bool                                `json:"required"`
-	SqlName     string                              `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsBoolJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsBoolJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsBool]
-type sinkGetResponseSchemaFieldsBoolJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsBool) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsBoolJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsBool) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsBoolType string
-
-const (
-	SinkGetResponseSchemaFieldsBoolTypeBool SinkGetResponseSchemaFieldsBoolType = "bool"
-)
-
-func (r SinkGetResponseSchemaFieldsBoolType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsBoolTypeBool:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsString struct {
-	Type        SinkGetResponseSchemaFieldsStringType `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsStringJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsStringJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsString]
-type sinkGetResponseSchemaFieldsStringJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsString) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsStringJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsString) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsStringType string
-
-const (
-	SinkGetResponseSchemaFieldsStringTypeString SinkGetResponseSchemaFieldsStringType = "string"
-)
-
-func (r SinkGetResponseSchemaFieldsStringType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsStringTypeString:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsBinary struct {
-	Type        SinkGetResponseSchemaFieldsBinaryType `json:"type" api:"required"`
-	MetadataKey string                                `json:"metadata_key" api:"nullable"`
-	Name        string                                `json:"name"`
-	Required    bool                                  `json:"required"`
-	SqlName     string                                `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsBinaryJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsBinaryJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsBinary]
-type sinkGetResponseSchemaFieldsBinaryJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsBinary) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsBinaryJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsBinary) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsBinaryType string
-
-const (
-	SinkGetResponseSchemaFieldsBinaryTypeBinary SinkGetResponseSchemaFieldsBinaryType = "binary"
-)
-
-func (r SinkGetResponseSchemaFieldsBinaryType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsBinaryTypeBinary:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsTimestamp struct {
-	Type        SinkGetResponseSchemaFieldsTimestampType `json:"type" api:"required"`
-	MetadataKey string                                   `json:"metadata_key" api:"nullable"`
-	Name        string                                   `json:"name"`
-	Required    bool                                     `json:"required"`
-	SqlName     string                                   `json:"sql_name"`
-	Unit        SinkGetResponseSchemaFieldsTimestampUnit `json:"unit"`
-	JSON        sinkGetResponseSchemaFieldsTimestampJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsTimestampJSON contains the JSON metadata for the
-// struct [SinkGetResponseSchemaFieldsTimestamp]
-type sinkGetResponseSchemaFieldsTimestampJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	Unit        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsTimestamp) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsTimestampJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsTimestamp) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsTimestampType string
-
-const (
-	SinkGetResponseSchemaFieldsTimestampTypeTimestamp SinkGetResponseSchemaFieldsTimestampType = "timestamp"
-)
-
-func (r SinkGetResponseSchemaFieldsTimestampType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsTimestampTypeTimestamp:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsTimestampUnit string
-
-const (
-	SinkGetResponseSchemaFieldsTimestampUnitSecond      SinkGetResponseSchemaFieldsTimestampUnit = "second"
-	SinkGetResponseSchemaFieldsTimestampUnitMillisecond SinkGetResponseSchemaFieldsTimestampUnit = "millisecond"
-	SinkGetResponseSchemaFieldsTimestampUnitMicrosecond SinkGetResponseSchemaFieldsTimestampUnit = "microsecond"
-	SinkGetResponseSchemaFieldsTimestampUnitNanosecond  SinkGetResponseSchemaFieldsTimestampUnit = "nanosecond"
-)
-
-func (r SinkGetResponseSchemaFieldsTimestampUnit) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsTimestampUnitSecond, SinkGetResponseSchemaFieldsTimestampUnitMillisecond, SinkGetResponseSchemaFieldsTimestampUnitMicrosecond, SinkGetResponseSchemaFieldsTimestampUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsJson struct {
-	Type        SinkGetResponseSchemaFieldsJsonType `json:"type" api:"required"`
-	MetadataKey string                              `json:"metadata_key" api:"nullable"`
-	Name        string                              `json:"name"`
-	Required    bool                                `json:"required"`
-	SqlName     string                              `json:"sql_name"`
-	JSON        sinkGetResponseSchemaFieldsJsonJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsJsonJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsJson]
-type sinkGetResponseSchemaFieldsJsonJSON struct {
-	Type        apijson.Field
-	MetadataKey apijson.Field
-	Name        apijson.Field
-	Required    apijson.Field
-	SqlName     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsJson) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsJsonType string
-
-const (
-	SinkGetResponseSchemaFieldsJsonTypeJson SinkGetResponseSchemaFieldsJsonType = "json"
-)
-
-func (r SinkGetResponseSchemaFieldsJsonType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsStruct struct {
-	JSON sinkGetResponseSchemaFieldsStructJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsStructJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsStruct]
-type sinkGetResponseSchemaFieldsStructJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsStruct) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsStructJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsStruct) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsList struct {
-	JSON sinkGetResponseSchemaFieldsListJSON `json:"-"`
-}
-
-// sinkGetResponseSchemaFieldsListJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFieldsList]
-type sinkGetResponseSchemaFieldsListJSON struct {
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFieldsList) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFieldsListJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFieldsList) implementsSinkGetResponseSchemaField() {}
-
-type SinkGetResponseSchemaFieldsType string
-
-const (
-	SinkGetResponseSchemaFieldsTypeInt32     SinkGetResponseSchemaFieldsType = "int32"
-	SinkGetResponseSchemaFieldsTypeInt64     SinkGetResponseSchemaFieldsType = "int64"
-	SinkGetResponseSchemaFieldsTypeFloat32   SinkGetResponseSchemaFieldsType = "float32"
-	SinkGetResponseSchemaFieldsTypeFloat64   SinkGetResponseSchemaFieldsType = "float64"
-	SinkGetResponseSchemaFieldsTypeBool      SinkGetResponseSchemaFieldsType = "bool"
-	SinkGetResponseSchemaFieldsTypeString    SinkGetResponseSchemaFieldsType = "string"
-	SinkGetResponseSchemaFieldsTypeBinary    SinkGetResponseSchemaFieldsType = "binary"
-	SinkGetResponseSchemaFieldsTypeTimestamp SinkGetResponseSchemaFieldsType = "timestamp"
-	SinkGetResponseSchemaFieldsTypeJson      SinkGetResponseSchemaFieldsType = "json"
-	SinkGetResponseSchemaFieldsTypeStruct    SinkGetResponseSchemaFieldsType = "struct"
-	SinkGetResponseSchemaFieldsTypeList      SinkGetResponseSchemaFieldsType = "list"
-)
-
-func (r SinkGetResponseSchemaFieldsType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsTypeInt32, SinkGetResponseSchemaFieldsTypeInt64, SinkGetResponseSchemaFieldsTypeFloat32, SinkGetResponseSchemaFieldsTypeFloat64, SinkGetResponseSchemaFieldsTypeBool, SinkGetResponseSchemaFieldsTypeString, SinkGetResponseSchemaFieldsTypeBinary, SinkGetResponseSchemaFieldsTypeTimestamp, SinkGetResponseSchemaFieldsTypeJson, SinkGetResponseSchemaFieldsTypeStruct, SinkGetResponseSchemaFieldsTypeList:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFieldsUnit string
-
-const (
-	SinkGetResponseSchemaFieldsUnitSecond      SinkGetResponseSchemaFieldsUnit = "second"
-	SinkGetResponseSchemaFieldsUnitMillisecond SinkGetResponseSchemaFieldsUnit = "millisecond"
-	SinkGetResponseSchemaFieldsUnitMicrosecond SinkGetResponseSchemaFieldsUnit = "microsecond"
-	SinkGetResponseSchemaFieldsUnitNanosecond  SinkGetResponseSchemaFieldsUnit = "nanosecond"
-)
-
-func (r SinkGetResponseSchemaFieldsUnit) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFieldsUnitSecond, SinkGetResponseSchemaFieldsUnitMillisecond, SinkGetResponseSchemaFieldsUnitMicrosecond, SinkGetResponseSchemaFieldsUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormat struct {
-	Type            SinkGetResponseSchemaFormatType            `json:"type" api:"required"`
-	Compression     SinkGetResponseSchemaFormatCompression     `json:"compression"`
-	DecimalEncoding SinkGetResponseSchemaFormatDecimalEncoding `json:"decimal_encoding"`
-	RowGroupBytes   int64                                      `json:"row_group_bytes" api:"nullable"`
-	TimestampFormat SinkGetResponseSchemaFormatTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                       `json:"unstructured"`
-	JSON            sinkGetResponseSchemaFormatJSON            `json:"-"`
-	union           SinkGetResponseSchemaFormatUnion
-}
-
-// sinkGetResponseSchemaFormatJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFormat]
-type sinkGetResponseSchemaFormatJSON struct {
-	Type            apijson.Field
-	Compression     apijson.Field
-	DecimalEncoding apijson.Field
-	RowGroupBytes   apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r sinkGetResponseSchemaFormatJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *SinkGetResponseSchemaFormat) UnmarshalJSON(data []byte) (err error) {
-	*r = SinkGetResponseSchemaFormat{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [SinkGetResponseSchemaFormatUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are [SinkGetResponseSchemaFormatJson],
-// [SinkGetResponseSchemaFormatParquet].
-func (r SinkGetResponseSchemaFormat) AsUnion() SinkGetResponseSchemaFormatUnion {
-	return r.union
-}
-
-// Union satisfied by [SinkGetResponseSchemaFormatJson] or
-// [SinkGetResponseSchemaFormatParquet].
-type SinkGetResponseSchemaFormatUnion interface {
-	implementsSinkGetResponseSchemaFormat()
-}
-
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*SinkGetResponseSchemaFormatUnion)(nil)).Elem(),
-		"type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFormatJson{}),
-			DiscriminatorValue: "json",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(SinkGetResponseSchemaFormatParquet{}),
-			DiscriminatorValue: "parquet",
-		},
-	)
-}
-
-type SinkGetResponseSchemaFormatJson struct {
-	Type            SinkGetResponseSchemaFormatJsonType            `json:"type" api:"required"`
-	DecimalEncoding SinkGetResponseSchemaFormatJsonDecimalEncoding `json:"decimal_encoding"`
-	TimestampFormat SinkGetResponseSchemaFormatJsonTimestampFormat `json:"timestamp_format"`
-	Unstructured    bool                                           `json:"unstructured"`
-	JSON            sinkGetResponseSchemaFormatJsonJSON            `json:"-"`
-}
-
-// sinkGetResponseSchemaFormatJsonJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFormatJson]
-type sinkGetResponseSchemaFormatJsonJSON struct {
-	Type            apijson.Field
-	DecimalEncoding apijson.Field
-	TimestampFormat apijson.Field
-	Unstructured    apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFormatJson) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFormatJsonJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFormatJson) implementsSinkGetResponseSchemaFormat() {}
-
-type SinkGetResponseSchemaFormatJsonType string
-
-const (
-	SinkGetResponseSchemaFormatJsonTypeJson SinkGetResponseSchemaFormatJsonType = "json"
-)
-
-func (r SinkGetResponseSchemaFormatJsonType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatJsonDecimalEncoding string
-
-const (
-	SinkGetResponseSchemaFormatJsonDecimalEncodingNumber SinkGetResponseSchemaFormatJsonDecimalEncoding = "number"
-	SinkGetResponseSchemaFormatJsonDecimalEncodingString SinkGetResponseSchemaFormatJsonDecimalEncoding = "string"
-	SinkGetResponseSchemaFormatJsonDecimalEncodingBytes  SinkGetResponseSchemaFormatJsonDecimalEncoding = "bytes"
-)
-
-func (r SinkGetResponseSchemaFormatJsonDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatJsonDecimalEncodingNumber, SinkGetResponseSchemaFormatJsonDecimalEncodingString, SinkGetResponseSchemaFormatJsonDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatJsonTimestampFormat string
-
-const (
-	SinkGetResponseSchemaFormatJsonTimestampFormatRfc3339    SinkGetResponseSchemaFormatJsonTimestampFormat = "rfc3339"
-	SinkGetResponseSchemaFormatJsonTimestampFormatUnixMillis SinkGetResponseSchemaFormatJsonTimestampFormat = "unix_millis"
-)
-
-func (r SinkGetResponseSchemaFormatJsonTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatJsonTimestampFormatRfc3339, SinkGetResponseSchemaFormatJsonTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatParquet struct {
-	Type          SinkGetResponseSchemaFormatParquetType        `json:"type" api:"required"`
-	Compression   SinkGetResponseSchemaFormatParquetCompression `json:"compression"`
-	RowGroupBytes int64                                         `json:"row_group_bytes" api:"nullable"`
-	JSON          sinkGetResponseSchemaFormatParquetJSON        `json:"-"`
-}
-
-// sinkGetResponseSchemaFormatParquetJSON contains the JSON metadata for the struct
-// [SinkGetResponseSchemaFormatParquet]
-type sinkGetResponseSchemaFormatParquetJSON struct {
-	Type          apijson.Field
-	Compression   apijson.Field
-	RowGroupBytes apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *SinkGetResponseSchemaFormatParquet) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r sinkGetResponseSchemaFormatParquetJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r SinkGetResponseSchemaFormatParquet) implementsSinkGetResponseSchemaFormat() {}
-
-type SinkGetResponseSchemaFormatParquetType string
-
-const (
-	SinkGetResponseSchemaFormatParquetTypeParquet SinkGetResponseSchemaFormatParquetType = "parquet"
-)
-
-func (r SinkGetResponseSchemaFormatParquetType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatParquetTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatParquetCompression string
-
-const (
-	SinkGetResponseSchemaFormatParquetCompressionUncompressed SinkGetResponseSchemaFormatParquetCompression = "uncompressed"
-	SinkGetResponseSchemaFormatParquetCompressionSnappy       SinkGetResponseSchemaFormatParquetCompression = "snappy"
-	SinkGetResponseSchemaFormatParquetCompressionGzip         SinkGetResponseSchemaFormatParquetCompression = "gzip"
-	SinkGetResponseSchemaFormatParquetCompressionZstd         SinkGetResponseSchemaFormatParquetCompression = "zstd"
-	SinkGetResponseSchemaFormatParquetCompressionLz4          SinkGetResponseSchemaFormatParquetCompression = "lz4"
-)
-
-func (r SinkGetResponseSchemaFormatParquetCompression) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatParquetCompressionUncompressed, SinkGetResponseSchemaFormatParquetCompressionSnappy, SinkGetResponseSchemaFormatParquetCompressionGzip, SinkGetResponseSchemaFormatParquetCompressionZstd, SinkGetResponseSchemaFormatParquetCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatType string
-
-const (
-	SinkGetResponseSchemaFormatTypeJson    SinkGetResponseSchemaFormatType = "json"
-	SinkGetResponseSchemaFormatTypeParquet SinkGetResponseSchemaFormatType = "parquet"
-)
-
-func (r SinkGetResponseSchemaFormatType) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatTypeJson, SinkGetResponseSchemaFormatTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatCompression string
-
-const (
-	SinkGetResponseSchemaFormatCompressionUncompressed SinkGetResponseSchemaFormatCompression = "uncompressed"
-	SinkGetResponseSchemaFormatCompressionSnappy       SinkGetResponseSchemaFormatCompression = "snappy"
-	SinkGetResponseSchemaFormatCompressionGzip         SinkGetResponseSchemaFormatCompression = "gzip"
-	SinkGetResponseSchemaFormatCompressionZstd         SinkGetResponseSchemaFormatCompression = "zstd"
-	SinkGetResponseSchemaFormatCompressionLz4          SinkGetResponseSchemaFormatCompression = "lz4"
-)
-
-func (r SinkGetResponseSchemaFormatCompression) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatCompressionUncompressed, SinkGetResponseSchemaFormatCompressionSnappy, SinkGetResponseSchemaFormatCompressionGzip, SinkGetResponseSchemaFormatCompressionZstd, SinkGetResponseSchemaFormatCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatDecimalEncoding string
-
-const (
-	SinkGetResponseSchemaFormatDecimalEncodingNumber SinkGetResponseSchemaFormatDecimalEncoding = "number"
-	SinkGetResponseSchemaFormatDecimalEncodingString SinkGetResponseSchemaFormatDecimalEncoding = "string"
-	SinkGetResponseSchemaFormatDecimalEncodingBytes  SinkGetResponseSchemaFormatDecimalEncoding = "bytes"
-)
-
-func (r SinkGetResponseSchemaFormatDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatDecimalEncodingNumber, SinkGetResponseSchemaFormatDecimalEncodingString, SinkGetResponseSchemaFormatDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkGetResponseSchemaFormatTimestampFormat string
-
-const (
-	SinkGetResponseSchemaFormatTimestampFormatRfc3339    SinkGetResponseSchemaFormatTimestampFormat = "rfc3339"
-	SinkGetResponseSchemaFormatTimestampFormatUnixMillis SinkGetResponseSchemaFormatTimestampFormat = "unix_millis"
-)
-
-func (r SinkGetResponseSchemaFormatTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkGetResponseSchemaFormatTimestampFormatRfc3339, SinkGetResponseSchemaFormatTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
 type SinkNewParams struct {
 	// Specifies the public ID of the account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
@@ -4807,8 +2210,10 @@ type SinkNewParams struct {
 	Type param.Field[SinkNewParamsType] `json:"type" api:"required"`
 	// Defines the configuration of the R2 Sink.
 	Config param.Field[SinkNewParamsConfigUnion] `json:"config"`
+	// Defines the output data format of a sink.
 	Format param.Field[SinkNewParamsFormatUnion] `json:"format"`
-	Schema param.Field[SinkNewParamsSchema]      `json:"schema"`
+	// Defines the schema of the events in the data stream.
+	Schema param.Field[SinkNewParamsSchema] `json:"schema"`
 }
 
 func (r SinkNewParams) MarshalJSON() (data []byte, err error) {
@@ -4821,11 +2226,12 @@ type SinkNewParamsType string
 const (
 	SinkNewParamsTypeR2            SinkNewParamsType = "r2"
 	SinkNewParamsTypeR2DataCatalog SinkNewParamsType = "r2_data_catalog"
+	SinkNewParamsTypeBasinCatalog  SinkNewParamsType = "basin_catalog"
 )
 
 func (r SinkNewParamsType) IsKnown() bool {
 	switch r {
-	case SinkNewParamsTypeR2, SinkNewParamsTypeR2DataCatalog:
+	case SinkNewParamsTypeR2, SinkNewParamsTypeR2DataCatalog, SinkNewParamsTypeBasinCatalog:
 		return true
 	}
 	return false
@@ -4996,8 +2402,10 @@ func (r SinkNewParamsConfigCloudflarePipelinesR2DataCatalogTableRollingPolicy) M
 	return apijson.MarshalRoot(r)
 }
 
+// Defines the output data format of a sink.
 type SinkNewParamsFormat struct {
-	Type            param.Field[SinkNewParamsFormatType]            `json:"type" api:"required"`
+	Type param.Field[SinkNewParamsFormatType] `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
 	Compression     param.Field[SinkNewParamsFormatCompression]     `json:"compression"`
 	DecimalEncoding param.Field[SinkNewParamsFormatDecimalEncoding] `json:"decimal_encoding"`
 	RowGroupBytes   param.Field[int64]                              `json:"row_group_bytes"`
@@ -5011,109 +2419,131 @@ func (r SinkNewParamsFormat) MarshalJSON() (data []byte, err error) {
 
 func (r SinkNewParamsFormat) implementsSinkNewParamsFormatUnion() {}
 
-// Satisfied by [pipelines.SinkNewParamsFormatJson],
-// [pipelines.SinkNewParamsFormatParquet], [SinkNewParamsFormat].
+// Defines the output data format of a sink.
+//
+// Satisfied by [pipelines.SinkNewParamsFormatCloudflarePipelinesSinkJsonFormat],
+// [pipelines.SinkNewParamsFormatCloudflarePipelinesSinkParquetFormat],
+// [SinkNewParamsFormat].
 type SinkNewParamsFormatUnion interface {
 	implementsSinkNewParamsFormatUnion()
 }
 
-type SinkNewParamsFormatJson struct {
-	Type            param.Field[SinkNewParamsFormatJsonType]            `json:"type" api:"required"`
-	DecimalEncoding param.Field[SinkNewParamsFormatJsonDecimalEncoding] `json:"decimal_encoding"`
-	TimestampFormat param.Field[SinkNewParamsFormatJsonTimestampFormat] `json:"timestamp_format"`
-	Unstructured    param.Field[bool]                                   `json:"unstructured"`
+type SinkNewParamsFormatCloudflarePipelinesSinkJsonFormat struct {
+	Type param.Field[SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatType] `json:"type" api:"required"`
+	// Specifies the compression applied to JSON sink output.
+	Compression     param.Field[SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompression]     `json:"compression"`
+	DecimalEncoding param.Field[SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding] `json:"decimal_encoding"`
+	TimestampFormat param.Field[SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormat] `json:"timestamp_format"`
+	Unstructured    param.Field[bool]                                                                `json:"unstructured"`
 }
 
-func (r SinkNewParamsFormatJson) MarshalJSON() (data []byte, err error) {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormat) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r SinkNewParamsFormatJson) implementsSinkNewParamsFormatUnion() {}
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormat) implementsSinkNewParamsFormatUnion() {}
 
-type SinkNewParamsFormatJsonType string
+type SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatType string
 
 const (
-	SinkNewParamsFormatJsonTypeJson SinkNewParamsFormatJsonType = "json"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTypeJson SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatType = "json"
 )
 
-func (r SinkNewParamsFormatJsonType) IsKnown() bool {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatType) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatJsonTypeJson:
+	case SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTypeJson:
 		return true
 	}
 	return false
 }
 
-type SinkNewParamsFormatJsonDecimalEncoding string
+// Specifies the compression applied to JSON sink output.
+type SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompression string
 
 const (
-	SinkNewParamsFormatJsonDecimalEncodingNumber SinkNewParamsFormatJsonDecimalEncoding = "number"
-	SinkNewParamsFormatJsonDecimalEncodingString SinkNewParamsFormatJsonDecimalEncoding = "string"
-	SinkNewParamsFormatJsonDecimalEncodingBytes  SinkNewParamsFormatJsonDecimalEncoding = "bytes"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompression = "uncompressed"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompressionGzip         SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompression = "gzip"
 )
 
-func (r SinkNewParamsFormatJsonDecimalEncoding) IsKnown() bool {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatJsonDecimalEncodingNumber, SinkNewParamsFormatJsonDecimalEncodingString, SinkNewParamsFormatJsonDecimalEncodingBytes:
+	case SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompressionUncompressed, SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatCompressionGzip:
 		return true
 	}
 	return false
 }
 
-type SinkNewParamsFormatJsonTimestampFormat string
+type SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding string
 
 const (
-	SinkNewParamsFormatJsonTimestampFormatRfc3339    SinkNewParamsFormatJsonTimestampFormat = "rfc3339"
-	SinkNewParamsFormatJsonTimestampFormatUnixMillis SinkNewParamsFormatJsonTimestampFormat = "unix_millis"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "number"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "string"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes  SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding = "bytes"
 )
 
-func (r SinkNewParamsFormatJsonTimestampFormat) IsKnown() bool {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncoding) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatJsonTimestampFormatRfc3339, SinkNewParamsFormatJsonTimestampFormatUnixMillis:
+	case SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingNumber, SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingString, SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatDecimalEncodingBytes:
 		return true
 	}
 	return false
 }
 
-type SinkNewParamsFormatParquet struct {
-	Type          param.Field[SinkNewParamsFormatParquetType]        `json:"type" api:"required"`
-	Compression   param.Field[SinkNewParamsFormatParquetCompression] `json:"compression"`
-	RowGroupBytes param.Field[int64]                                 `json:"row_group_bytes"`
+type SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormat string
+
+const (
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339    SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "rfc3339"
+	SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormat = "unix_millis"
+)
+
+func (r SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormat) IsKnown() bool {
+	switch r {
+	case SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormatRfc3339, SinkNewParamsFormatCloudflarePipelinesSinkJsonFormatTimestampFormatUnixMillis:
+		return true
+	}
+	return false
 }
 
-func (r SinkNewParamsFormatParquet) MarshalJSON() (data []byte, err error) {
+type SinkNewParamsFormatCloudflarePipelinesSinkParquetFormat struct {
+	Type          param.Field[SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatType]        `json:"type" api:"required"`
+	Compression   param.Field[SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression] `json:"compression"`
+	RowGroupBytes param.Field[int64]                                                              `json:"row_group_bytes"`
+}
+
+func (r SinkNewParamsFormatCloudflarePipelinesSinkParquetFormat) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-func (r SinkNewParamsFormatParquet) implementsSinkNewParamsFormatUnion() {}
+func (r SinkNewParamsFormatCloudflarePipelinesSinkParquetFormat) implementsSinkNewParamsFormatUnion() {
+}
 
-type SinkNewParamsFormatParquetType string
+type SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatType string
 
 const (
-	SinkNewParamsFormatParquetTypeParquet SinkNewParamsFormatParquetType = "parquet"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatTypeParquet SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatType = "parquet"
 )
 
-func (r SinkNewParamsFormatParquetType) IsKnown() bool {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatType) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatParquetTypeParquet:
+	case SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatTypeParquet:
 		return true
 	}
 	return false
 }
 
-type SinkNewParamsFormatParquetCompression string
+type SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression string
 
 const (
-	SinkNewParamsFormatParquetCompressionUncompressed SinkNewParamsFormatParquetCompression = "uncompressed"
-	SinkNewParamsFormatParquetCompressionSnappy       SinkNewParamsFormatParquetCompression = "snappy"
-	SinkNewParamsFormatParquetCompressionGzip         SinkNewParamsFormatParquetCompression = "gzip"
-	SinkNewParamsFormatParquetCompressionZstd         SinkNewParamsFormatParquetCompression = "zstd"
-	SinkNewParamsFormatParquetCompressionLz4          SinkNewParamsFormatParquetCompression = "lz4"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression = "uncompressed"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy       SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression = "snappy"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionGzip         SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression = "gzip"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionZstd         SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression = "zstd"
+	SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionLz4          SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression = "lz4"
 )
 
-func (r SinkNewParamsFormatParquetCompression) IsKnown() bool {
+func (r SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatParquetCompressionUncompressed, SinkNewParamsFormatParquetCompressionSnappy, SinkNewParamsFormatParquetCompressionGzip, SinkNewParamsFormatParquetCompressionZstd, SinkNewParamsFormatParquetCompressionLz4:
+	case SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionUncompressed, SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionSnappy, SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionGzip, SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionZstd, SinkNewParamsFormatCloudflarePipelinesSinkParquetFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -5134,19 +2564,20 @@ func (r SinkNewParamsFormatType) IsKnown() bool {
 	return false
 }
 
+// Specifies the compression applied to JSON sink output.
 type SinkNewParamsFormatCompression string
 
 const (
 	SinkNewParamsFormatCompressionUncompressed SinkNewParamsFormatCompression = "uncompressed"
-	SinkNewParamsFormatCompressionSnappy       SinkNewParamsFormatCompression = "snappy"
 	SinkNewParamsFormatCompressionGzip         SinkNewParamsFormatCompression = "gzip"
+	SinkNewParamsFormatCompressionSnappy       SinkNewParamsFormatCompression = "snappy"
 	SinkNewParamsFormatCompressionZstd         SinkNewParamsFormatCompression = "zstd"
 	SinkNewParamsFormatCompressionLz4          SinkNewParamsFormatCompression = "lz4"
 )
 
 func (r SinkNewParamsFormatCompression) IsKnown() bool {
 	switch r {
-	case SinkNewParamsFormatCompressionUncompressed, SinkNewParamsFormatCompressionSnappy, SinkNewParamsFormatCompressionGzip, SinkNewParamsFormatCompressionZstd, SinkNewParamsFormatCompressionLz4:
+	case SinkNewParamsFormatCompressionUncompressed, SinkNewParamsFormatCompressionGzip, SinkNewParamsFormatCompressionSnappy, SinkNewParamsFormatCompressionZstd, SinkNewParamsFormatCompressionLz4:
 		return true
 	}
 	return false
@@ -5183,560 +2614,14 @@ func (r SinkNewParamsFormatTimestampFormat) IsKnown() bool {
 	return false
 }
 
+// Defines the schema of the events in the data stream.
 type SinkNewParamsSchema struct {
-	Fields   param.Field[[]SinkNewParamsSchemaFieldUnion] `json:"fields"`
-	Format   param.Field[SinkNewParamsSchemaFormatUnion]  `json:"format"`
-	Inferred param.Field[bool]                            `json:"inferred"`
+	Fields   param.Field[[]SourceFieldUnionParam] `json:"fields"`
+	Inferred param.Field[bool]                    `json:"inferred"`
 }
 
 func (r SinkNewParamsSchema) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type SinkNewParamsSchemaField struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                        `json:"metadata_key"`
-	Name        param.Field[string]                        `json:"name"`
-	Required    param.Field[bool]                          `json:"required"`
-	SqlName     param.Field[string]                        `json:"sql_name"`
-	Unit        param.Field[SinkNewParamsSchemaFieldsUnit] `json:"unit"`
-}
-
-func (r SinkNewParamsSchemaField) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaField) implementsSinkNewParamsSchemaFieldUnion() {}
-
-// Satisfied by [pipelines.SinkNewParamsSchemaFieldsInt32],
-// [pipelines.SinkNewParamsSchemaFieldsInt64],
-// [pipelines.SinkNewParamsSchemaFieldsFloat32],
-// [pipelines.SinkNewParamsSchemaFieldsFloat64],
-// [pipelines.SinkNewParamsSchemaFieldsBool],
-// [pipelines.SinkNewParamsSchemaFieldsString],
-// [pipelines.SinkNewParamsSchemaFieldsBinary],
-// [pipelines.SinkNewParamsSchemaFieldsTimestamp],
-// [pipelines.SinkNewParamsSchemaFieldsJson],
-// [pipelines.SinkNewParamsSchemaFieldsStruct],
-// [pipelines.SinkNewParamsSchemaFieldsList], [SinkNewParamsSchemaField].
-type SinkNewParamsSchemaFieldUnion interface {
-	implementsSinkNewParamsSchemaFieldUnion()
-}
-
-type SinkNewParamsSchemaFieldsInt32 struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsInt32Type] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                             `json:"metadata_key"`
-	Name        param.Field[string]                             `json:"name"`
-	Required    param.Field[bool]                               `json:"required"`
-	SqlName     param.Field[string]                             `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsInt32) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsInt32) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsInt32Type string
-
-const (
-	SinkNewParamsSchemaFieldsInt32TypeInt32 SinkNewParamsSchemaFieldsInt32Type = "int32"
-)
-
-func (r SinkNewParamsSchemaFieldsInt32Type) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsInt32TypeInt32:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsInt64 struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsInt64Type] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                             `json:"metadata_key"`
-	Name        param.Field[string]                             `json:"name"`
-	Required    param.Field[bool]                               `json:"required"`
-	SqlName     param.Field[string]                             `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsInt64) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsInt64) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsInt64Type string
-
-const (
-	SinkNewParamsSchemaFieldsInt64TypeInt64 SinkNewParamsSchemaFieldsInt64Type = "int64"
-)
-
-func (r SinkNewParamsSchemaFieldsInt64Type) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsInt64TypeInt64:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsFloat32 struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsFloat32Type] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                               `json:"metadata_key"`
-	Name        param.Field[string]                               `json:"name"`
-	Required    param.Field[bool]                                 `json:"required"`
-	SqlName     param.Field[string]                               `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsFloat32) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsFloat32) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsFloat32Type string
-
-const (
-	SinkNewParamsSchemaFieldsFloat32TypeFloat32 SinkNewParamsSchemaFieldsFloat32Type = "float32"
-)
-
-func (r SinkNewParamsSchemaFieldsFloat32Type) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsFloat32TypeFloat32:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsFloat64 struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsFloat64Type] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                               `json:"metadata_key"`
-	Name        param.Field[string]                               `json:"name"`
-	Required    param.Field[bool]                                 `json:"required"`
-	SqlName     param.Field[string]                               `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsFloat64) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsFloat64) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsFloat64Type string
-
-const (
-	SinkNewParamsSchemaFieldsFloat64TypeFloat64 SinkNewParamsSchemaFieldsFloat64Type = "float64"
-)
-
-func (r SinkNewParamsSchemaFieldsFloat64Type) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsFloat64TypeFloat64:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsBool struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsBoolType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                            `json:"metadata_key"`
-	Name        param.Field[string]                            `json:"name"`
-	Required    param.Field[bool]                              `json:"required"`
-	SqlName     param.Field[string]                            `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsBool) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsBool) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsBoolType string
-
-const (
-	SinkNewParamsSchemaFieldsBoolTypeBool SinkNewParamsSchemaFieldsBoolType = "bool"
-)
-
-func (r SinkNewParamsSchemaFieldsBoolType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsBoolTypeBool:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsString struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsStringType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                              `json:"metadata_key"`
-	Name        param.Field[string]                              `json:"name"`
-	Required    param.Field[bool]                                `json:"required"`
-	SqlName     param.Field[string]                              `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsString) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsString) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsStringType string
-
-const (
-	SinkNewParamsSchemaFieldsStringTypeString SinkNewParamsSchemaFieldsStringType = "string"
-)
-
-func (r SinkNewParamsSchemaFieldsStringType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsStringTypeString:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsBinary struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsBinaryType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                              `json:"metadata_key"`
-	Name        param.Field[string]                              `json:"name"`
-	Required    param.Field[bool]                                `json:"required"`
-	SqlName     param.Field[string]                              `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsBinary) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsBinary) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsBinaryType string
-
-const (
-	SinkNewParamsSchemaFieldsBinaryTypeBinary SinkNewParamsSchemaFieldsBinaryType = "binary"
-)
-
-func (r SinkNewParamsSchemaFieldsBinaryType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsBinaryTypeBinary:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsTimestamp struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsTimestampType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                                 `json:"metadata_key"`
-	Name        param.Field[string]                                 `json:"name"`
-	Required    param.Field[bool]                                   `json:"required"`
-	SqlName     param.Field[string]                                 `json:"sql_name"`
-	Unit        param.Field[SinkNewParamsSchemaFieldsTimestampUnit] `json:"unit"`
-}
-
-func (r SinkNewParamsSchemaFieldsTimestamp) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsTimestamp) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsTimestampType string
-
-const (
-	SinkNewParamsSchemaFieldsTimestampTypeTimestamp SinkNewParamsSchemaFieldsTimestampType = "timestamp"
-)
-
-func (r SinkNewParamsSchemaFieldsTimestampType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsTimestampTypeTimestamp:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsTimestampUnit string
-
-const (
-	SinkNewParamsSchemaFieldsTimestampUnitSecond      SinkNewParamsSchemaFieldsTimestampUnit = "second"
-	SinkNewParamsSchemaFieldsTimestampUnitMillisecond SinkNewParamsSchemaFieldsTimestampUnit = "millisecond"
-	SinkNewParamsSchemaFieldsTimestampUnitMicrosecond SinkNewParamsSchemaFieldsTimestampUnit = "microsecond"
-	SinkNewParamsSchemaFieldsTimestampUnitNanosecond  SinkNewParamsSchemaFieldsTimestampUnit = "nanosecond"
-)
-
-func (r SinkNewParamsSchemaFieldsTimestampUnit) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsTimestampUnitSecond, SinkNewParamsSchemaFieldsTimestampUnitMillisecond, SinkNewParamsSchemaFieldsTimestampUnitMicrosecond, SinkNewParamsSchemaFieldsTimestampUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsJson struct {
-	Type        param.Field[SinkNewParamsSchemaFieldsJsonType] `json:"type" api:"required"`
-	MetadataKey param.Field[string]                            `json:"metadata_key"`
-	Name        param.Field[string]                            `json:"name"`
-	Required    param.Field[bool]                              `json:"required"`
-	SqlName     param.Field[string]                            `json:"sql_name"`
-}
-
-func (r SinkNewParamsSchemaFieldsJson) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsJson) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsJsonType string
-
-const (
-	SinkNewParamsSchemaFieldsJsonTypeJson SinkNewParamsSchemaFieldsJsonType = "json"
-)
-
-func (r SinkNewParamsSchemaFieldsJsonType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsStruct struct {
-}
-
-func (r SinkNewParamsSchemaFieldsStruct) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsStruct) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsList struct {
-}
-
-func (r SinkNewParamsSchemaFieldsList) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFieldsList) implementsSinkNewParamsSchemaFieldUnion() {}
-
-type SinkNewParamsSchemaFieldsType string
-
-const (
-	SinkNewParamsSchemaFieldsTypeInt32     SinkNewParamsSchemaFieldsType = "int32"
-	SinkNewParamsSchemaFieldsTypeInt64     SinkNewParamsSchemaFieldsType = "int64"
-	SinkNewParamsSchemaFieldsTypeFloat32   SinkNewParamsSchemaFieldsType = "float32"
-	SinkNewParamsSchemaFieldsTypeFloat64   SinkNewParamsSchemaFieldsType = "float64"
-	SinkNewParamsSchemaFieldsTypeBool      SinkNewParamsSchemaFieldsType = "bool"
-	SinkNewParamsSchemaFieldsTypeString    SinkNewParamsSchemaFieldsType = "string"
-	SinkNewParamsSchemaFieldsTypeBinary    SinkNewParamsSchemaFieldsType = "binary"
-	SinkNewParamsSchemaFieldsTypeTimestamp SinkNewParamsSchemaFieldsType = "timestamp"
-	SinkNewParamsSchemaFieldsTypeJson      SinkNewParamsSchemaFieldsType = "json"
-	SinkNewParamsSchemaFieldsTypeStruct    SinkNewParamsSchemaFieldsType = "struct"
-	SinkNewParamsSchemaFieldsTypeList      SinkNewParamsSchemaFieldsType = "list"
-)
-
-func (r SinkNewParamsSchemaFieldsType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsTypeInt32, SinkNewParamsSchemaFieldsTypeInt64, SinkNewParamsSchemaFieldsTypeFloat32, SinkNewParamsSchemaFieldsTypeFloat64, SinkNewParamsSchemaFieldsTypeBool, SinkNewParamsSchemaFieldsTypeString, SinkNewParamsSchemaFieldsTypeBinary, SinkNewParamsSchemaFieldsTypeTimestamp, SinkNewParamsSchemaFieldsTypeJson, SinkNewParamsSchemaFieldsTypeStruct, SinkNewParamsSchemaFieldsTypeList:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFieldsUnit string
-
-const (
-	SinkNewParamsSchemaFieldsUnitSecond      SinkNewParamsSchemaFieldsUnit = "second"
-	SinkNewParamsSchemaFieldsUnitMillisecond SinkNewParamsSchemaFieldsUnit = "millisecond"
-	SinkNewParamsSchemaFieldsUnitMicrosecond SinkNewParamsSchemaFieldsUnit = "microsecond"
-	SinkNewParamsSchemaFieldsUnitNanosecond  SinkNewParamsSchemaFieldsUnit = "nanosecond"
-)
-
-func (r SinkNewParamsSchemaFieldsUnit) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFieldsUnitSecond, SinkNewParamsSchemaFieldsUnitMillisecond, SinkNewParamsSchemaFieldsUnitMicrosecond, SinkNewParamsSchemaFieldsUnitNanosecond:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormat struct {
-	Type            param.Field[SinkNewParamsSchemaFormatType]            `json:"type" api:"required"`
-	Compression     param.Field[SinkNewParamsSchemaFormatCompression]     `json:"compression"`
-	DecimalEncoding param.Field[SinkNewParamsSchemaFormatDecimalEncoding] `json:"decimal_encoding"`
-	RowGroupBytes   param.Field[int64]                                    `json:"row_group_bytes"`
-	TimestampFormat param.Field[SinkNewParamsSchemaFormatTimestampFormat] `json:"timestamp_format"`
-	Unstructured    param.Field[bool]                                     `json:"unstructured"`
-}
-
-func (r SinkNewParamsSchemaFormat) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFormat) implementsSinkNewParamsSchemaFormatUnion() {}
-
-// Satisfied by [pipelines.SinkNewParamsSchemaFormatJson],
-// [pipelines.SinkNewParamsSchemaFormatParquet], [SinkNewParamsSchemaFormat].
-type SinkNewParamsSchemaFormatUnion interface {
-	implementsSinkNewParamsSchemaFormatUnion()
-}
-
-type SinkNewParamsSchemaFormatJson struct {
-	Type            param.Field[SinkNewParamsSchemaFormatJsonType]            `json:"type" api:"required"`
-	DecimalEncoding param.Field[SinkNewParamsSchemaFormatJsonDecimalEncoding] `json:"decimal_encoding"`
-	TimestampFormat param.Field[SinkNewParamsSchemaFormatJsonTimestampFormat] `json:"timestamp_format"`
-	Unstructured    param.Field[bool]                                         `json:"unstructured"`
-}
-
-func (r SinkNewParamsSchemaFormatJson) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFormatJson) implementsSinkNewParamsSchemaFormatUnion() {}
-
-type SinkNewParamsSchemaFormatJsonType string
-
-const (
-	SinkNewParamsSchemaFormatJsonTypeJson SinkNewParamsSchemaFormatJsonType = "json"
-)
-
-func (r SinkNewParamsSchemaFormatJsonType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatJsonTypeJson:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatJsonDecimalEncoding string
-
-const (
-	SinkNewParamsSchemaFormatJsonDecimalEncodingNumber SinkNewParamsSchemaFormatJsonDecimalEncoding = "number"
-	SinkNewParamsSchemaFormatJsonDecimalEncodingString SinkNewParamsSchemaFormatJsonDecimalEncoding = "string"
-	SinkNewParamsSchemaFormatJsonDecimalEncodingBytes  SinkNewParamsSchemaFormatJsonDecimalEncoding = "bytes"
-)
-
-func (r SinkNewParamsSchemaFormatJsonDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatJsonDecimalEncodingNumber, SinkNewParamsSchemaFormatJsonDecimalEncodingString, SinkNewParamsSchemaFormatJsonDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatJsonTimestampFormat string
-
-const (
-	SinkNewParamsSchemaFormatJsonTimestampFormatRfc3339    SinkNewParamsSchemaFormatJsonTimestampFormat = "rfc3339"
-	SinkNewParamsSchemaFormatJsonTimestampFormatUnixMillis SinkNewParamsSchemaFormatJsonTimestampFormat = "unix_millis"
-)
-
-func (r SinkNewParamsSchemaFormatJsonTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatJsonTimestampFormatRfc3339, SinkNewParamsSchemaFormatJsonTimestampFormatUnixMillis:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatParquet struct {
-	Type          param.Field[SinkNewParamsSchemaFormatParquetType]        `json:"type" api:"required"`
-	Compression   param.Field[SinkNewParamsSchemaFormatParquetCompression] `json:"compression"`
-	RowGroupBytes param.Field[int64]                                       `json:"row_group_bytes"`
-}
-
-func (r SinkNewParamsSchemaFormatParquet) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-func (r SinkNewParamsSchemaFormatParquet) implementsSinkNewParamsSchemaFormatUnion() {}
-
-type SinkNewParamsSchemaFormatParquetType string
-
-const (
-	SinkNewParamsSchemaFormatParquetTypeParquet SinkNewParamsSchemaFormatParquetType = "parquet"
-)
-
-func (r SinkNewParamsSchemaFormatParquetType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatParquetTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatParquetCompression string
-
-const (
-	SinkNewParamsSchemaFormatParquetCompressionUncompressed SinkNewParamsSchemaFormatParquetCompression = "uncompressed"
-	SinkNewParamsSchemaFormatParquetCompressionSnappy       SinkNewParamsSchemaFormatParquetCompression = "snappy"
-	SinkNewParamsSchemaFormatParquetCompressionGzip         SinkNewParamsSchemaFormatParquetCompression = "gzip"
-	SinkNewParamsSchemaFormatParquetCompressionZstd         SinkNewParamsSchemaFormatParquetCompression = "zstd"
-	SinkNewParamsSchemaFormatParquetCompressionLz4          SinkNewParamsSchemaFormatParquetCompression = "lz4"
-)
-
-func (r SinkNewParamsSchemaFormatParquetCompression) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatParquetCompressionUncompressed, SinkNewParamsSchemaFormatParquetCompressionSnappy, SinkNewParamsSchemaFormatParquetCompressionGzip, SinkNewParamsSchemaFormatParquetCompressionZstd, SinkNewParamsSchemaFormatParquetCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatType string
-
-const (
-	SinkNewParamsSchemaFormatTypeJson    SinkNewParamsSchemaFormatType = "json"
-	SinkNewParamsSchemaFormatTypeParquet SinkNewParamsSchemaFormatType = "parquet"
-)
-
-func (r SinkNewParamsSchemaFormatType) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatTypeJson, SinkNewParamsSchemaFormatTypeParquet:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatCompression string
-
-const (
-	SinkNewParamsSchemaFormatCompressionUncompressed SinkNewParamsSchemaFormatCompression = "uncompressed"
-	SinkNewParamsSchemaFormatCompressionSnappy       SinkNewParamsSchemaFormatCompression = "snappy"
-	SinkNewParamsSchemaFormatCompressionGzip         SinkNewParamsSchemaFormatCompression = "gzip"
-	SinkNewParamsSchemaFormatCompressionZstd         SinkNewParamsSchemaFormatCompression = "zstd"
-	SinkNewParamsSchemaFormatCompressionLz4          SinkNewParamsSchemaFormatCompression = "lz4"
-)
-
-func (r SinkNewParamsSchemaFormatCompression) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatCompressionUncompressed, SinkNewParamsSchemaFormatCompressionSnappy, SinkNewParamsSchemaFormatCompressionGzip, SinkNewParamsSchemaFormatCompressionZstd, SinkNewParamsSchemaFormatCompressionLz4:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatDecimalEncoding string
-
-const (
-	SinkNewParamsSchemaFormatDecimalEncodingNumber SinkNewParamsSchemaFormatDecimalEncoding = "number"
-	SinkNewParamsSchemaFormatDecimalEncodingString SinkNewParamsSchemaFormatDecimalEncoding = "string"
-	SinkNewParamsSchemaFormatDecimalEncodingBytes  SinkNewParamsSchemaFormatDecimalEncoding = "bytes"
-)
-
-func (r SinkNewParamsSchemaFormatDecimalEncoding) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatDecimalEncodingNumber, SinkNewParamsSchemaFormatDecimalEncodingString, SinkNewParamsSchemaFormatDecimalEncodingBytes:
-		return true
-	}
-	return false
-}
-
-type SinkNewParamsSchemaFormatTimestampFormat string
-
-const (
-	SinkNewParamsSchemaFormatTimestampFormatRfc3339    SinkNewParamsSchemaFormatTimestampFormat = "rfc3339"
-	SinkNewParamsSchemaFormatTimestampFormatUnixMillis SinkNewParamsSchemaFormatTimestampFormat = "unix_millis"
-)
-
-func (r SinkNewParamsSchemaFormatTimestampFormat) IsKnown() bool {
-	switch r {
-	case SinkNewParamsSchemaFormatTimestampFormatRfc3339, SinkNewParamsSchemaFormatTimestampFormatUnixMillis:
-		return true
-	}
-	return false
 }
 
 type SinkNewResponseEnvelope struct {
@@ -5784,16 +2669,6 @@ func (r SinkListParams) URLQuery() (v url.Values) {
 type SinkDeleteParams struct {
 	// Specifies the public ID of the account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Delete sink forcefully, including deleting any dependent pipelines.
-	Force param.Field[string] `query:"force"`
-}
-
-// URLQuery serializes [SinkDeleteParams]'s query parameters as `url.Values`.
-func (r SinkDeleteParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
-		NestedFormat: apiquery.NestedQueryFormatDots,
-	})
 }
 
 type SinkDeleteResponseEnvelope struct {

@@ -35,6 +35,7 @@ func TestAccessServiceTokenNewWithOptionalParams(t *testing.T) {
 		AccountID:                     cloudflare.F("account_id"),
 		ClientSecretVersion:           cloudflare.F(0.000000),
 		Duration:                      cloudflare.F("60m"),
+		Enabled:                       cloudflare.F(true),
 		PreviousClientSecretExpiresAt: cloudflare.F(time.Now()),
 	})
 	if err != nil {
@@ -68,6 +69,7 @@ func TestAccessServiceTokenUpdateWithOptionalParams(t *testing.T) {
 			AccountID:                     cloudflare.F("account_id"),
 			ClientSecretVersion:           cloudflare.F(0.000000),
 			Duration:                      cloudflare.F("60m"),
+			Enabled:                       cloudflare.F(true),
 			Name:                          cloudflare.F("CI/CD token"),
 			PreviousClientSecretExpiresAt: cloudflare.F(time.Now()),
 		},
@@ -100,7 +102,7 @@ func TestAccessServiceTokenListWithOptionalParams(t *testing.T) {
 		AccountID: cloudflare.F("account_id"),
 		Name:      cloudflare.F("name"),
 		Page:      cloudflare.F(int64(0)),
-		PerPage:   cloudflare.F(int64(0)),
+		PerPage:   cloudflare.F(int64(1000)),
 		Search:    cloudflare.F("search"),
 	})
 	if err != nil {

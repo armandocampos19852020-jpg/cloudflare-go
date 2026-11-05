@@ -191,6 +191,7 @@ type RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                            `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                          `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                       `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                        `json:"tags"`
 	JSON            rankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -205,6 +206,7 @@ type rankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -260,7 +262,6 @@ func (r RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsDataSource) 
 type RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -270,7 +271,7 @@ const (
 
 func (r RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RankingTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -422,6 +423,7 @@ type RankingTopResponseMeta struct {
 	// Normalization method applied to the results. Refer to
 	// [Normalization methods](https://developers.cloudflare.com/radar/concepts/normalization/).
 	Normalization RankingTopResponseMetaNormalization `json:"normalization" api:"required"`
+	Top0          RankingTopResponseMetaTop0          `json:"top_0" api:"required"`
 	// Measurement units for the results.
 	Units []RankingTopResponseMetaUnit `json:"units" api:"required"`
 	JSON  rankingTopResponseMetaJSON   `json:"-"`
@@ -434,6 +436,7 @@ type rankingTopResponseMetaJSON struct {
 	DateRange      apijson.Field
 	LastUpdated    apijson.Field
 	Normalization  apijson.Field
+	Top0           apijson.Field
 	Units          apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
@@ -483,6 +486,7 @@ type RankingTopResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                           `json:"tags"`
 	JSON            rankingTopResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -496,6 +500,7 @@ type rankingTopResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -551,7 +556,6 @@ func (r RankingTopResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() boo
 type RankingTopResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeEvent             RankingTopResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           RankingTopResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeOutage            RankingTopResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	RankingTopResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection RankingTopResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -561,7 +565,7 @@ const (
 
 func (r RankingTopResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeEvent, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RankingTopResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -613,6 +617,27 @@ func (r RankingTopResponseMetaNormalization) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type RankingTopResponseMetaTop0 struct {
+	Date time.Time                      `json:"date" api:"required" format:"date"`
+	JSON rankingTopResponseMetaTop0JSON `json:"-"`
+}
+
+// rankingTopResponseMetaTop0JSON contains the JSON metadata for the struct
+// [RankingTopResponseMetaTop0]
+type rankingTopResponseMetaTop0JSON struct {
+	Date        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *RankingTopResponseMetaTop0) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r rankingTopResponseMetaTop0JSON) RawJSON() string {
+	return r.raw
 }
 
 type RankingTopResponseMetaUnit struct {
@@ -667,9 +692,9 @@ func (r rankingTopResponseTop0JSON) RawJSON() string {
 }
 
 type RankingTopResponseTop0Category struct {
-	ID              float64                            `json:"id" api:"required"`
+	ID              int64                              `json:"id" api:"required"`
 	Name            string                             `json:"name" api:"required"`
-	SuperCategoryID float64                            `json:"superCategoryId" api:"required"`
+	SuperCategoryID int64                              `json:"superCategoryId" api:"required"`
 	JSON            rankingTopResponseTop0CategoryJSON `json:"-"`
 }
 
@@ -692,13 +717,29 @@ func (r rankingTopResponseTop0CategoryJSON) RawJSON() string {
 }
 
 type RankingTimeseriesGroupsParams struct {
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by domain category.
 	DomainCategory param.Field[[]string] `query:"domainCategory"`

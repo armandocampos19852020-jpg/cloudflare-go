@@ -44,7 +44,8 @@ func NewProjectService(opts ...option.RequestOption) (r *ProjectService) {
 	return
 }
 
-// Create a new project.
+// Create a Cloudflare Pages project for configuring and deploying a site or
+// application.
 func (r *ProjectService) New(ctx context.Context, params ProjectNewParams, opts ...option.RequestOption) (res *Project, err error) {
 	var env ProjectNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -61,7 +62,7 @@ func (r *ProjectService) New(ctx context.Context, params ProjectNewParams, opts 
 	return res, nil
 }
 
-// Fetch a list of all user projects.
+// List the Cloudflare Pages projects in an account.
 func (r *ProjectService) List(ctx context.Context, params ProjectListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[Project], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -83,12 +84,12 @@ func (r *ProjectService) List(ctx context.Context, params ProjectListParams, opt
 	return res, nil
 }
 
-// Fetch a list of all user projects.
+// List the Cloudflare Pages projects in an account.
 func (r *ProjectService) ListAutoPaging(ctx context.Context, params ProjectListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[Project] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, params, opts...))
 }
 
-// Delete a project by name.
+// Permanently delete a Cloudflare Pages project and its deployments.
 func (r *ProjectService) Delete(ctx context.Context, projectName string, body ProjectDeleteParams, opts ...option.RequestOption) (res *ProjectDeleteResponse, err error) {
 	var env ProjectDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -109,8 +110,8 @@ func (r *ProjectService) Delete(ctx context.Context, projectName string, body Pr
 	return res, nil
 }
 
-// Set new attributes for an existing project. Modify environment variables. To
-// delete an environment variable, set the key to null.
+// Update the build, deployment, source, or environment settings for a Cloudflare
+// Pages project. To delete an environment variable, set its key to `null`.
 func (r *ProjectService) Edit(ctx context.Context, projectName string, params ProjectEditParams, opts ...option.RequestOption) (res *Project, err error) {
 	var env ProjectEditResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -131,7 +132,8 @@ func (r *ProjectService) Edit(ctx context.Context, projectName string, params Pr
 	return res, nil
 }
 
-// Fetch a project by name.
+// Retrieve the configuration and deployment settings for a Cloudflare Pages
+// project.
 func (r *ProjectService) Get(ctx context.Context, projectName string, query ProjectGetParams, opts ...option.RequestOption) (res *Project, err error) {
 	var env ProjectGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -152,7 +154,29 @@ func (r *ProjectService) Get(ctx context.Context, projectName string, query Proj
 	return res, nil
 }
 
-// Purge all cached build artifacts for a Pages project
+// Get a short-lived JWT for Pages Direct Upload asset operations.
+func (r *ProjectService) GetUploadToken(ctx context.Context, projectName string, query ProjectGetUploadTokenParams, opts ...option.RequestOption) (res *ProjectGetUploadTokenResponse, err error) {
+	var env ProjectGetUploadTokenResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if query.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if projectName == "" {
+		err = errors.New("missing required project_name parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/pages/projects/%s/upload-token", query.AccountID, projectName)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
+// Remove cached build artifacts so subsequent builds run without the project's
+// existing build cache.
 func (r *ProjectService) PurgeBuildCache(ctx context.Context, projectName string, body ProjectPurgeBuildCacheParams, opts ...option.RequestOption) (res *ProjectPurgeBuildCacheResponse, err error) {
 	var env ProjectPurgeBuildCacheResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -188,7 +212,7 @@ type Deployment struct {
 	EnvVars map[string]DeploymentEnvVar `json:"env_vars" api:"required,nullable"`
 	// Type of deploy.
 	Environment DeploymentEnvironment `json:"environment" api:"required"`
-	// If the deployment has been skipped.
+	// Whether the deployment was skipped.
 	IsSkipped bool `json:"is_skipped" api:"required"`
 	// The status of the deployment.
 	LatestStage Stage `json:"latest_stage" api:"required"`
@@ -196,7 +220,8 @@ type Deployment struct {
 	ModifiedOn time.Time `json:"modified_on" api:"required" format:"date-time"`
 	// Id of the project.
 	ProjectID string `json:"project_id" api:"required"`
-	// Name of the project.
+	// Name of the Pages project. Must begin with a lowercase letter or digit and
+	// contain only lowercase letters, digits, and hyphens.
 	ProjectName string `json:"project_name" api:"required"`
 	// Short Id (8 character) of the deployment.
 	ShortID string `json:"short_id" api:"required"`
@@ -206,6 +231,8 @@ type Deployment struct {
 	Stages []Stage `json:"stages" api:"required"`
 	// The live URL to view this deployment.
 	URL string `json:"url" api:"required"`
+	// Why the deployment was skipped.
+	SkipReason DeploymentSkipReason `json:"skip_reason" api:"nullable"`
 	// Whether the deployment uses functions.
 	UsesFunctions bool           `json:"uses_functions" api:"nullable"`
 	JSON          deploymentJSON `json:"-"`
@@ -229,6 +256,7 @@ type deploymentJSON struct {
 	Source            apijson.Field
 	Stages            apijson.Field
 	URL               apijson.Field
+	SkipReason        apijson.Field
 	UsesFunctions     apijson.Field
 	raw               string
 	ExtraFields       map[string]apijson.Field
@@ -660,6 +688,27 @@ func (r DeploymentSourceType) IsKnown() bool {
 	return false
 }
 
+// Why the deployment was skipped.
+type DeploymentSkipReason string
+
+const (
+	DeploymentSkipReasonCommitMessage                 DeploymentSkipReason = "commit_message"
+	DeploymentSkipReasonPreviewDeploymentsDisabled    DeploymentSkipReason = "preview_deployments_disabled"
+	DeploymentSkipReasonProductionDeploymentsDisabled DeploymentSkipReason = "production_deployments_disabled"
+	DeploymentSkipReasonPathConfig                    DeploymentSkipReason = "path_config"
+	DeploymentSkipReasonBranchConfig                  DeploymentSkipReason = "branch_config"
+	DeploymentSkipReasonPagesToWorkersConversion      DeploymentSkipReason = "pages_to_workers_conversion"
+	DeploymentSkipReasonSupersededQueuedBuild         DeploymentSkipReason = "superseded_queued_build"
+)
+
+func (r DeploymentSkipReason) IsKnown() bool {
+	switch r {
+	case DeploymentSkipReasonCommitMessage, DeploymentSkipReasonPreviewDeploymentsDisabled, DeploymentSkipReasonProductionDeploymentsDisabled, DeploymentSkipReasonPathConfig, DeploymentSkipReasonBranchConfig, DeploymentSkipReasonPagesToWorkersConversion, DeploymentSkipReasonSupersededQueuedBuild:
+		return true
+	}
+	return false
+}
+
 type Project struct {
 	// ID of the project.
 	ID string `json:"id" api:"required"`
@@ -675,7 +724,8 @@ type Project struct {
 	FrameworkVersion string `json:"framework_version" api:"required"`
 	// Most recent deployment of the project.
 	LatestDeployment Deployment `json:"latest_deployment" api:"required,nullable"`
-	// Name of the project.
+	// Name of the Pages project. Must begin with a lowercase letter or digit and
+	// contain only lowercase letters, digits, and hyphens.
 	Name string `json:"name" api:"required"`
 	// Name of the preview script.
 	PreviewScriptName string `json:"preview_script_name" api:"required"`
@@ -687,6 +737,10 @@ type Project struct {
 	UsesFunctions bool `json:"uses_functions" api:"required,nullable"`
 	// Configs for the project build process.
 	BuildConfig ProjectBuildConfig `json:"build_config"`
+	// Present when the project is set to a retired build image major version and its
+	// builds have been moved to a newer one. `build_image_major_version` in
+	// `deployment_configs` then reports the version the builds run on.
+	BuildImageAutoUpgrade ProjectBuildImageAutoUpgrade `json:"build_image_auto_upgrade"`
 	// A list of associated custom domains for the project.
 	Domains []string `json:"domains"`
 	// Configs for the project source control.
@@ -698,24 +752,25 @@ type Project struct {
 
 // projectJSON contains the JSON metadata for the struct [Project]
 type projectJSON struct {
-	ID                   apijson.Field
-	CanonicalDeployment  apijson.Field
-	CreatedOn            apijson.Field
-	DeploymentConfigs    apijson.Field
-	Framework            apijson.Field
-	FrameworkVersion     apijson.Field
-	LatestDeployment     apijson.Field
-	Name                 apijson.Field
-	PreviewScriptName    apijson.Field
-	ProductionBranch     apijson.Field
-	ProductionScriptName apijson.Field
-	UsesFunctions        apijson.Field
-	BuildConfig          apijson.Field
-	Domains              apijson.Field
-	Source               apijson.Field
-	Subdomain            apijson.Field
-	raw                  string
-	ExtraFields          map[string]apijson.Field
+	ID                    apijson.Field
+	CanonicalDeployment   apijson.Field
+	CreatedOn             apijson.Field
+	DeploymentConfigs     apijson.Field
+	Framework             apijson.Field
+	FrameworkVersion      apijson.Field
+	LatestDeployment      apijson.Field
+	Name                  apijson.Field
+	PreviewScriptName     apijson.Field
+	ProductionBranch      apijson.Field
+	ProductionScriptName  apijson.Field
+	UsesFunctions         apijson.Field
+	BuildConfig           apijson.Field
+	BuildImageAutoUpgrade apijson.Field
+	Domains               apijson.Field
+	Source                apijson.Field
+	Subdomain             apijson.Field
+	raw                   string
+	ExtraFields           map[string]apijson.Field
 }
 
 func (r *Project) UnmarshalJSON(data []byte) (err error) {
@@ -756,7 +811,10 @@ func (r projectDeploymentConfigsJSON) RawJSON() string {
 type ProjectDeploymentConfigsPreview struct {
 	// Whether to always use the latest compatibility date for Pages Functions.
 	AlwaysUseLatestCompatibilityDate bool `json:"always_use_latest_compatibility_date" api:"required"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, this is the version the builds run on and `build_image_auto_upgrade`
+	// is set on the project.
 	BuildImageMajorVersion int64 `json:"build_image_major_version" api:"required"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate string `json:"compatibility_date" api:"required"`
@@ -1352,7 +1410,10 @@ func (r projectDeploymentConfigsPreviewVectorizeBindingJSON) RawJSON() string {
 type ProjectDeploymentConfigsProduction struct {
 	// Whether to always use the latest compatibility date for Pages Functions.
 	AlwaysUseLatestCompatibilityDate bool `json:"always_use_latest_compatibility_date" api:"required"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, this is the version the builds run on and `build_image_auto_upgrade`
+	// is set on the project.
 	BuildImageMajorVersion int64 `json:"build_image_major_version" api:"required"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate string `json:"compatibility_date" api:"required"`
@@ -1985,6 +2046,34 @@ func (r projectBuildConfigJSON) RawJSON() string {
 	return r.raw
 }
 
+// Present when the project is set to a retired build image major version and its
+// builds have been moved to a newer one. `build_image_major_version` in
+// `deployment_configs` then reports the version the builds run on.
+type ProjectBuildImageAutoUpgrade struct {
+	// The retired build image major version the project is set to.
+	FromVersion int64 `json:"from_version" api:"required"`
+	// The build image major version the project's builds run on.
+	ToVersion int64                            `json:"to_version" api:"required"`
+	JSON      projectBuildImageAutoUpgradeJSON `json:"-"`
+}
+
+// projectBuildImageAutoUpgradeJSON contains the JSON metadata for the struct
+// [ProjectBuildImageAutoUpgrade]
+type projectBuildImageAutoUpgradeJSON struct {
+	FromVersion apijson.Field
+	ToVersion   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ProjectBuildImageAutoUpgrade) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectBuildImageAutoUpgradeJSON) RawJSON() string {
+	return r.raw
+}
+
 // Configs for the project source control.
 type ProjectSource struct {
 	Config ProjectSourceConfig `json:"config" api:"required"`
@@ -2170,11 +2259,12 @@ const (
 	StageStatusActive   StageStatus = "active"
 	StageStatusFailure  StageStatus = "failure"
 	StageStatusCanceled StageStatus = "canceled"
+	StageStatusSkipped  StageStatus = "skipped"
 )
 
 func (r StageStatus) IsKnown() bool {
 	switch r {
-	case StageStatusSuccess, StageStatusIdle, StageStatusActive, StageStatusFailure, StageStatusCanceled:
+	case StageStatusSuccess, StageStatusIdle, StageStatusActive, StageStatusFailure, StageStatusCanceled, StageStatusSkipped:
 		return true
 	}
 	return false
@@ -2182,12 +2272,35 @@ func (r StageStatus) IsKnown() bool {
 
 type ProjectDeleteResponse = interface{}
 
+type ProjectGetUploadTokenResponse struct {
+	// Short-lived JWT used to authenticate Pages Direct Upload asset operations.
+	JWT  string                            `json:"jwt" api:"required"`
+	JSON projectGetUploadTokenResponseJSON `json:"-"`
+}
+
+// projectGetUploadTokenResponseJSON contains the JSON metadata for the struct
+// [ProjectGetUploadTokenResponse]
+type projectGetUploadTokenResponseJSON struct {
+	JWT         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseJSON) RawJSON() string {
+	return r.raw
+}
+
 type ProjectPurgeBuildCacheResponse = interface{}
 
 type ProjectNewParams struct {
 	// Identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Name of the project.
+	// Name for the Pages project. Must begin with a lowercase letter or digit and
+	// contain only lowercase letters, digits, and hyphens.
 	Name param.Field[string] `json:"name" api:"required"`
 	// Production branch of the project. Used to identify production deployments.
 	ProductionBranch param.Field[string] `json:"production_branch" api:"required"`
@@ -2245,7 +2358,9 @@ type ProjectNewParamsDeploymentConfigsPreview struct {
 	AnalyticsEngineDatasets param.Field[map[string]ProjectNewParamsDeploymentConfigsPreviewAnalyticsEngineDatasets] `json:"analytics_engine_datasets"`
 	// Browser bindings used for Pages Functions.
 	Browsers param.Field[map[string]ProjectNewParamsDeploymentConfigsPreviewBrowsers] `json:"browsers"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, a request that sets version 1 is rejected.
 	BuildImageMajorVersion param.Field[int64] `json:"build_image_major_version"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate param.Field[string] `json:"compatibility_date"`
@@ -2551,7 +2666,9 @@ type ProjectNewParamsDeploymentConfigsProduction struct {
 	AnalyticsEngineDatasets param.Field[map[string]ProjectNewParamsDeploymentConfigsProductionAnalyticsEngineDatasets] `json:"analytics_engine_datasets"`
 	// Browser bindings used for Pages Functions.
 	Browsers param.Field[map[string]ProjectNewParamsDeploymentConfigsProductionBrowsers] `json:"browsers"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, a request that sets version 1 is rejected.
 	BuildImageMajorVersion param.Field[int64] `json:"build_image_major_version"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate param.Field[string] `json:"compatibility_date"`
@@ -3077,9 +3194,9 @@ func (r ProjectNewResponseEnvelopeSuccess) IsKnown() bool {
 type ProjectListParams struct {
 	// Identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Which page of projects to fetch.
+	// Page number of results to return.
 	Page param.Field[int64] `query:"page"`
-	// How many projects to return per page.
+	// Number of results to return per page.
 	PerPage param.Field[int64] `query:"per_page"`
 }
 
@@ -3242,7 +3359,8 @@ type ProjectEditParams struct {
 	BuildConfig param.Field[ProjectEditParamsBuildConfig] `json:"build_config"`
 	// Configs for deployments in a project.
 	DeploymentConfigs param.Field[ProjectEditParamsDeploymentConfigs] `json:"deployment_configs"`
-	// Name of the project.
+	// Name for the Pages project. Must begin with a lowercase letter or digit and
+	// contain only lowercase letters, digits, and hyphens.
 	Name param.Field[string] `json:"name"`
 	// Production branch of the project. Used to identify production deployments.
 	ProductionBranch param.Field[string] `json:"production_branch"`
@@ -3296,7 +3414,9 @@ type ProjectEditParamsDeploymentConfigsPreview struct {
 	AnalyticsEngineDatasets param.Field[map[string]ProjectEditParamsDeploymentConfigsPreviewAnalyticsEngineDatasets] `json:"analytics_engine_datasets"`
 	// Browser bindings used for Pages Functions.
 	Browsers param.Field[map[string]ProjectEditParamsDeploymentConfigsPreviewBrowsers] `json:"browsers"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, a request that sets version 1 is rejected.
 	BuildImageMajorVersion param.Field[int64] `json:"build_image_major_version"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate param.Field[string] `json:"compatibility_date"`
@@ -3602,7 +3722,9 @@ type ProjectEditParamsDeploymentConfigsProduction struct {
 	AnalyticsEngineDatasets param.Field[map[string]ProjectEditParamsDeploymentConfigsProductionAnalyticsEngineDatasets] `json:"analytics_engine_datasets"`
 	// Browser bindings used for Pages Functions.
 	Browsers param.Field[map[string]ProjectEditParamsDeploymentConfigsProductionBrowsers] `json:"browsers"`
-	// The major version of the build image to use for Pages Functions.
+	// The major version of the build image to use for Pages Functions. Version 1 is
+	// retired and its projects are moved to version 3. Once a project's builds have
+	// been moved, a request that sets version 1 is rejected.
 	BuildImageMajorVersion param.Field[int64] `json:"build_image_major_version"`
 	// Compatibility date used for Pages Functions.
 	CompatibilityDate param.Field[string] `json:"compatibility_date"`
@@ -4264,6 +4386,150 @@ const (
 func (r ProjectGetResponseEnvelopeSuccess) IsKnown() bool {
 	switch r {
 	case ProjectGetResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
+}
+
+type ProjectGetUploadTokenParams struct {
+	// Identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+}
+
+type ProjectGetUploadTokenResponseEnvelope struct {
+	Errors   []ProjectGetUploadTokenResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []ProjectGetUploadTokenResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   ProjectGetUploadTokenResponse                   `json:"result" api:"required"`
+	// Whether the API call was successful.
+	Success ProjectGetUploadTokenResponseEnvelopeSuccess `json:"success" api:"required"`
+	JSON    projectGetUploadTokenResponseEnvelopeJSON    `json:"-"`
+}
+
+// projectGetUploadTokenResponseEnvelopeJSON contains the JSON metadata for the
+// struct [ProjectGetUploadTokenResponseEnvelope]
+type projectGetUploadTokenResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
+	Result      apijson.Field
+	Success     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type ProjectGetUploadTokenResponseEnvelopeErrors struct {
+	Code             int64                                             `json:"code" api:"required"`
+	Message          string                                            `json:"message" api:"required"`
+	DocumentationURL string                                            `json:"documentation_url"`
+	Source           ProjectGetUploadTokenResponseEnvelopeErrorsSource `json:"source"`
+	JSON             projectGetUploadTokenResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// projectGetUploadTokenResponseEnvelopeErrorsJSON contains the JSON metadata for
+// the struct [ProjectGetUploadTokenResponseEnvelopeErrors]
+type projectGetUploadTokenResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type ProjectGetUploadTokenResponseEnvelopeErrorsSource struct {
+	Pointer string                                                `json:"pointer"`
+	JSON    projectGetUploadTokenResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// projectGetUploadTokenResponseEnvelopeErrorsSourceJSON contains the JSON metadata
+// for the struct [ProjectGetUploadTokenResponseEnvelopeErrorsSource]
+type projectGetUploadTokenResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type ProjectGetUploadTokenResponseEnvelopeMessages struct {
+	Code             int64                                               `json:"code" api:"required"`
+	Message          string                                              `json:"message" api:"required"`
+	DocumentationURL string                                              `json:"documentation_url"`
+	Source           ProjectGetUploadTokenResponseEnvelopeMessagesSource `json:"source"`
+	JSON             projectGetUploadTokenResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// projectGetUploadTokenResponseEnvelopeMessagesJSON contains the JSON metadata for
+// the struct [ProjectGetUploadTokenResponseEnvelopeMessages]
+type projectGetUploadTokenResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type ProjectGetUploadTokenResponseEnvelopeMessagesSource struct {
+	Pointer string                                                  `json:"pointer"`
+	JSON    projectGetUploadTokenResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// projectGetUploadTokenResponseEnvelopeMessagesSourceJSON contains the JSON
+// metadata for the struct [ProjectGetUploadTokenResponseEnvelopeMessagesSource]
+type projectGetUploadTokenResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ProjectGetUploadTokenResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r projectGetUploadTokenResponseEnvelopeMessagesSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the API call was successful.
+type ProjectGetUploadTokenResponseEnvelopeSuccess bool
+
+const (
+	ProjectGetUploadTokenResponseEnvelopeSuccessTrue ProjectGetUploadTokenResponseEnvelopeSuccess = true
+)
+
+func (r ProjectGetUploadTokenResponseEnvelopeSuccess) IsKnown() bool {
+	switch r {
+	case ProjectGetUploadTokenResponseEnvelopeSuccessTrue:
 		return true
 	}
 	return false

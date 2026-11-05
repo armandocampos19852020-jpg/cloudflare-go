@@ -36,6 +36,7 @@ func TestLiveInputNewWithOptionalParams(t *testing.T) {
 		Meta: cloudflare.F[any](map[string]interface{}{
 			"name": "test stream 1",
 		}),
+		PreferLowLatency: cloudflare.F(true),
 		Recording: cloudflare.F(stream.LiveInputNewParamsRecording{
 			AllowedOrigins:      cloudflare.F([]string{"example.com"}),
 			HideLiveViewerCount: cloudflare.F(false),
@@ -43,6 +44,7 @@ func TestLiveInputNewWithOptionalParams(t *testing.T) {
 			RequireSignedURLs:   cloudflare.F(false),
 			TimeoutSeconds:      cloudflare.F(int64(0)),
 		}),
+		IdempotencyKey: cloudflare.F("Idempotency-Key"),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error
@@ -78,6 +80,7 @@ func TestLiveInputUpdateWithOptionalParams(t *testing.T) {
 			Meta: cloudflare.F[any](map[string]interface{}{
 				"name": "test stream 1",
 			}),
+			PreferLowLatency: cloudflare.F(true),
 			Recording: cloudflare.F(stream.LiveInputUpdateParamsRecording{
 				AllowedOrigins:      cloudflare.F([]string{"example.com"}),
 				HideLiveViewerCount: cloudflare.F(false),

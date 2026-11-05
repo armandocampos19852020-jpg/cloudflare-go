@@ -13,7 +13,6 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/cloudforce_one"
 	"github.com/cloudflare/cloudflare-go/v7/internal/testutil"
 	"github.com/cloudflare/cloudflare-go/v7/option"
-	"github.com/cloudflare/cloudflare-go/v7/shared"
 )
 
 func TestThreatEventNewWithOptionalParams(t *testing.T) {
@@ -53,8 +52,14 @@ func TestThreatEventNewWithOptionalParams(t *testing.T) {
 			IndicatorType: cloudflare.F("domain"),
 			Value:         cloudflare.F("malicious.com"),
 		}}),
-		IndicatorType:  cloudflare.F("domain"),
-		Insight:        cloudflare.F("This domain was likely registered for phishing purposes"),
+		IndicatorType: cloudflare.F("domain"),
+		Insight:       cloudflare.F("This domain was likely registered for phishing purposes"),
+		Source: cloudflare.F(cloudforce_one.ThreatEventNewParamsSource{
+			ResourceID:   cloudflare.F("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),
+			ResourceType: cloudflare.F(cloudforce_one.ThreatEventNewParamsSourceResourceTypeArticle),
+			System:       cloudflare.F(cloudforce_one.ThreatEventNewParamsSourceSystemThreatSignals),
+			Title:        cloudflare.F("title"),
+		}),
 		Tags:           cloudflare.F([]string{"malware"}),
 		TargetCountry:  cloudflare.F("US"),
 		TargetIndustry: cloudflare.F("Agriculture"),
@@ -85,6 +90,7 @@ func TestThreatEventListWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.CloudforceOne.ThreatEvents.List(context.TODO(), cloudforce_one.ThreatEventListParams{
 		AccountID:    cloudflare.F("account_id"),
+		Cache:        cloudflare.F(cloudforce_one.ThreatEventListParamsCacheFromGraph),
 		Cursor:       cloudflare.F("eyJ2ZXJzaW9uIjoxLCJwb3NpdGlvbiI6eyJkYXRlIjoiMjAyNC0wMS0xMlQxMDowMDowMFoiLCJ1dWlkIjoiYWJjMTIzIn19"),
 		DatasetID:    cloudflare.F([]string{"string"}),
 		ForceRefresh: cloudflare.F(true),
@@ -93,11 +99,16 @@ func TestThreatEventListWithOptionalParams(t *testing.T) {
 		OrderBy:      cloudflare.F("orderBy"),
 		Page:         cloudflare.F(0.000000),
 		PageSize:     cloudflare.F(0.000000),
-		Search: cloudflare.F([]cloudforce_one.ThreatEventListParamsSearch{{
-			Field: cloudflare.F("attackerCountry"),
-			Op:    cloudflare.F(cloudforce_one.ThreatEventListParamsSearchOpEquals),
-			Value: cloudflare.F[cloudforce_one.ThreatEventListParamsSearchValueUnion](shared.UnionString("usa")),
+		Search: cloudflare.F([]cloudforce_one.ThreatEventListParamsSearchUnion{cloudforce_one.ThreatEventListParamsSearchObject{
+			Field: cloudflare.F(cloudforce_one.ThreatEventListParamsSearchObjectFieldAttacker),
+			Op:    cloudflare.F(cloudforce_one.ThreatEventListParamsSearchObjectOpEquals),
+			Value: cloudflare.F("x"),
 		}}),
+		SearchBranches: cloudflare.F([][]cloudforce_one.ThreatEventListParamsSearchBranchUnion{{cloudforce_one.ThreatEventListParamsSearchBranchesObject{
+			Field: cloudflare.F(cloudforce_one.ThreatEventListParamsSearchBranchesObjectFieldAttacker),
+			Op:    cloudflare.F(cloudforce_one.ThreatEventListParamsSearchBranchesObjectOpEquals),
+			Value: cloudflare.F("x"),
+		}}}),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error
@@ -154,6 +165,60 @@ func TestThreatEventBulkNewWithOptionalParams(t *testing.T) {
 		}}),
 		DatasetID:            cloudflare.F("durableObjectName"),
 		IncludeCreatedEvents: cloudflare.F(true),
+	})
+	if err != nil {
+		var apierr *cloudflare.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestThreatEventBulkNewRelationships(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := cloudflare.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
+		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
+		option.WithAPIEmail("user@example.com"),
+	)
+	_, err := client.CloudforceOne.ThreatEvents.BulkNewRelationships(context.TODO(), cloudforce_one.ThreatEventBulkNewRelationshipsParams{
+		AccountID: cloudflare.F("account_id"),
+		Data: cloudflare.F([]cloudforce_one.ThreatEventBulkNewRelationshipsParamsData{{
+			Category: cloudflare.F("Domain Resolution"),
+			Date:     cloudflare.F(time.Now()),
+			Event:    cloudflare.F("An attacker registered the domain domain.com"),
+			Raw: cloudflare.F(cloudforce_one.ThreatEventBulkNewRelationshipsParamsDataRaw{
+				Data: cloudflare.F(map[string]interface{}{
+					"foo": "bar",
+				}),
+				Source: cloudflare.F("example.com"),
+				TLP:    cloudflare.F("amber"),
+			}),
+			TLP:             cloudflare.F("amber"),
+			AccountID:       cloudflare.F(123456.000000),
+			Attacker:        cloudflare.F("Flying Yeti"),
+			AttackerCountry: cloudflare.F("CN"),
+			DatasetID:       cloudflare.F("durableObjectName"),
+			Indicator:       cloudflare.F("domain.com"),
+			Indicators: cloudflare.F([]cloudforce_one.ThreatEventBulkNewRelationshipsParamsDataIndicator{{
+				IndicatorType: cloudflare.F("domain"),
+				Value:         cloudflare.F("malicious.com"),
+			}}),
+			IndicatorType:  cloudflare.F("domain"),
+			Insight:        cloudflare.F("This domain was likely registered for phishing purposes"),
+			Tags:           cloudflare.F([]string{"malware"}),
+			TargetCountry:  cloudflare.F("US"),
+			TargetIndustry: cloudflare.F("Agriculture"),
+		}}),
+		DatasetID: cloudflare.F("durableObjectName"),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error

@@ -199,10 +199,13 @@ type DLPEntryUpdateResponse struct {
 	CaseSensitive bool `json:"case_sensitive"`
 	// This field can have the runtime type of
 	// [DLPEntryUpdateResponsePredefinedEntryConfidence].
-	Confidence  interface{} `json:"confidence"`
-	CreatedAt   time.Time   `json:"created_at" format:"date-time"`
-	Description string      `json:"description" api:"nullable"`
-	Pattern     Pattern     `json:"pattern"`
+	Confidence interface{} `json:"confidence"`
+	CreatedAt  time.Time   `json:"created_at" format:"date-time"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated  bool    `json:"deprecated"`
+	Description string  `json:"description" api:"nullable"`
+	Pattern     Pattern `json:"pattern"`
 	// Deprecated: deprecated
 	ProfileID string    `json:"profile_id" api:"nullable" format:"uuid"`
 	Secret    bool      `json:"secret"`
@@ -210,7 +213,7 @@ type DLPEntryUpdateResponse struct {
 	// This field can have the runtime type of
 	// [DLPEntryUpdateResponsePredefinedEntryVariant].
 	Variant interface{} `json:"variant"`
-	// This field can have the runtime type of [interface{}].
+	// This field can have the runtime type of [[]string].
 	WordList interface{}                `json:"word_list"`
 	JSON     dlpEntryUpdateResponseJSON `json:"-"`
 	union    DLPEntryUpdateResponseUnion
@@ -226,6 +229,7 @@ type dlpEntryUpdateResponseJSON struct {
 	CaseSensitive apijson.Field
 	Confidence    apijson.Field
 	CreatedAt     apijson.Field
+	Deprecated    apijson.Field
 	Description   apijson.Field
 	Pattern       apijson.Field
 	ProfileID     apijson.Field
@@ -373,7 +377,9 @@ type DLPEntryUpdateResponseCustomPromptTopicEntry struct {
 	Name      string                                           `json:"name" api:"required"`
 	Type      DLPEntryUpdateResponseCustomPromptTopicEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                                        `json:"updated_at" api:"required" format:"date-time"`
-	JSON      dlpEntryUpdateResponseCustomPromptTopicEntryJSON `json:"-"`
+	// The optional description of the custom prompt topic entry.
+	Description string                                           `json:"description" api:"nullable"`
+	JSON        dlpEntryUpdateResponseCustomPromptTopicEntryJSON `json:"-"`
 }
 
 // dlpEntryUpdateResponseCustomPromptTopicEntryJSON contains the JSON metadata for
@@ -385,6 +391,7 @@ type dlpEntryUpdateResponseCustomPromptTopicEntryJSON struct {
 	Name        apijson.Field
 	Type        apijson.Field
 	UpdatedAt   apijson.Field
+	Description apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -419,6 +426,9 @@ type DLPEntryUpdateResponsePredefinedEntry struct {
 	Enabled    bool                                            `json:"enabled" api:"required"`
 	Name       string                                          `json:"name" api:"required"`
 	Type       DLPEntryUpdateResponsePredefinedEntryType       `json:"type" api:"required"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated bool `json:"deprecated"`
 	// Deprecated: deprecated
 	ProfileID string `json:"profile_id" api:"nullable" format:"uuid"`
 	// A Predefined AI prompt classification topic entry.
@@ -434,6 +444,7 @@ type dlpEntryUpdateResponsePredefinedEntryJSON struct {
 	Enabled     apijson.Field
 	Name        apijson.Field
 	Type        apijson.Field
+	Deprecated  apijson.Field
 	ProfileID   apijson.Field
 	Variant     apijson.Field
 	raw         string
@@ -707,7 +718,9 @@ type DLPEntryUpdateResponseExactDataEntry struct {
 	Secret        bool                                     `json:"secret" api:"required"`
 	Type          DLPEntryUpdateResponseExactDataEntryType `json:"type" api:"required"`
 	UpdatedAt     time.Time                                `json:"updated_at" api:"required" format:"date-time"`
-	JSON          dlpEntryUpdateResponseExactDataEntryJSON `json:"-"`
+	// The optional description of the exact data entry.
+	Description string                                   `json:"description" api:"nullable"`
+	JSON        dlpEntryUpdateResponseExactDataEntryJSON `json:"-"`
 }
 
 // dlpEntryUpdateResponseExactDataEntryJSON contains the JSON metadata for the
@@ -721,6 +734,7 @@ type dlpEntryUpdateResponseExactDataEntryJSON struct {
 	Secret        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
+	Description   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
 }
@@ -756,7 +770,9 @@ type DLPEntryUpdateResponseDocumentFingerprintEntry struct {
 	Name      string                                             `json:"name" api:"required"`
 	Type      DLPEntryUpdateResponseDocumentFingerprintEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                                          `json:"updated_at" api:"required" format:"date-time"`
-	JSON      dlpEntryUpdateResponseDocumentFingerprintEntryJSON `json:"-"`
+	// The optional description of the document fingerprint entry.
+	Description string                                             `json:"description" api:"nullable"`
+	JSON        dlpEntryUpdateResponseDocumentFingerprintEntryJSON `json:"-"`
 }
 
 // dlpEntryUpdateResponseDocumentFingerprintEntryJSON contains the JSON metadata
@@ -768,6 +784,7 @@ type dlpEntryUpdateResponseDocumentFingerprintEntryJSON struct {
 	Name        apijson.Field
 	Type        apijson.Field
 	UpdatedAt   apijson.Field
+	Description apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -803,7 +820,7 @@ type DLPEntryUpdateResponseWordListEntry struct {
 	Name      string                                  `json:"name" api:"required"`
 	Type      DLPEntryUpdateResponseWordListEntryType `json:"type" api:"required"`
 	UpdatedAt time.Time                               `json:"updated_at" api:"required" format:"date-time"`
-	WordList  interface{}                             `json:"word_list" api:"required"`
+	WordList  []string                                `json:"word_list" api:"required"`
 	ProfileID string                                  `json:"profile_id" api:"nullable" format:"uuid"`
 	JSON      dlpEntryUpdateResponseWordListEntryJSON `json:"-"`
 }
@@ -877,10 +894,13 @@ type DLPEntryListResponse struct {
 	// a case-sensitive manner Cannot be set to false if secret is true
 	CaseSensitive bool `json:"case_sensitive"`
 	// This field can have the runtime type of [DLPEntryListResponseObjectConfidence].
-	Confidence  interface{} `json:"confidence"`
-	CreatedAt   time.Time   `json:"created_at" format:"date-time"`
-	Description string      `json:"description" api:"nullable"`
-	Pattern     Pattern     `json:"pattern"`
+	Confidence interface{} `json:"confidence"`
+	CreatedAt  time.Time   `json:"created_at" format:"date-time"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated  bool    `json:"deprecated"`
+	Description string  `json:"description" api:"nullable"`
+	Pattern     Pattern `json:"pattern"`
 	// Deprecated: deprecated
 	ProfileID    string                           `json:"profile_id" api:"nullable" format:"uuid"`
 	Secret       bool                             `json:"secret"`
@@ -888,7 +908,7 @@ type DLPEntryListResponse struct {
 	UploadStatus DLPEntryListResponseUploadStatus `json:"upload_status"`
 	// This field can have the runtime type of [DLPEntryListResponseObjectVariant].
 	Variant interface{} `json:"variant"`
-	// This field can have the runtime type of [interface{}].
+	// This field can have the runtime type of [[]string].
 	WordList interface{}              `json:"word_list"`
 	JSON     dlpEntryListResponseJSON `json:"-"`
 	union    DLPEntryListResponseUnion
@@ -904,6 +924,7 @@ type dlpEntryListResponseJSON struct {
 	CaseSensitive apijson.Field
 	Confidence    apijson.Field
 	CreatedAt     apijson.Field
+	Deprecated    apijson.Field
 	Description   apijson.Field
 	Pattern       apijson.Field
 	ProfileID     apijson.Field
@@ -1110,10 +1131,13 @@ type DLPEntryGetResponse struct {
 	// a case-sensitive manner Cannot be set to false if secret is true
 	CaseSensitive bool `json:"case_sensitive"`
 	// This field can have the runtime type of [DLPEntryGetResponseObjectConfidence].
-	Confidence  interface{} `json:"confidence"`
-	CreatedAt   time.Time   `json:"created_at" format:"date-time"`
-	Description string      `json:"description" api:"nullable"`
-	Pattern     Pattern     `json:"pattern"`
+	Confidence interface{} `json:"confidence"`
+	CreatedAt  time.Time   `json:"created_at" format:"date-time"`
+	// Whether this entry is deprecated for new use. This is computed from the static
+	// catalog and emitted only when true.
+	Deprecated  bool    `json:"deprecated"`
+	Description string  `json:"description" api:"nullable"`
+	Pattern     Pattern `json:"pattern"`
 	// Deprecated: deprecated
 	ProfileID string `json:"profile_id" api:"nullable" format:"uuid"`
 	// This field can have the runtime type of [[]DLPEntryGetResponseObjectProfile].
@@ -1123,7 +1147,7 @@ type DLPEntryGetResponse struct {
 	UploadStatus DLPEntryGetResponseUploadStatus `json:"upload_status"`
 	// This field can have the runtime type of [DLPEntryGetResponseObjectVariant].
 	Variant interface{} `json:"variant"`
-	// This field can have the runtime type of [interface{}].
+	// This field can have the runtime type of [[]string].
 	WordList interface{}             `json:"word_list"`
 	JSON     dlpEntryGetResponseJSON `json:"-"`
 	union    DLPEntryGetResponseUnion
@@ -1139,6 +1163,7 @@ type dlpEntryGetResponseJSON struct {
 	CaseSensitive apijson.Field
 	Confidence    apijson.Field
 	CreatedAt     apijson.Field
+	Deprecated    apijson.Field
 	Description   apijson.Field
 	Pattern       apijson.Field
 	ProfileID     apijson.Field

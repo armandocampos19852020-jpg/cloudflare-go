@@ -8,22 +8,42 @@ import (
 
 type UnionTime time.Time
 
-func (UnionTime) ImplementsAuditLogListParamsBeforeUnion() {}
-func (UnionTime) ImplementsAuditLogListParamsSinceUnion()  {}
+func (UnionTime) ImplementsAuditLogListParamsBeforeUnion()                             {}
+func (UnionTime) ImplementsAuditLogListParamsSinceUnion()                              {}
+func (UnionTime) ImplementsObservabilityTelemetryQueryResponseRunQueryCreatedUnion()   {}
+func (UnionTime) ImplementsObservabilityTelemetryQueryResponseRunQueryUpdatedUnion()   {}
+func (UnionTime) ImplementsObservabilitySharedQueryGetResponseRunQueryCreatedUnion()   {}
+func (UnionTime) ImplementsObservabilitySharedQueryGetResponseRunQueryUpdatedUnion()   {}
+func (UnionTime) ImplementsThreatEventIndicatorAggregateListParamsCreatedAfterUnion()  {}
+func (UnionTime) ImplementsThreatEventIndicatorAggregateListParamsCreatedBeforeUnion() {}
 
 type UnionString string
 
-func (UnionString) ImplementsEmailSendingSendParamsFromUnion()    {}
-func (UnionString) ImplementsEmailSendingSendParamsToUnion()      {}
-func (UnionString) ImplementsEmailSendingSendParamsBccUnion()     {}
-func (UnionString) ImplementsEmailSendingSendParamsCcUnion()      {}
-func (UnionString) ImplementsEmailSendingSendParamsReplyToUnion() {}
-func (UnionString) ImplementsReceivedGetParamsEndUnion()          {}
-func (UnionString) ImplementsReceivedGetParamsStartUnion()        {}
+func (UnionString) ImplementsEntitlementListResponseAllocationValueUnion()                         {}
+func (UnionString) ImplementsBillingUsageGetResponseTagsUnion()                                    {}
+func (UnionString) ImplementsSettingEditParamsBodyValueValueUnion()                                {}
+func (UnionString) ImplementsAnalyticsQuerySummaryParamsFiltersValueUnion()                        {}
+func (UnionString) ImplementsAnalyticsQueryTimeseriesParamsFiltersValueUnion()                     {}
+func (UnionString) ImplementsAnalyticsQueryTopNParamsFiltersValueUnion()                           {}
+func (UnionString) ImplementsAnalyticsQueryDataSecurityContentFindingTopNParamsFiltersValueUnion() {}
+func (UnionString) ImplementsAnalyticsQueryDataSecurityFindingSummaryParamsFiltersValueUnion()     {}
+func (UnionString) ImplementsAnalyticsQueryDataSecurityFindingTimeseriesParamsFiltersValueUnion()  {}
+func (UnionString) ImplementsEmailSendingSendParamsFromUnion()                                     {}
+func (UnionString) ImplementsEmailSendingSendParamsBccUnion()                                      {}
+func (UnionString) ImplementsEmailSendingSendParamsBccArrayItemUnion()                             {}
+func (UnionString) ImplementsEmailSendingSendParamsCcUnion()                                       {}
+func (UnionString) ImplementsEmailSendingSendParamsCcArrayItemUnion()                              {}
+func (UnionString) ImplementsEmailSendingSendParamsReplyToUnion()                                  {}
+func (UnionString) ImplementsEmailSendingSendParamsToUnion()                                       {}
+func (UnionString) ImplementsEmailSendingSendParamsToArrayItemUnion()                              {}
+func (UnionString) ImplementsReceivedGetParamsEndUnion()                                           {}
+func (UnionString) ImplementsReceivedGetParamsStartUnion()                                         {}
+func (UnionString) ImplementsObservabilityTelemetryQueryResponseRunQueryCreatedUnion()             {}
 func (UnionString) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
 func (UnionString) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersNeedleValueUnion() {
 }
+func (UnionString) ImplementsObservabilityTelemetryQueryResponseRunQueryUpdatedUnion() {}
 func (UnionString) ImplementsObservabilityTelemetryQueryResponseCalculationsAggregatesGroupsValueUnion() {
 }
 func (UnionString) ImplementsObservabilityTelemetryQueryResponseCalculationsSeriesDataGroupsValueUnion() {
@@ -62,11 +82,13 @@ func (UnionString) ImplementsObservabilityQueryListResponseParametersFiltersWork
 func (UnionString) ImplementsObservabilityQueryListResponseParametersNeedleValueUnion() {}
 func (UnionString) ImplementsObservabilityQueryNewParamsParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
-func (UnionString) ImplementsObservabilityQueryNewParamsParametersNeedleValueUnion() {}
+func (UnionString) ImplementsObservabilityQueryNewParamsParametersNeedleValueUnion()   {}
+func (UnionString) ImplementsObservabilitySharedQueryGetResponseRunQueryCreatedUnion() {}
 func (UnionString) ImplementsObservabilitySharedQueryGetResponseRunQueryParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
 func (UnionString) ImplementsObservabilitySharedQueryGetResponseRunQueryParametersNeedleValueUnion() {
 }
+func (UnionString) ImplementsObservabilitySharedQueryGetResponseRunQueryUpdatedUnion() {}
 func (UnionString) ImplementsObservabilitySharedQueryGetResponseCalculationsAggregatesGroupsValueUnion() {
 }
 func (UnionString) ImplementsObservabilitySharedQueryGetResponseCalculationsSeriesDataGroupsValueUnion() {
@@ -80,14 +102,23 @@ func (UnionString) ImplementsObservabilitySharedQueryNewParamsParametersFiltersO
 }
 func (UnionString) ImplementsObservabilitySharedQueryNewParamsParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
-func (UnionString) ImplementsObservabilitySharedQueryNewParamsParametersNeedleValueUnion()         {}
-func (UnionString) ImplementsNamespaceBulkGetResponseWorkersKVBulkGetResultValuesUnion()           {}
-func (UnionString) ImplementsNamespaceKeyBulkGetResponseWorkersKVBulkGetResultValuesUnion()        {}
-func (UnionString) ImplementsNamespaceValueUpdateParamsValueUnion()                                {}
-func (UnionString) ImplementsOriginPortUnionParam()                                                {}
-func (UnionString) ImplementsOriginPortUnion()                                                     {}
-func (UnionString) ImplementsHealthCheckTargetUnionParam()                                         {}
-func (UnionString) ImplementsHealthCheckTargetUnion()                                              {}
+func (UnionString) ImplementsObservabilitySharedQueryNewParamsParametersNeedleValueUnion()  {}
+func (UnionString) ImplementsNamespaceBulkGetResponseWorkersKVBulkGetResultValuesUnion()    {}
+func (UnionString) ImplementsNamespaceKeyBulkGetResponseWorkersKVBulkGetResultValuesUnion() {}
+func (UnionString) ImplementsNamespaceValueUpdateParamsValueUnion()                         {}
+func (UnionString) ImplementsOriginPortUnionParam()                                         {}
+func (UnionString) ImplementsOriginPortUnion()                                              {}
+func (UnionString) ImplementsUsageGetResponseTagsUnion()                                    {}
+func (UnionString) ImplementsUsageGetAccountUsageV2ResponseTagsUnion()                      {}
+func (UnionString) ImplementsV2QueryGetResponseEnvelopeErrorsCode()                         {}
+func (UnionString) ImplementsV2QueryGetResponseEnvelopeMessagesCode()                       {}
+func (UnionString) ImplementsCfInterconnectUpdateResponseModifiedInterconnectHealthCheckTargetUnion() {
+}
+func (UnionString) ImplementsCfInterconnectListResponseInterconnectsHealthCheckTargetUnion() {}
+func (UnionString) ImplementsCfInterconnectBulkUpdateResponseModifiedInterconnectsHealthCheckTargetUnion() {
+}
+func (UnionString) ImplementsCfInterconnectGetResponseInterconnectHealthCheckTargetUnion()         {}
+func (UnionString) ImplementsCfInterconnectUpdateParamsHealthCheckTargetUnion()                    {}
 func (UnionString) ImplementsGRETunnelNewResponseHealthCheckTargetUnion()                          {}
 func (UnionString) ImplementsGRETunnelUpdateResponseModifiedGRETunnelHealthCheckTargetUnion()      {}
 func (UnionString) ImplementsGRETunnelListResponseGRETunnelsHealthCheckTargetUnion()               {}
@@ -137,6 +168,8 @@ func (UnionString) ImplementsAccessApplicationUpdateParamsBodyMcpServerApplicati
 func (UnionString) ImplementsAccessApplicationUpdateParamsBodyMcpServerPortalApplicationPolicyUnion() {
 }
 func (UnionString) ImplementsAccessApplicationPolicyTestNewParamsPolicyUnion()                  {}
+func (UnionString) ImplementsCasbPostureRemediationJobNewResponseCreatedAssetFieldsValueUnion() {}
+func (UnionString) ImplementsCasbPostureRemediationJobListResponseAssetFieldsValueUnion()       {}
 func (UnionString) ImplementsDLPEmailRuleNewResponseConditionsValueUnion()                      {}
 func (UnionString) ImplementsDLPEmailRuleUpdateResponseConditionsValueUnion()                   {}
 func (UnionString) ImplementsDLPEmailRuleListResponseConditionsValueUnion()                     {}
@@ -155,54 +188,207 @@ func (UnionString) ImplementsConfigUpdateParamsToolsZarazManagedComponentDefault
 func (UnionString) ImplementsConfigUpdateParamsToolsZarazManagedComponentSettingsUnion()        {}
 func (UnionString) ImplementsConfigUpdateParamsToolsWorkerDefaultFieldsUnion()                  {}
 func (UnionString) ImplementsConfigUpdateParamsToolsWorkerSettingsUnion()                       {}
-func (UnionString) ImplementsPresetNewResponseDataPermissionsPluginsConfigUnion()               {}
-func (UnionString) ImplementsPresetUpdateResponseDataPermissionsPluginsConfigUnion()            {}
-func (UnionString) ImplementsPresetDeleteResponseDataPermissionsPluginsConfigUnion()            {}
-func (UnionString) ImplementsPresetGetPresetByIDResponseDataPermissionsPluginsConfigUnion()     {}
-func (UnionString) ImplementsPresetNewParamsPermissionsPluginsConfigUnion()                     {}
-func (UnionString) ImplementsPresetUpdateParamsPermissionsPluginsConfigUnion()                  {}
-func (UnionString) ImplementsThreatEventListParamsSearchValueUnion()                            {}
-func (UnionString) ImplementsThreatEventListParamsSearchValueArrayItemUnion()                   {}
-func (UnionString) ImplementsLogListParamsFiltersValueUnion()                                   {}
-func (UnionString) ImplementsLogDeleteParamsFiltersValueUnion()                                 {}
-func (UnionString) ImplementsLogEditParamsMetadataUnion()                                       {}
-func (UnionString) ImplementsDatasetNewResponseFiltersValueUnion()                              {}
-func (UnionString) ImplementsDatasetUpdateResponseFiltersValueUnion()                           {}
-func (UnionString) ImplementsDatasetListResponseFiltersValueUnion()                             {}
-func (UnionString) ImplementsDatasetDeleteResponseFiltersValueUnion()                           {}
-func (UnionString) ImplementsDatasetGetResponseFiltersValueUnion()                              {}
-func (UnionString) ImplementsDatasetNewParamsFiltersValueUnion()                                {}
-func (UnionString) ImplementsDatasetUpdateParamsFiltersValueUnion()                             {}
-func (UnionString) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                   {}
-func (UnionString) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                  {}
-func (UnionString) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()                {}
-func (UnionString) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                   {}
-func (UnionString) ImplementsInstanceGetResponseOutputUnion()                                   {}
-func (UnionString) ImplementsInstanceGetResponseStepsObjectConfigRetriesDelayUnion()            {}
-func (UnionString) ImplementsInstanceGetResponseStepsObjectConfigTimeoutUnion()                 {}
-func (UnionString) ImplementsInstanceNewParamsInstanceRetentionErrorRetentionUnion()            {}
-func (UnionString) ImplementsInstanceNewParamsInstanceRetentionSuccessRetentionUnion()          {}
-func (UnionString) ImplementsInstanceBulkParamsBodyInstanceRetentionErrorRetentionUnion()       {}
-func (UnionString) ImplementsInstanceBulkParamsBodyInstanceRetentionSuccessRetentionUnion()     {}
-func (UnionString) ImplementsAbuseReportGetResponseEnvelopeErrorsCode()                         {}
-func (UnionString) ImplementsAIRunResponseUnion()                                               {}
-func (UnionString) ImplementsAIRunParamsBodyTextEmbeddingsTextUnion()                           {}
-func (UnionString) ImplementsAIRunParamsBodyTextGenerationMessagesContentUnion()                {}
-func (UnionString) ImplementsAIRunParamsBodyImageTextToTextMessagesContentUnion()               {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsHeightUnion()                      {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginBottomUnion()                {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginLeftUnion()                  {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginRightUnion()                 {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginTopUnion()                   {}
-func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsWidthUnion()                       {}
-func (UnionString) ImplementsJsonNewParamsBodyObjectResponseFormatJsonSchemaUnion()             {}
-func (UnionString) ImplementsCrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion() {}
+func (UnionString) ImplementsSessionGetParticipantDataFromPeerIDResponseDataParticipantPeerReportMetadataEventsMetadataUnion() {
+}
+func (UnionString) ImplementsThreatEventListParamsSearchObjectValueUnion()                    {}
+func (UnionString) ImplementsThreatEventListParamsSearchBranchesObjectValueUnion()            {}
+func (UnionString) ImplementsThreatEventRelationshipListParamsRelationshipTypesUnion()        {}
+func (UnionString) ImplementsThreatEventIndicatorListParamsSearchValueUnion()                 {}
+func (UnionString) ImplementsThreatEventIndicatorListParamsTagSearchValueUnion()              {}
+func (UnionString) ImplementsThreatEventIndicatorListParamsTagSearchValueArrayItemUnion()     {}
+func (UnionString) ImplementsThreatEventIndicatorAggregateListParamsCreatedAfterUnion()       {}
+func (UnionString) ImplementsThreatEventIndicatorAggregateListParamsCreatedBeforeUnion()      {}
+func (UnionString) ImplementsThreatEventTagNewParamsActiveDurationUnion()                     {}
+func (UnionString) ImplementsThreatEventTagNewParamsActorCategoryUnion()                      {}
+func (UnionString) ImplementsThreatEventTagNewParamsAttributionOrganizationUnion()            {}
+func (UnionString) ImplementsThreatEventTagNewParamsMotiveUnion()                             {}
+func (UnionString) ImplementsThreatEventTagNewParamsOpsecLevelUnion()                         {}
+func (UnionString) ImplementsThreatEventTagNewParamsOriginCountryISOUnion()                   {}
+func (UnionString) ImplementsThreatEventTagNewParamsSophisticationLevelUnion()                {}
+func (UnionString) ImplementsThreatEventTagListParamsFiltersValueUnion()                      {}
+func (UnionString) ImplementsThreatEventTagListParamsFiltersValueArrayItemUnion()             {}
+func (UnionString) ImplementsThreatEventTagEditParamsActiveDurationUnion()                    {}
+func (UnionString) ImplementsThreatEventTagEditParamsActorCategoryUnion()                     {}
+func (UnionString) ImplementsThreatEventTagEditParamsAttributionOrganizationUnion()           {}
+func (UnionString) ImplementsThreatEventTagEditParamsMotiveUnion()                            {}
+func (UnionString) ImplementsThreatEventTagEditParamsOpsecLevelUnion()                        {}
+func (UnionString) ImplementsThreatEventTagEditParamsOriginCountryISOUnion()                  {}
+func (UnionString) ImplementsThreatEventTagEditParamsSophisticationLevelUnion()               {}
+func (UnionString) ImplementsThreatEventTagIndicatorListParamsSearchValueUnion()              {}
+func (UnionString) ImplementsThreatEventTagIndicatorByDatasetListParamsSearchValueUnion()     {}
+func (UnionString) ImplementsLogListParamsFiltersValueUnion()                                 {}
+func (UnionString) ImplementsLogDeleteParamsFiltersValueUnion()                               {}
+func (UnionString) ImplementsLogEditParamsMetadataUnion()                                     {}
+func (UnionString) ImplementsDatasetNewResponseFiltersValueUnion()                            {}
+func (UnionString) ImplementsDatasetUpdateResponseFiltersValueUnion()                         {}
+func (UnionString) ImplementsDatasetListResponseFiltersValueUnion()                           {}
+func (UnionString) ImplementsDatasetDeleteResponseFiltersValueUnion()                         {}
+func (UnionString) ImplementsDatasetGetResponseFiltersValueUnion()                            {}
+func (UnionString) ImplementsDatasetNewParamsFiltersValueUnion()                              {}
+func (UnionString) ImplementsDatasetUpdateParamsFiltersValueUnion()                           {}
+func (UnionString) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                 {}
+func (UnionString) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                {}
+func (UnionString) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()              {}
+func (UnionString) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                 {}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionString) ImplementsAppFlagNewResponseVariationsUnion()                                 {}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateResponseVariationsUnion()                            {}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionString) ImplementsAppFlagListResponseVariationsUnion()                             {}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionString) ImplementsAppFlagGetResponseVariationsUnion()                            {}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionString) ImplementsAppFlagNewParamsVariationsUnion()                                 {}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectValueUnion()              {}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionString) ImplementsAppFlagUpdateParamsVariationsUnion() {}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectAfterVariationsUnion()              {}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectDiffFromUnion()                     {}
+func (UnionString) ImplementsAppFlagChangelogListResponseObjectDiffToUnion()                       {}
+func (UnionString) ImplementsAppEvaluateGetResponseValueUnion()                                    {}
+func (UnionString) ImplementsWorkflowUpdateParamsDefaultRetentionErrorRetentionUnion()             {}
+func (UnionString) ImplementsWorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion()           {}
+func (UnionString) ImplementsInstanceGetResponseOutputUnion()                                      {}
+func (UnionString) ImplementsInstanceGetResponseStepsObjectConfigRetriesDelayUnion()               {}
+func (UnionString) ImplementsInstanceGetResponseStepsObjectConfigTimeoutUnion()                    {}
+func (UnionString) ImplementsInstanceNewParamsInstanceRetentionErrorRetentionUnion()               {}
+func (UnionString) ImplementsInstanceNewParamsInstanceRetentionSuccessRetentionUnion()             {}
+func (UnionString) ImplementsInstanceBulkParamsBodyInstanceRetentionErrorRetentionUnion()          {}
+func (UnionString) ImplementsInstanceBulkParamsBodyInstanceRetentionSuccessRetentionUnion()        {}
+func (UnionString) ImplementsVersionGraphResponseGraphWorkflowNodesObjectDurationUnion()           {}
+func (UnionString) ImplementsVersionGraphResponseGraphWorkflowNodesObjectConfigRetriesDelayUnion() {}
+func (UnionString) ImplementsVersionGraphResponseGraphWorkflowNodesObjectConfigTimeoutUnion()      {}
+func (UnionString) ImplementsVersionGraphResponseGraphWorkflowNodesObjectOptionsTimeoutUnion()     {}
+func (UnionString) ImplementsAbuseReportGetResponseEnvelopeErrorsCode()                            {}
+func (UnionString) ImplementsSubmittedListResponseEnvelopeErrorsCode()                             {}
+func (UnionString) ImplementsSubmittedGetResponseEnvelopeErrorsCode()                              {}
+func (UnionString) ImplementsSubmittedEmailListResponseEnvelopeErrorsCode()                        {}
+func (UnionString) ImplementsAIRunResponseUnion()                                                  {}
+func (UnionString) ImplementsAIRunParamsBodyTextEmbeddingsTextUnion()                              {}
+func (UnionString) ImplementsAIRunParamsBodyTextGenerationMessagesContentUnion()                   {}
+func (UnionString) ImplementsAIRunParamsBodyImageTextToTextMessagesContentUnion()                  {}
+func (UnionString) ImplementsNamespaceChatCompletionsResponseChoicesMessageContentUnion()          {}
+func (UnionString) ImplementsNamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion()    {}
+func (UnionString) ImplementsNamespaceChatCompletionsParamsMessagesContentUnion()                  {}
+func (UnionString) ImplementsNamespaceSearchParamsAISearchOptionsCustomMetadataUnion()             {}
+func (UnionString) ImplementsNamespaceSearchParamsMessagesContentUnion()                           {}
+func (UnionString) ImplementsNamespaceInstanceChatCompletionsResponseChoicesMessageContentUnion()  {}
+func (UnionString) ImplementsNamespaceInstanceChatCompletionsParamsMessagesContentUnion()          {}
+func (UnionString) ImplementsNamespaceInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {
+}
+func (UnionString) ImplementsNamespaceInstanceSearchParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionString) ImplementsNamespaceInstanceSearchParamsMessagesContentUnion()               {}
+func (UnionString) ImplementsNamespaceInstanceItemListResponseMetadataUnion()                  {}
+func (UnionString) ImplementsNamespaceInstanceItemNewOrUpdateResponseMetadataUnion()           {}
+func (UnionString) ImplementsNamespaceInstanceItemGetResponseMetadataUnion()                   {}
+func (UnionString) ImplementsNamespaceInstanceItemSyncResponseMetadataUnion()                  {}
+func (UnionString) ImplementsNamespaceInstanceItemUploadResponseMetadataUnion()                {}
+func (UnionString) ImplementsInstanceChatCompletionsResponseChoicesMessageContentUnion()       {}
+func (UnionString) ImplementsInstanceChatCompletionsParamsMessagesContentUnion()               {}
+func (UnionString) ImplementsInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionString) ImplementsInstanceSearchParamsAISearchOptionsCustomMetadataUnion()          {}
+func (UnionString) ImplementsInstanceSearchParamsMessagesContentUnion()                        {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsHeightUnion()                     {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginBottomUnion()               {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginLeftUnion()                 {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginRightUnion()                {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginTopUnion()                  {}
+func (UnionString) ImplementsPDFNewParamsBodyObjectPDFOptionsWidthUnion()                      {}
+func (UnionString) ImplementsSnapshotNewResponseAccessibilityTreeValueUnion()                  {}
+func (UnionString) ImplementsAccessibilityTreeNewResponseAccessibilityTreeValueUnion()         {}
 
 type UnionBool bool
 
-func (UnionBool) ImplementsVersionAssetsConfigRunWorkerFirstUnionParam()               {}
-func (UnionBool) ImplementsVersionAssetsConfigRunWorkerFirstUnion()                    {}
-func (UnionBool) ImplementsScriptUpdateParamsMetadataAssetsConfigRunWorkerFirstUnion() {}
+func (UnionBool) ImplementsEntitlementListResponseAllocationValueUnion()                         {}
+func (UnionBool) ImplementsAnalyticsQuerySummaryParamsFiltersValueUnion()                        {}
+func (UnionBool) ImplementsAnalyticsQueryTimeseriesParamsFiltersValueUnion()                     {}
+func (UnionBool) ImplementsAnalyticsQueryTopNParamsFiltersValueUnion()                           {}
+func (UnionBool) ImplementsAnalyticsQueryDataSecurityContentFindingTopNParamsFiltersValueUnion() {}
+func (UnionBool) ImplementsAnalyticsQueryDataSecurityFindingSummaryParamsFiltersValueUnion()     {}
+func (UnionBool) ImplementsAnalyticsQueryDataSecurityFindingTimeseriesParamsFiltersValueUnion()  {}
+func (UnionBool) ImplementsVersionAssetsConfigRunWorkerFirstUnionParam()                         {}
+func (UnionBool) ImplementsVersionAssetsConfigRunWorkerFirstUnion()                              {}
+func (UnionBool) ImplementsScriptUpdateParamsMetadataAssetsConfigRunWorkerFirstUnion()           {}
 func (UnionBool) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
 func (UnionBool) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersNeedleValueUnion() {}
@@ -262,6 +448,8 @@ func (UnionBool) ImplementsNamespaceBulkGetResponseWorkersKVBulkGetResultValuesU
 func (UnionBool) ImplementsNamespaceKeyBulkGetResponseWorkersKVBulkGetResultValuesUnion() {}
 func (UnionBool) ImplementsDispatchNamespaceScriptUpdateParamsMetadataAssetsConfigRunWorkerFirstUnion() {
 }
+func (UnionBool) ImplementsCasbPostureRemediationJobNewResponseCreatedAssetFieldsValueUnion() {}
+func (UnionBool) ImplementsCasbPostureRemediationJobListResponseAssetFieldsValueUnion()       {}
 func (UnionBool) ImplementsConfigurationToolsZarazManagedComponentDefaultFieldsUnion()        {}
 func (UnionBool) ImplementsConfigurationToolsZarazManagedComponentSettingsUnion()             {}
 func (UnionBool) ImplementsConfigurationToolsWorkerDefaultFieldsUnion()                       {}
@@ -270,25 +458,137 @@ func (UnionBool) ImplementsConfigUpdateParamsToolsZarazManagedComponentDefaultFi
 func (UnionBool) ImplementsConfigUpdateParamsToolsZarazManagedComponentSettingsUnion()        {}
 func (UnionBool) ImplementsConfigUpdateParamsToolsWorkerDefaultFieldsUnion()                  {}
 func (UnionBool) ImplementsConfigUpdateParamsToolsWorkerSettingsUnion()                       {}
-func (UnionBool) ImplementsLogListParamsFiltersValueUnion()                                   {}
-func (UnionBool) ImplementsLogDeleteParamsFiltersValueUnion()                                 {}
-func (UnionBool) ImplementsLogEditParamsMetadataUnion()                                       {}
-func (UnionBool) ImplementsDatasetNewResponseFiltersValueUnion()                              {}
-func (UnionBool) ImplementsDatasetUpdateResponseFiltersValueUnion()                           {}
-func (UnionBool) ImplementsDatasetListResponseFiltersValueUnion()                             {}
-func (UnionBool) ImplementsDatasetDeleteResponseFiltersValueUnion()                           {}
-func (UnionBool) ImplementsDatasetGetResponseFiltersValueUnion()                              {}
-func (UnionBool) ImplementsDatasetNewParamsFiltersValueUnion()                                {}
-func (UnionBool) ImplementsDatasetUpdateParamsFiltersValueUnion()                             {}
-func (UnionBool) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                   {}
-func (UnionBool) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                  {}
-func (UnionBool) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()                {}
-func (UnionBool) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                   {}
-func (UnionBool) ImplementsJsonNewParamsBodyObjectResponseFormatJsonSchemaUnion()             {}
-func (UnionBool) ImplementsCrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion() {}
+func (UnionBool) ImplementsSessionGetParticipantDataFromPeerIDResponseDataParticipantPeerReportMetadataEventsMetadataUnion() {
+}
+func (UnionBool) ImplementsLogListParamsFiltersValueUnion()                                 {}
+func (UnionBool) ImplementsLogDeleteParamsFiltersValueUnion()                               {}
+func (UnionBool) ImplementsLogEditParamsMetadataUnion()                                     {}
+func (UnionBool) ImplementsDatasetNewResponseFiltersValueUnion()                            {}
+func (UnionBool) ImplementsDatasetUpdateResponseFiltersValueUnion()                         {}
+func (UnionBool) ImplementsDatasetListResponseFiltersValueUnion()                           {}
+func (UnionBool) ImplementsDatasetDeleteResponseFiltersValueUnion()                         {}
+func (UnionBool) ImplementsDatasetGetResponseFiltersValueUnion()                            {}
+func (UnionBool) ImplementsDatasetNewParamsFiltersValueUnion()                              {}
+func (UnionBool) ImplementsDatasetUpdateParamsFiltersValueUnion()                           {}
+func (UnionBool) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                 {}
+func (UnionBool) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                {}
+func (UnionBool) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()              {}
+func (UnionBool) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                 {}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewResponseVariationsUnion()                                 {}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateResponseVariationsUnion()                            {}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionBool) ImplementsAppFlagListResponseVariationsUnion()                             {}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionBool) ImplementsAppFlagGetResponseVariationsUnion()                            {}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionBool) ImplementsAppFlagNewParamsVariationsUnion()                                 {}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectValueUnion()              {}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionBool) ImplementsAppFlagUpdateParamsVariationsUnion()                                     {}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectValueUnion() {}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectAfterVariationsUnion()           {}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectDiffFromUnion()                  {}
+func (UnionBool) ImplementsAppFlagChangelogListResponseObjectDiffToUnion()                    {}
+func (UnionBool) ImplementsAppEvaluateGetResponseValueUnion()                                 {}
+func (UnionBool) ImplementsNamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionBool) ImplementsNamespaceSearchParamsAISearchOptionsCustomMetadataUnion()          {}
+func (UnionBool) ImplementsNamespaceInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {
+}
+func (UnionBool) ImplementsNamespaceInstanceSearchParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionBool) ImplementsNamespaceInstanceItemListResponseMetadataUnion()                  {}
+func (UnionBool) ImplementsNamespaceInstanceItemNewOrUpdateResponseMetadataUnion()           {}
+func (UnionBool) ImplementsNamespaceInstanceItemGetResponseMetadataUnion()                   {}
+func (UnionBool) ImplementsNamespaceInstanceItemSyncResponseMetadataUnion()                  {}
+func (UnionBool) ImplementsNamespaceInstanceItemUploadResponseMetadataUnion()                {}
+func (UnionBool) ImplementsInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionBool) ImplementsInstanceSearchParamsAISearchOptionsCustomMetadataUnion()          {}
+func (UnionBool) ImplementsSnapshotNewResponseAccessibilityTreeCheckedUnion()                {}
+func (UnionBool) ImplementsSnapshotNewResponseAccessibilityTreePressedUnion()                {}
+func (UnionBool) ImplementsAccessibilityTreeNewResponseAccessibilityTreeCheckedUnion()       {}
+func (UnionBool) ImplementsAccessibilityTreeNewResponseAccessibilityTreePressedUnion()       {}
 
 type UnionInt int64
 
+func (UnionInt) ImplementsEntitlementListResponseAllocationValueUnion()                  {}
 func (UnionInt) ImplementsReceivedGetParamsEndUnion()                                    {}
 func (UnionInt) ImplementsReceivedGetParamsStartUnion()                                  {}
 func (UnionInt) ImplementsPageRuleActionsCacheTTLByStatusValueUnion()                    {}
@@ -297,6 +597,8 @@ func (UnionInt) ImplementsPageRuleUpdateParamsActionsCacheTTLByStatusValueUnion(
 func (UnionInt) ImplementsPageRuleEditParamsActionsCacheTTLByStatusValueUnion()          {}
 func (UnionInt) ImplementsOriginPortUnionParam()                                         {}
 func (UnionInt) ImplementsOriginPortUnion()                                              {}
+func (UnionInt) ImplementsWorkflowUpdateParamsDefaultRetentionErrorRetentionUnion()      {}
+func (UnionInt) ImplementsWorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion()    {}
 func (UnionInt) ImplementsInstanceNewParamsInstanceRetentionErrorRetentionUnion()        {}
 func (UnionInt) ImplementsInstanceNewParamsInstanceRetentionSuccessRetentionUnion()      {}
 func (UnionInt) ImplementsInstanceBulkParamsBodyInstanceRetentionErrorRetentionUnion()   {}
@@ -304,9 +606,15 @@ func (UnionInt) ImplementsInstanceBulkParamsBodyInstanceRetentionSuccessRetentio
 
 type UnionFloat float64
 
-func (UnionFloat) ImplementsSettingEditParamsBodyValueValueUnion() {}
-func (UnionFloat) ImplementsTTLParam()                             {}
-func (UnionFloat) ImplementsTTL()                                  {}
+func (UnionFloat) ImplementsSettingEditParamsBodyValueValueUnion()                                {}
+func (UnionFloat) ImplementsAnalyticsQuerySummaryParamsFiltersValueUnion()                        {}
+func (UnionFloat) ImplementsAnalyticsQueryTimeseriesParamsFiltersValueUnion()                     {}
+func (UnionFloat) ImplementsAnalyticsQueryTopNParamsFiltersValueUnion()                           {}
+func (UnionFloat) ImplementsAnalyticsQueryDataSecurityContentFindingTopNParamsFiltersValueUnion() {}
+func (UnionFloat) ImplementsAnalyticsQueryDataSecurityFindingSummaryParamsFiltersValueUnion()     {}
+func (UnionFloat) ImplementsAnalyticsQueryDataSecurityFindingTimeseriesParamsFiltersValueUnion()  {}
+func (UnionFloat) ImplementsTTLParam()                                                            {}
+func (UnionFloat) ImplementsTTL()                                                                 {}
 func (UnionFloat) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersFiltersWorkersObservabilityFilterLeafValueUnion() {
 }
 func (UnionFloat) ImplementsObservabilityTelemetryQueryResponseRunQueryParametersNeedleValueUnion() {}
@@ -364,33 +672,160 @@ func (UnionFloat) ImplementsObservabilitySharedQueryNewParamsParametersFiltersWo
 func (UnionFloat) ImplementsObservabilitySharedQueryNewParamsParametersNeedleValueUnion()      {}
 func (UnionFloat) ImplementsNamespaceBulkGetResponseWorkersKVBulkGetResultValuesUnion()        {}
 func (UnionFloat) ImplementsNamespaceKeyBulkGetResponseWorkersKVBulkGetResultValuesUnion()     {}
+func (UnionFloat) ImplementsV2QueryGetResponseEnvelopeErrorsCode()                             {}
+func (UnionFloat) ImplementsV2QueryGetResponseEnvelopeMessagesCode()                           {}
+func (UnionFloat) ImplementsCasbPostureRemediationJobNewResponseCreatedAssetFieldsValueUnion() {}
+func (UnionFloat) ImplementsCasbPostureRemediationJobListResponseAssetFieldsValueUnion()       {}
 func (UnionFloat) ImplementsRankingTimeseriesGroupsResponseSerie0Union()                       {}
 func (UnionFloat) ImplementsRankingInternetServiceTimeseriesGroupsResponseSerie0Union()        {}
-func (UnionFloat) ImplementsThreatEventListParamsSearchValueUnion()                            {}
-func (UnionFloat) ImplementsThreatEventListParamsSearchValueArrayItemUnion()                   {}
-func (UnionFloat) ImplementsLogListParamsFiltersValueUnion()                                   {}
-func (UnionFloat) ImplementsLogDeleteParamsFiltersValueUnion()                                 {}
-func (UnionFloat) ImplementsLogEditParamsMetadataUnion()                                       {}
-func (UnionFloat) ImplementsDatasetNewResponseFiltersValueUnion()                              {}
-func (UnionFloat) ImplementsDatasetUpdateResponseFiltersValueUnion()                           {}
-func (UnionFloat) ImplementsDatasetListResponseFiltersValueUnion()                             {}
-func (UnionFloat) ImplementsDatasetDeleteResponseFiltersValueUnion()                           {}
-func (UnionFloat) ImplementsDatasetGetResponseFiltersValueUnion()                              {}
-func (UnionFloat) ImplementsDatasetNewParamsFiltersValueUnion()                                {}
-func (UnionFloat) ImplementsDatasetUpdateParamsFiltersValueUnion()                             {}
-func (UnionFloat) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                   {}
-func (UnionFloat) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                  {}
-func (UnionFloat) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()                {}
-func (UnionFloat) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                   {}
-func (UnionFloat) ImplementsInstanceGetResponseOutputUnion()                                   {}
-func (UnionFloat) ImplementsInstanceGetResponseStepsObjectConfigRetriesDelayUnion()            {}
-func (UnionFloat) ImplementsInstanceGetResponseStepsObjectConfigTimeoutUnion()                 {}
-func (UnionFloat) ImplementsAbuseReportGetResponseEnvelopeErrorsCode()                         {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsHeightUnion()                      {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginBottomUnion()                {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginLeftUnion()                  {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginRightUnion()                 {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginTopUnion()                   {}
-func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsWidthUnion()                       {}
-func (UnionFloat) ImplementsJsonNewParamsBodyObjectResponseFormatJsonSchemaUnion()             {}
-func (UnionFloat) ImplementsCrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion() {}
+func (UnionFloat) ImplementsSessionGetParticipantDataFromPeerIDResponseDataParticipantPeerReportMetadataEventsMetadataUnion() {
+}
+func (UnionFloat) ImplementsThreatEventListParamsSearchObjectValueUnion()                    {}
+func (UnionFloat) ImplementsThreatEventListParamsSearchBranchesObjectValueUnion()            {}
+func (UnionFloat) ImplementsThreatEventIndicatorListParamsTagSearchValueUnion()              {}
+func (UnionFloat) ImplementsThreatEventIndicatorListParamsTagSearchValueArrayItemUnion()     {}
+func (UnionFloat) ImplementsThreatEventTagNewParamsPriorityUnion()                           {}
+func (UnionFloat) ImplementsThreatEventTagListParamsFiltersValueUnion()                      {}
+func (UnionFloat) ImplementsThreatEventTagListParamsFiltersValueArrayItemUnion()             {}
+func (UnionFloat) ImplementsThreatEventTagEditParamsPriorityUnion()                          {}
+func (UnionFloat) ImplementsLogListParamsFiltersValueUnion()                                 {}
+func (UnionFloat) ImplementsLogDeleteParamsFiltersValueUnion()                               {}
+func (UnionFloat) ImplementsLogEditParamsMetadataUnion()                                     {}
+func (UnionFloat) ImplementsDatasetNewResponseFiltersValueUnion()                            {}
+func (UnionFloat) ImplementsDatasetUpdateResponseFiltersValueUnion()                         {}
+func (UnionFloat) ImplementsDatasetListResponseFiltersValueUnion()                           {}
+func (UnionFloat) ImplementsDatasetDeleteResponseFiltersValueUnion()                         {}
+func (UnionFloat) ImplementsDatasetGetResponseFiltersValueUnion()                            {}
+func (UnionFloat) ImplementsDatasetNewParamsFiltersValueUnion()                              {}
+func (UnionFloat) ImplementsDatasetUpdateParamsFiltersValueUnion()                           {}
+func (UnionFloat) ImplementsEvaluationNewResponseDatasetsFiltersValueUnion()                 {}
+func (UnionFloat) ImplementsEvaluationListResponseDatasetsFiltersValueUnion()                {}
+func (UnionFloat) ImplementsEvaluationDeleteResponseDatasetsFiltersValueUnion()              {}
+func (UnionFloat) ImplementsEvaluationGetResponseDatasetsFiltersValueUnion()                 {}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewResponseVariationsUnion()                                 {}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateResponseVariationsUnion()                            {}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagListResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionFloat) ImplementsAppFlagListResponseVariationsUnion()                             {}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagGetResponseRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionFloat) ImplementsAppFlagGetResponseVariationsUnion()                            {}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionFloat) ImplementsAppFlagNewParamsVariationsUnion()                                 {}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectValueUnion()              {}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectValueUnion() {}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateParamsRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClauseUnion() {
+}
+func (UnionFloat) ImplementsAppFlagUpdateParamsVariationsUnion() {}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectValueUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterRulesConditionsObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesObjectClausesUnion() {
+}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectAfterVariationsUnion()              {}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectDiffFromUnion()                     {}
+func (UnionFloat) ImplementsAppFlagChangelogListResponseObjectDiffToUnion()                       {}
+func (UnionFloat) ImplementsAppEvaluateGetResponseValueUnion()                                    {}
+func (UnionFloat) ImplementsInstanceGetResponseOutputUnion()                                      {}
+func (UnionFloat) ImplementsInstanceGetResponseStepsObjectConfigRetriesDelayUnion()               {}
+func (UnionFloat) ImplementsInstanceGetResponseStepsObjectConfigTimeoutUnion()                    {}
+func (UnionFloat) ImplementsVersionGraphResponseGraphWorkflowNodesObjectDurationUnion()           {}
+func (UnionFloat) ImplementsVersionGraphResponseGraphWorkflowNodesObjectConfigRetriesDelayUnion() {}
+func (UnionFloat) ImplementsVersionGraphResponseGraphWorkflowNodesObjectConfigTimeoutUnion()      {}
+func (UnionFloat) ImplementsVersionGraphResponseGraphWorkflowNodesObjectOptionsTimeoutUnion()     {}
+func (UnionFloat) ImplementsAbuseReportGetResponseEnvelopeErrorsCode()                            {}
+func (UnionFloat) ImplementsSubmittedListResponseEnvelopeErrorsCode()                             {}
+func (UnionFloat) ImplementsSubmittedGetResponseEnvelopeErrorsCode()                              {}
+func (UnionFloat) ImplementsSubmittedEmailListResponseEnvelopeErrorsCode()                        {}
+func (UnionFloat) ImplementsNamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion()    {}
+func (UnionFloat) ImplementsNamespaceSearchParamsAISearchOptionsCustomMetadataUnion()             {}
+func (UnionFloat) ImplementsNamespaceInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {
+}
+func (UnionFloat) ImplementsNamespaceInstanceSearchParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionFloat) ImplementsNamespaceInstanceItemListResponseMetadataUnion()                  {}
+func (UnionFloat) ImplementsNamespaceInstanceItemNewOrUpdateResponseMetadataUnion()           {}
+func (UnionFloat) ImplementsNamespaceInstanceItemGetResponseMetadataUnion()                   {}
+func (UnionFloat) ImplementsNamespaceInstanceItemSyncResponseMetadataUnion()                  {}
+func (UnionFloat) ImplementsNamespaceInstanceItemUploadResponseMetadataUnion()                {}
+func (UnionFloat) ImplementsInstanceChatCompletionsParamsAISearchOptionsCustomMetadataUnion() {}
+func (UnionFloat) ImplementsInstanceSearchParamsAISearchOptionsCustomMetadataUnion()          {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsHeightUnion()                     {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginBottomUnion()               {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginLeftUnion()                 {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginRightUnion()                {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsMarginTopUnion()                  {}
+func (UnionFloat) ImplementsPDFNewParamsBodyObjectPDFOptionsWidthUnion()                      {}
+func (UnionFloat) ImplementsSnapshotNewResponseAccessibilityTreeValueUnion()                  {}
+func (UnionFloat) ImplementsAccessibilityTreeNewResponseAccessibilityTreeValueUnion()         {}

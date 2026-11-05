@@ -29,6 +29,7 @@ import (
 // the [NewAbuseReportService] method instead.
 type AbuseReportService struct {
 	Options     []option.RequestOption
+	Submitted   *SubmittedService
 	Mitigations *MitigationService
 }
 
@@ -38,11 +39,17 @@ type AbuseReportService struct {
 func NewAbuseReportService(opts ...option.RequestOption) (r *AbuseReportService) {
 	r = &AbuseReportService{}
 	r.Options = opts
+	r.Submitted = NewSubmittedService(opts...)
 	r.Mitigations = NewMitigationService(opts...)
 	return
 }
 
-// Submit the Abuse Report of a particular type
+// Submit an abuse report of a particular type.
+//
+// Requires the abuse-reports entitlement on the account (Enterprise accounts have
+// it by default; other accounts must request access) and an API token with the
+// `Trust and Safety Write` permission. If the account is not entitled, the request
+// is rejected with an HTTP `401` response (see below).
 func (r *AbuseReportService) New(ctx context.Context, reportParam string, params AbuseReportNewParams, opts ...option.RequestOption) (res *string, err error) {
 	var env AbuseReportNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -63,7 +70,9 @@ func (r *AbuseReportService) New(ctx context.Context, reportParam string, params
 	return res, nil
 }
 
-// List the abuse reports for a given account
+// List abuse reports made against domains or other content associated with the
+// account. To list reports that the account submitted, use the submitted abuse
+// reports endpoint instead.
 func (r *AbuseReportService) List(ctx context.Context, params AbuseReportListParams, opts ...option.RequestOption) (res *pagination.V4PagePagination[AbuseReportListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -85,12 +94,16 @@ func (r *AbuseReportService) List(ctx context.Context, params AbuseReportListPar
 	return res, nil
 }
 
-// List the abuse reports for a given account
+// List abuse reports made against domains or other content associated with the
+// account. To list reports that the account submitted, use the submitted abuse
+// reports endpoint instead.
 func (r *AbuseReportService) ListAutoPaging(ctx context.Context, params AbuseReportListParams, opts ...option.RequestOption) *pagination.V4PagePaginationAutoPager[AbuseReportListResponse] {
 	return pagination.NewV4PagePaginationAutoPager(r.List(ctx, params, opts...))
 }
 
-// Retrieve the details of an abuse report.
+// Retrieve the details of an abuse report made against a domain or other content
+// associated with the account. To retrieve a report that the account submitted,
+// use the submitted abuse report endpoint instead.
 func (r *AbuseReportService) Get(ctx context.Context, reportParam string, query AbuseReportGetParams, opts ...option.RequestOption) (res *AbuseReportGetResponse, err error) {
 	var env AbuseReportGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -1632,6 +1645,11 @@ type AbuseReportListParams struct {
 	Page param.Field[int64] `query:"page"`
 	// How many abuse reports per page to list
 	PerPage param.Field[int64] `query:"per_page"`
+	// Free-text search. Returns reports whose report ID starts with the term or whose
+	// domain contains the term, both case-insensitively. Surrounding whitespace is
+	// ignored, and an empty value is treated as absent. Combined with the other
+	// filters using AND.
+	Search param.Field[string] `query:"search"`
 	// A property to sort by, followed by the order (id, cdate, domain, type, status)
 	Sort param.Field[string] `query:"sort"`
 	// Filter by the status of the report.

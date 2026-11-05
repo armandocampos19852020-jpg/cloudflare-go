@@ -110,6 +110,26 @@ func (r *SettingAllowPolicyService) Delete(ctx context.Context, policyID string,
 	return res, nil
 }
 
+// Executes multiple allow policy operations atomically: delete, partially update,
+// replace, and create allow policies in a single request. All four operation
+// arrays (deletes, patches, puts, posts) are required and executed in order. Send
+// empty arrays for unused operations.
+func (r *SettingAllowPolicyService) Batch(ctx context.Context, params SettingAllowPolicyBatchParams, opts ...option.RequestOption) (res *SettingAllowPolicyBatchResponse, err error) {
+	var env SettingAllowPolicyBatchResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if params.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/email-security/settings/allow_policies/batch", params.AccountID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
 // Updates an existing allow policy. Only provided fields will be modified. Changes
 // take effect for new emails matching the pattern.
 func (r *SettingAllowPolicyService) Edit(ctx context.Context, policyID string, params SettingAllowPolicyEditParams, opts ...option.RequestOption) (res *SettingAllowPolicyEditResponse, err error) {
@@ -154,44 +174,58 @@ func (r *SettingAllowPolicyService) Get(ctx context.Context, policyID string, qu
 	return res, nil
 }
 
-// An email allow policy
+// An email allow policy.
 type SettingAllowPolicyNewResponse struct {
-	// Allow policy identifier
+	// Allow policy identifier.
 	ID        string    `json:"id" api:"required" format:"uuid"`
 	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
 	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `modified_at` instead.
 	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
 	Comments     string    `json:"comments" api:"nullable"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender bool `json:"is_acceptable_sender"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient bool `json:"is_exempt_recipient"`
 	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_exempt_recipient` instead.
 	IsRecipient bool `json:"is_recipient"`
 	IsRegex     bool `json:"is_regex"`
 	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_trusted_sender` instead.
 	IsSender bool `json:"is_sender"`
 	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_acceptable_sender` instead.
 	IsSpoof bool `json:"is_spoof"`
-	// Messages from this sender will bypass all detections and link following
+	// Bypasses all detections and link following for messages from this sender.
 	IsTrustedSender bool      `json:"is_trusted_sender"`
 	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
-	Pattern         string    `json:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType SettingAllowPolicyNewResponsePatternType `json:"pattern_type"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -229,8 +263,17 @@ func (r settingAllowPolicyNewResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyNewResponsePatternType string
 
 const (
@@ -248,44 +291,58 @@ func (r SettingAllowPolicyNewResponsePatternType) IsKnown() bool {
 	return false
 }
 
-// An email allow policy
+// An email allow policy.
 type SettingAllowPolicyListResponse struct {
-	// Allow policy identifier
+	// Allow policy identifier.
 	ID        string    `json:"id" api:"required" format:"uuid"`
 	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
 	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `modified_at` instead.
 	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
 	Comments     string    `json:"comments" api:"nullable"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender bool `json:"is_acceptable_sender"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient bool `json:"is_exempt_recipient"`
 	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_exempt_recipient` instead.
 	IsRecipient bool `json:"is_recipient"`
 	IsRegex     bool `json:"is_regex"`
 	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_trusted_sender` instead.
 	IsSender bool `json:"is_sender"`
 	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_acceptable_sender` instead.
 	IsSpoof bool `json:"is_spoof"`
-	// Messages from this sender will bypass all detections and link following
+	// Bypasses all detections and link following for messages from this sender.
 	IsTrustedSender bool      `json:"is_trusted_sender"`
 	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
-	Pattern         string    `json:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType SettingAllowPolicyListResponsePatternType `json:"pattern_type"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -323,8 +380,17 @@ func (r settingAllowPolicyListResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyListResponsePatternType string
 
 const (
@@ -343,7 +409,7 @@ func (r SettingAllowPolicyListResponsePatternType) IsKnown() bool {
 }
 
 type SettingAllowPolicyDeleteResponse struct {
-	// Allow policy identifier
+	// Allow policy identifier.
 	ID   string                               `json:"id" api:"required" format:"uuid"`
 	JSON settingAllowPolicyDeleteResponseJSON `json:"-"`
 }
@@ -364,44 +430,458 @@ func (r settingAllowPolicyDeleteResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-// An email allow policy
-type SettingAllowPolicyEditResponse struct {
-	// Allow policy identifier
+type SettingAllowPolicyBatchResponse struct {
+	Deletes []SettingAllowPolicyBatchResponseDelete `json:"deletes"`
+	Patches []SettingAllowPolicyBatchResponsePatch  `json:"patches"`
+	Posts   []SettingAllowPolicyBatchResponsePost   `json:"posts"`
+	Puts    []SettingAllowPolicyBatchResponsePut    `json:"puts"`
+	JSON    settingAllowPolicyBatchResponseJSON     `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseJSON contains the JSON metadata for the struct
+// [SettingAllowPolicyBatchResponse]
+type settingAllowPolicyBatchResponseJSON struct {
+	Deletes     apijson.Field
+	Patches     apijson.Field
+	Posts       apijson.Field
+	Puts        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type SettingAllowPolicyBatchResponseDelete struct {
+	// Allow policy identifier.
+	ID   string                                    `json:"id" api:"required" format:"uuid"`
+	JSON settingAllowPolicyBatchResponseDeleteJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseDeleteJSON contains the JSON metadata for the
+// struct [SettingAllowPolicyBatchResponseDelete]
+type settingAllowPolicyBatchResponseDeleteJSON struct {
+	ID          apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseDelete) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseDeleteJSON) RawJSON() string {
+	return r.raw
+}
+
+// An email allow policy.
+type SettingAllowPolicyBatchResponsePatch struct {
+	// Allow policy identifier.
 	ID        string    `json:"id" api:"required" format:"uuid"`
 	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
 	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `modified_at` instead.
 	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
 	Comments     string    `json:"comments" api:"nullable"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender bool `json:"is_acceptable_sender"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient bool `json:"is_exempt_recipient"`
 	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_exempt_recipient` instead.
 	IsRecipient bool `json:"is_recipient"`
 	IsRegex     bool `json:"is_regex"`
 	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_trusted_sender` instead.
 	IsSender bool `json:"is_sender"`
 	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_acceptable_sender` instead.
 	IsSpoof bool `json:"is_spoof"`
-	// Messages from this sender will bypass all detections and link following
+	// Bypasses all detections and link following for messages from this sender.
 	IsTrustedSender bool      `json:"is_trusted_sender"`
 	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
-	Pattern         string    `json:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType SettingAllowPolicyBatchResponsePatchesPatternType `json:"pattern_type"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender bool                                     `json:"verify_sender"`
+	JSON         settingAllowPolicyBatchResponsePatchJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponsePatchJSON contains the JSON metadata for the
+// struct [SettingAllowPolicyBatchResponsePatch]
+type settingAllowPolicyBatchResponsePatchJSON struct {
+	ID                 apijson.Field
+	CreatedAt          apijson.Field
+	LastModified       apijson.Field
+	Comments           apijson.Field
+	IsAcceptableSender apijson.Field
+	IsExemptRecipient  apijson.Field
+	IsRecipient        apijson.Field
+	IsRegex            apijson.Field
+	IsSender           apijson.Field
+	IsSpoof            apijson.Field
+	IsTrustedSender    apijson.Field
+	ModifiedAt         apijson.Field
+	Pattern            apijson.Field
+	PatternType        apijson.Field
+	VerifySender       apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponsePatch) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponsePatchJSON) RawJSON() string {
+	return r.raw
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchResponsePatchesPatternType string
+
+const (
+	SettingAllowPolicyBatchResponsePatchesPatternTypeEmail   SettingAllowPolicyBatchResponsePatchesPatternType = "EMAIL"
+	SettingAllowPolicyBatchResponsePatchesPatternTypeDomain  SettingAllowPolicyBatchResponsePatchesPatternType = "DOMAIN"
+	SettingAllowPolicyBatchResponsePatchesPatternTypeIP      SettingAllowPolicyBatchResponsePatchesPatternType = "IP"
+	SettingAllowPolicyBatchResponsePatchesPatternTypeUnknown SettingAllowPolicyBatchResponsePatchesPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchResponsePatchesPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchResponsePatchesPatternTypeEmail, SettingAllowPolicyBatchResponsePatchesPatternTypeDomain, SettingAllowPolicyBatchResponsePatchesPatternTypeIP, SettingAllowPolicyBatchResponsePatchesPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+// An email allow policy.
+type SettingAllowPolicyBatchResponsePost struct {
+	// Allow policy identifier.
+	ID        string    `json:"id" api:"required" format:"uuid"`
+	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
+	//
+	// Deprecated: Use `modified_at` instead.
+	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
+	Comments     string    `json:"comments" api:"nullable"`
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender bool `json:"is_acceptable_sender"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient bool `json:"is_exempt_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient bool `json:"is_recipient"`
+	IsRegex     bool `json:"is_regex"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender bool `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof bool `json:"is_spoof"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender bool      `json:"is_trusted_sender"`
+	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType SettingAllowPolicyBatchResponsePostsPatternType `json:"pattern_type"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender bool                                    `json:"verify_sender"`
+	JSON         settingAllowPolicyBatchResponsePostJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponsePostJSON contains the JSON metadata for the
+// struct [SettingAllowPolicyBatchResponsePost]
+type settingAllowPolicyBatchResponsePostJSON struct {
+	ID                 apijson.Field
+	CreatedAt          apijson.Field
+	LastModified       apijson.Field
+	Comments           apijson.Field
+	IsAcceptableSender apijson.Field
+	IsExemptRecipient  apijson.Field
+	IsRecipient        apijson.Field
+	IsRegex            apijson.Field
+	IsSender           apijson.Field
+	IsSpoof            apijson.Field
+	IsTrustedSender    apijson.Field
+	ModifiedAt         apijson.Field
+	Pattern            apijson.Field
+	PatternType        apijson.Field
+	VerifySender       apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponsePost) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponsePostJSON) RawJSON() string {
+	return r.raw
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchResponsePostsPatternType string
+
+const (
+	SettingAllowPolicyBatchResponsePostsPatternTypeEmail   SettingAllowPolicyBatchResponsePostsPatternType = "EMAIL"
+	SettingAllowPolicyBatchResponsePostsPatternTypeDomain  SettingAllowPolicyBatchResponsePostsPatternType = "DOMAIN"
+	SettingAllowPolicyBatchResponsePostsPatternTypeIP      SettingAllowPolicyBatchResponsePostsPatternType = "IP"
+	SettingAllowPolicyBatchResponsePostsPatternTypeUnknown SettingAllowPolicyBatchResponsePostsPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchResponsePostsPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchResponsePostsPatternTypeEmail, SettingAllowPolicyBatchResponsePostsPatternTypeDomain, SettingAllowPolicyBatchResponsePostsPatternTypeIP, SettingAllowPolicyBatchResponsePostsPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+// An email allow policy.
+type SettingAllowPolicyBatchResponsePut struct {
+	// Allow policy identifier.
+	ID        string    `json:"id" api:"required" format:"uuid"`
+	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
+	//
+	// Deprecated: Use `modified_at` instead.
+	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
+	Comments     string    `json:"comments" api:"nullable"`
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender bool `json:"is_acceptable_sender"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient bool `json:"is_exempt_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient bool `json:"is_recipient"`
+	IsRegex     bool `json:"is_regex"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender bool `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof bool `json:"is_spoof"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender bool      `json:"is_trusted_sender"`
+	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType SettingAllowPolicyBatchResponsePutsPatternType `json:"pattern_type"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender bool                                   `json:"verify_sender"`
+	JSON         settingAllowPolicyBatchResponsePutJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponsePutJSON contains the JSON metadata for the struct
+// [SettingAllowPolicyBatchResponsePut]
+type settingAllowPolicyBatchResponsePutJSON struct {
+	ID                 apijson.Field
+	CreatedAt          apijson.Field
+	LastModified       apijson.Field
+	Comments           apijson.Field
+	IsAcceptableSender apijson.Field
+	IsExemptRecipient  apijson.Field
+	IsRecipient        apijson.Field
+	IsRegex            apijson.Field
+	IsSender           apijson.Field
+	IsSpoof            apijson.Field
+	IsTrustedSender    apijson.Field
+	ModifiedAt         apijson.Field
+	Pattern            apijson.Field
+	PatternType        apijson.Field
+	VerifySender       apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponsePut) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponsePutJSON) RawJSON() string {
+	return r.raw
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchResponsePutsPatternType string
+
+const (
+	SettingAllowPolicyBatchResponsePutsPatternTypeEmail   SettingAllowPolicyBatchResponsePutsPatternType = "EMAIL"
+	SettingAllowPolicyBatchResponsePutsPatternTypeDomain  SettingAllowPolicyBatchResponsePutsPatternType = "DOMAIN"
+	SettingAllowPolicyBatchResponsePutsPatternTypeIP      SettingAllowPolicyBatchResponsePutsPatternType = "IP"
+	SettingAllowPolicyBatchResponsePutsPatternTypeUnknown SettingAllowPolicyBatchResponsePutsPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchResponsePutsPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchResponsePutsPatternTypeEmail, SettingAllowPolicyBatchResponsePutsPatternTypeDomain, SettingAllowPolicyBatchResponsePutsPatternTypeIP, SettingAllowPolicyBatchResponsePutsPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+// An email allow policy.
+type SettingAllowPolicyEditResponse struct {
+	// Allow policy identifier.
+	ID        string    `json:"id" api:"required" format:"uuid"`
+	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
+	//
+	// Deprecated: Use `modified_at` instead.
+	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
+	Comments     string    `json:"comments" api:"nullable"`
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender bool `json:"is_acceptable_sender"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient bool `json:"is_exempt_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient bool `json:"is_recipient"`
+	IsRegex     bool `json:"is_regex"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender bool `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof bool `json:"is_spoof"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender bool      `json:"is_trusted_sender"`
+	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType SettingAllowPolicyEditResponsePatternType `json:"pattern_type"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -439,8 +919,17 @@ func (r settingAllowPolicyEditResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyEditResponsePatternType string
 
 const (
@@ -458,44 +947,58 @@ func (r SettingAllowPolicyEditResponsePatternType) IsKnown() bool {
 	return false
 }
 
-// An email allow policy
+// An email allow policy.
 type SettingAllowPolicyGetResponse struct {
-	// Allow policy identifier
+	// Allow policy identifier.
 	ID        string    `json:"id" api:"required" format:"uuid"`
 	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
 	// Deprecated, use `modified_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `modified_at` instead.
 	LastModified time.Time `json:"last_modified" api:"required" format:"date-time"`
 	Comments     string    `json:"comments" api:"nullable"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender bool `json:"is_acceptable_sender"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient bool `json:"is_exempt_recipient"`
 	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_exempt_recipient` instead.
 	IsRecipient bool `json:"is_recipient"`
 	IsRegex     bool `json:"is_regex"`
 	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_trusted_sender` instead.
 	IsSender bool `json:"is_sender"`
 	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
 	// July 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `is_acceptable_sender` instead.
 	IsSpoof bool `json:"is_spoof"`
-	// Messages from this sender will bypass all detections and link following
+	// Bypasses all detections and link following for messages from this sender.
 	IsTrustedSender bool      `json:"is_trusted_sender"`
 	ModifiedAt      time.Time `json:"modified_at" format:"date-time"`
-	Pattern         string    `json:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern string `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType SettingAllowPolicyGetResponsePatternType `json:"pattern_type"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -533,8 +1036,17 @@ func (r settingAllowPolicyGetResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyGetResponsePatternType string
 
 const (
@@ -555,18 +1067,32 @@ func (r SettingAllowPolicyGetResponsePatternType) IsKnown() bool {
 type SettingAllowPolicyNewParams struct {
 	// Identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender param.Field[bool] `json:"is_acceptable_sender" api:"required"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient param.Field[bool] `json:"is_exempt_recipient" api:"required"`
 	IsRegex           param.Field[bool] `json:"is_regex" api:"required"`
-	// Messages from this sender will bypass all detections and link following
-	IsTrustedSender param.Field[bool]   `json:"is_trusted_sender" api:"required"`
-	Pattern         param.Field[string] `json:"pattern" api:"required"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender param.Field[bool] `json:"is_trusted_sender" api:"required"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern param.Field[string] `json:"pattern" api:"required"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType param.Field[SettingAllowPolicyNewParamsPatternType] `json:"pattern_type" api:"required"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -587,8 +1113,17 @@ func (r SettingAllowPolicyNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyNewParamsPatternType string
 
 const (
@@ -611,7 +1146,7 @@ type SettingAllowPolicyNewResponseEnvelope struct {
 	Messages []SettingAllowPolicyNewResponseEnvelopeMessages `json:"messages" api:"required"`
 	// Whether the API call was successful.
 	Success SettingAllowPolicyNewResponseEnvelopeSuccess `json:"success" api:"required"`
-	// An email allow policy
+	// An email allow policy.
 	Result SettingAllowPolicyNewResponse             `json:"result"`
 	JSON   settingAllowPolicyNewResponseEnvelopeJSON `json:"-"`
 }
@@ -763,10 +1298,10 @@ type SettingAllowPolicyListParams struct {
 	// Field to sort by.
 	Order param.Field[SettingAllowPolicyListParamsOrder] `query:"order"`
 	// Current page within paginated list of results.
-	Page    param.Field[int64]  `query:"page"`
+	Page param.Field[int64] `query:"page"`
+	// Filter by exact pattern value.
 	Pattern param.Field[string] `query:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// Filter by pattern type.
 	PatternType param.Field[SettingAllowPolicyListParamsPatternType] `query:"pattern_type"`
 	// The number of results per page. Maximum value is 1000.
 	PerPage param.Field[int64] `query:"per_page"`
@@ -817,8 +1352,7 @@ func (r SettingAllowPolicyListParamsOrder) IsKnown() bool {
 	return false
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Filter by pattern type.
 type SettingAllowPolicyListParamsPatternType string
 
 const (
@@ -980,15 +1514,427 @@ func (r SettingAllowPolicyDeleteResponseEnvelopeSuccess) IsKnown() bool {
 	return false
 }
 
+type SettingAllowPolicyBatchParams struct {
+	// Identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// IDs of the allow policies to delete.
+	Deletes param.Field[[]SettingAllowPolicyBatchParamsDelete] `json:"deletes" api:"required"`
+	// Partial updates to apply — each entry carries the policy's ID and only the
+	// fields to change.
+	Patches param.Field[[]SettingAllowPolicyBatchParamsPatch] `json:"patches" api:"required"`
+	// Allow policies to create.
+	Posts param.Field[[]SettingAllowPolicyBatchParamsPost] `json:"posts" api:"required"`
+	// Full replacements to apply — each entry carries the policy's ID and every field
+	// of its new value.
+	Puts param.Field[[]SettingAllowPolicyBatchParamsPut] `json:"puts" api:"required"`
+}
+
+func (r SettingAllowPolicyBatchParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type SettingAllowPolicyBatchParamsDelete struct {
+	// Allow policy identifier.
+	ID param.Field[string] `json:"id" api:"required" format:"uuid"`
+}
+
+func (r SettingAllowPolicyBatchParamsDelete) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// An email allow policy.
+type SettingAllowPolicyBatchParamsPatch struct {
+	Comments param.Field[string] `json:"comments"`
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender param.Field[bool] `json:"is_acceptable_sender"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient param.Field[bool] `json:"is_exempt_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient param.Field[bool] `json:"is_recipient"`
+	IsRegex     param.Field[bool] `json:"is_regex"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender param.Field[bool] `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof param.Field[bool] `json:"is_spoof"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender param.Field[bool] `json:"is_trusted_sender"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern param.Field[string] `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType param.Field[SettingAllowPolicyBatchParamsPatchesPatternType] `json:"pattern_type"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender param.Field[bool] `json:"verify_sender"`
+}
+
+func (r SettingAllowPolicyBatchParamsPatch) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchParamsPatchesPatternType string
+
+const (
+	SettingAllowPolicyBatchParamsPatchesPatternTypeEmail   SettingAllowPolicyBatchParamsPatchesPatternType = "EMAIL"
+	SettingAllowPolicyBatchParamsPatchesPatternTypeDomain  SettingAllowPolicyBatchParamsPatchesPatternType = "DOMAIN"
+	SettingAllowPolicyBatchParamsPatchesPatternTypeIP      SettingAllowPolicyBatchParamsPatchesPatternType = "IP"
+	SettingAllowPolicyBatchParamsPatchesPatternTypeUnknown SettingAllowPolicyBatchParamsPatchesPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchParamsPatchesPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchParamsPatchesPatternTypeEmail, SettingAllowPolicyBatchParamsPatchesPatternTypeDomain, SettingAllowPolicyBatchParamsPatchesPatternTypeIP, SettingAllowPolicyBatchParamsPatchesPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+// Create an allow policy.
+type SettingAllowPolicyBatchParamsPost struct {
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender param.Field[bool] `json:"is_acceptable_sender" api:"required"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient param.Field[bool] `json:"is_exempt_recipient" api:"required"`
+	IsRegex           param.Field[bool] `json:"is_regex" api:"required"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender param.Field[bool] `json:"is_trusted_sender" api:"required"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern param.Field[string] `json:"pattern" api:"required"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType param.Field[SettingAllowPolicyBatchParamsPostsPatternType] `json:"pattern_type" api:"required"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender param.Field[bool]   `json:"verify_sender" api:"required"`
+	Comments     param.Field[string] `json:"comments"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient param.Field[bool] `json:"is_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender param.Field[bool] `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof param.Field[bool] `json:"is_spoof"`
+}
+
+func (r SettingAllowPolicyBatchParamsPost) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchParamsPostsPatternType string
+
+const (
+	SettingAllowPolicyBatchParamsPostsPatternTypeEmail   SettingAllowPolicyBatchParamsPostsPatternType = "EMAIL"
+	SettingAllowPolicyBatchParamsPostsPatternTypeDomain  SettingAllowPolicyBatchParamsPostsPatternType = "DOMAIN"
+	SettingAllowPolicyBatchParamsPostsPatternTypeIP      SettingAllowPolicyBatchParamsPostsPatternType = "IP"
+	SettingAllowPolicyBatchParamsPostsPatternTypeUnknown SettingAllowPolicyBatchParamsPostsPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchParamsPostsPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchParamsPostsPatternTypeEmail, SettingAllowPolicyBatchParamsPostsPatternTypeDomain, SettingAllowPolicyBatchParamsPostsPatternTypeIP, SettingAllowPolicyBatchParamsPostsPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+// An email allow policy.
+type SettingAllowPolicyBatchParamsPut struct {
+	Comments param.Field[string] `json:"comments"`
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
+	IsAcceptableSender param.Field[bool] `json:"is_acceptable_sender"`
+	// Bypasses all detections for messages to this recipient.
+	IsExemptRecipient param.Field[bool] `json:"is_exempt_recipient"`
+	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_exempt_recipient` instead.
+	IsRecipient param.Field[bool] `json:"is_recipient"`
+	IsRegex     param.Field[bool] `json:"is_regex"`
+	// Deprecated as of July 1, 2025. Use `is_trusted_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_trusted_sender` instead.
+	IsSender param.Field[bool] `json:"is_sender"`
+	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
+	// July 1, 2026.
+	//
+	// Deprecated: Use `is_acceptable_sender` instead.
+	IsSpoof param.Field[bool] `json:"is_spoof"`
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender param.Field[bool] `json:"is_trusted_sender"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern param.Field[string] `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
+	PatternType param.Field[SettingAllowPolicyBatchParamsPutsPatternType] `json:"pattern_type"`
+	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
+	// policies that pass authentication.
+	VerifySender param.Field[bool] `json:"verify_sender"`
+}
+
+func (r SettingAllowPolicyBatchParamsPut) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
+type SettingAllowPolicyBatchParamsPutsPatternType string
+
+const (
+	SettingAllowPolicyBatchParamsPutsPatternTypeEmail   SettingAllowPolicyBatchParamsPutsPatternType = "EMAIL"
+	SettingAllowPolicyBatchParamsPutsPatternTypeDomain  SettingAllowPolicyBatchParamsPutsPatternType = "DOMAIN"
+	SettingAllowPolicyBatchParamsPutsPatternTypeIP      SettingAllowPolicyBatchParamsPutsPatternType = "IP"
+	SettingAllowPolicyBatchParamsPutsPatternTypeUnknown SettingAllowPolicyBatchParamsPutsPatternType = "UNKNOWN"
+)
+
+func (r SettingAllowPolicyBatchParamsPutsPatternType) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchParamsPutsPatternTypeEmail, SettingAllowPolicyBatchParamsPutsPatternTypeDomain, SettingAllowPolicyBatchParamsPutsPatternTypeIP, SettingAllowPolicyBatchParamsPutsPatternTypeUnknown:
+		return true
+	}
+	return false
+}
+
+type SettingAllowPolicyBatchResponseEnvelope struct {
+	Errors   []SettingAllowPolicyBatchResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []SettingAllowPolicyBatchResponseEnvelopeMessages `json:"messages" api:"required"`
+	// Whether the API call was successful.
+	Success SettingAllowPolicyBatchResponseEnvelopeSuccess `json:"success" api:"required"`
+	Result  SettingAllowPolicyBatchResponse                `json:"result"`
+	JSON    settingAllowPolicyBatchResponseEnvelopeJSON    `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseEnvelopeJSON contains the JSON metadata for the
+// struct [SettingAllowPolicyBatchResponseEnvelope]
+type settingAllowPolicyBatchResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
+	Success     apijson.Field
+	Result      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type SettingAllowPolicyBatchResponseEnvelopeErrors struct {
+	Code             int64                                               `json:"code" api:"required"`
+	Message          string                                              `json:"message" api:"required"`
+	DocumentationURL string                                              `json:"documentation_url"`
+	Source           SettingAllowPolicyBatchResponseEnvelopeErrorsSource `json:"source"`
+	JSON             settingAllowPolicyBatchResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseEnvelopeErrorsJSON contains the JSON metadata for
+// the struct [SettingAllowPolicyBatchResponseEnvelopeErrors]
+type settingAllowPolicyBatchResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type SettingAllowPolicyBatchResponseEnvelopeErrorsSource struct {
+	Pointer string                                                  `json:"pointer"`
+	JSON    settingAllowPolicyBatchResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseEnvelopeErrorsSourceJSON contains the JSON
+// metadata for the struct [SettingAllowPolicyBatchResponseEnvelopeErrorsSource]
+type settingAllowPolicyBatchResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type SettingAllowPolicyBatchResponseEnvelopeMessages struct {
+	Code             int64                                                 `json:"code" api:"required"`
+	Message          string                                                `json:"message" api:"required"`
+	DocumentationURL string                                                `json:"documentation_url"`
+	Source           SettingAllowPolicyBatchResponseEnvelopeMessagesSource `json:"source"`
+	JSON             settingAllowPolicyBatchResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseEnvelopeMessagesJSON contains the JSON metadata
+// for the struct [SettingAllowPolicyBatchResponseEnvelopeMessages]
+type settingAllowPolicyBatchResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type SettingAllowPolicyBatchResponseEnvelopeMessagesSource struct {
+	Pointer string                                                    `json:"pointer"`
+	JSON    settingAllowPolicyBatchResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// settingAllowPolicyBatchResponseEnvelopeMessagesSourceJSON contains the JSON
+// metadata for the struct [SettingAllowPolicyBatchResponseEnvelopeMessagesSource]
+type settingAllowPolicyBatchResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SettingAllowPolicyBatchResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingAllowPolicyBatchResponseEnvelopeMessagesSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the API call was successful.
+type SettingAllowPolicyBatchResponseEnvelopeSuccess bool
+
+const (
+	SettingAllowPolicyBatchResponseEnvelopeSuccessTrue SettingAllowPolicyBatchResponseEnvelopeSuccess = true
+)
+
+func (r SettingAllowPolicyBatchResponseEnvelopeSuccess) IsKnown() bool {
+	switch r {
+	case SettingAllowPolicyBatchResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
+}
+
 type SettingAllowPolicyEditParams struct {
 	// Identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	Comments  param.Field[string] `json:"comments"`
-	// Messages from this sender will be exempted from Spam, Spoof and Bulk
-	// dispositions. Note - This will not exempt messages with Malicious or Suspicious
-	// dispositions.
+	// Exempts messages from this sender from Spam, Spoof and Bulk dispositions only;
+	// Malicious and Suspicious dispositions still apply.
 	IsAcceptableSender param.Field[bool] `json:"is_acceptable_sender"`
-	// Messages to this recipient will bypass all detections
+	// Bypasses all detections for messages to this recipient.
 	IsExemptRecipient param.Field[bool] `json:"is_exempt_recipient"`
 	// Deprecated as of July 1, 2025. Use `is_exempt_recipient` instead. End of life:
 	// July 1, 2026.
@@ -1000,11 +1946,26 @@ type SettingAllowPolicyEditParams struct {
 	// Deprecated as of July 1, 2025. Use `is_acceptable_sender` instead. End of life:
 	// July 1, 2026.
 	IsSpoof param.Field[bool] `json:"is_spoof"`
-	// Messages from this sender will bypass all detections and link following
-	IsTrustedSender param.Field[bool]   `json:"is_trusted_sender"`
-	Pattern         param.Field[string] `json:"pattern"`
-	// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-	// creating or updating policies, but may be returned for existing entries.
+	// Bypasses all detections and link following for messages from this sender.
+	IsTrustedSender param.Field[bool] `json:"is_trusted_sender"`
+	// The pattern value to match. The format depends on `pattern_type`: a valid email
+	// address for EMAIL (e.g. `user@example.com`), a valid domain name for DOMAIN
+	// (e.g. `example.com`), or a plain IPv4 or IPv6 address or CIDR block for IP (e.g.
+	// `1.2.3.4`, `1.2.3.0/24`, `2606:4700:4700::1111`, or `2606:4700:4700::/48`); the
+	// API rejects private or unique-local, loopback, link-local, unspecified, and IPv4
+	// broadcast addresses, including their IPv4-mapped IPv6 equivalents.
+	Pattern param.Field[string] `json:"pattern"`
+	// Type of pattern matching.
+	//
+	//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+	//   - DOMAIN: matches a domain name (e.g. `example.com`)
+	//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+	//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+	//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+	//     link-local, unspecified, and IPv4 broadcast addresses, including their
+	//     IPv4-mapped IPv6 equivalents.
+	//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+	//     but it may appear on existing entries.
 	PatternType param.Field[SettingAllowPolicyEditParamsPatternType] `json:"pattern_type"`
 	// Enforce DMARC, SPF or DKIM authentication. When on, Email Security only honors
 	// policies that pass authentication.
@@ -1015,8 +1976,17 @@ func (r SettingAllowPolicyEditParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-// Type of pattern matching. Note: UNKNOWN is deprecated and cannot be used when
-// creating or updating policies, but may be returned for existing entries.
+// Type of pattern matching.
+//
+//   - EMAIL: matches a full email address (e.g. `user@example.com`)
+//   - DOMAIN: matches a domain name (e.g. `example.com`)
+//   - IP: matches a plain IPv4 or IPv6 address (e.g. `1.2.3.4` or
+//     `2606:4700:4700::1111`) or CIDR block (e.g. `1.2.3.0/24` or
+//     `2606:4700:4700::/48`). The API rejects private or unique-local, loopback,
+//     link-local, unspecified, and IPv4 broadcast addresses, including their
+//     IPv4-mapped IPv6 equivalents.
+//   - UNKNOWN: deprecated; you cannot use this when creating or updating policies,
+//     but it may appear on existing entries.
 type SettingAllowPolicyEditParamsPatternType string
 
 const (
@@ -1039,7 +2009,7 @@ type SettingAllowPolicyEditResponseEnvelope struct {
 	Messages []SettingAllowPolicyEditResponseEnvelopeMessages `json:"messages" api:"required"`
 	// Whether the API call was successful.
 	Success SettingAllowPolicyEditResponseEnvelopeSuccess `json:"success" api:"required"`
-	// An email allow policy
+	// An email allow policy.
 	Result SettingAllowPolicyEditResponse             `json:"result"`
 	JSON   settingAllowPolicyEditResponseEnvelopeJSON `json:"-"`
 }
@@ -1184,7 +2154,7 @@ type SettingAllowPolicyGetResponseEnvelope struct {
 	Messages []SettingAllowPolicyGetResponseEnvelopeMessages `json:"messages" api:"required"`
 	// Whether the API call was successful.
 	Success SettingAllowPolicyGetResponseEnvelopeSuccess `json:"success" api:"required"`
-	// An email allow policy
+	// An email allow policy.
 	Result SettingAllowPolicyGetResponse             `json:"result"`
 	JSON   settingAllowPolicyGetResponseEnvelopeJSON `json:"-"`
 }

@@ -24,9 +24,10 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewDevtoolBrowserService] method instead.
 type DevtoolBrowserService struct {
-	Options []option.RequestOption
-	Page    *DevtoolBrowserPageService
-	Targets *DevtoolBrowserTargetService
+	Options  []option.RequestOption
+	LiveView *DevtoolBrowserLiveViewService
+	Page     *DevtoolBrowserPageService
+	Targets  *DevtoolBrowserTargetService
 }
 
 // NewDevtoolBrowserService generates a new service that applies the given options
@@ -35,12 +36,14 @@ type DevtoolBrowserService struct {
 func NewDevtoolBrowserService(opts ...option.RequestOption) (r *DevtoolBrowserService) {
 	r = &DevtoolBrowserService{}
 	r.Options = opts
+	r.LiveView = NewDevtoolBrowserLiveViewService(opts...)
 	r.Page = NewDevtoolBrowserPageService(opts...)
 	r.Targets = NewDevtoolBrowserTargetService(opts...)
 	return
 }
 
-// Get a browser session ID.
+// Acquires a browser and returns its session ID and websocket URL. Optionally
+// accepts a JSON body with session guardrails to restrict outbound HTTP/S traffic.
 func (r *DevtoolBrowserService) New(ctx context.Context, params DevtoolBrowserNewParams, opts ...option.RequestOption) (res *DevtoolBrowserNewResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -66,36 +69,6 @@ func (r *DevtoolBrowserService) Delete(ctx context.Context, sessionID string, bo
 	path := fmt.Sprintf("accounts/%s/browser-rendering/devtools/browser/%s", body.AccountID, sessionID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &res, opts...)
 	return res, err
-}
-
-// Establishes a WebSocket connection to an existing browser session.
-func (r *DevtoolBrowserService) Connect(ctx context.Context, sessionID string, params DevtoolBrowserConnectParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	if params.AccountID.Value == "" {
-		err = errors.New("missing required account_id parameter")
-		return err
-	}
-	if sessionID == "" {
-		err = errors.New("missing required session_id parameter")
-		return err
-	}
-	path := fmt.Sprintf("accounts/%s/browser-rendering/devtools/browser/%s", params.AccountID, sessionID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, nil, opts...)
-	return err
-}
-
-// Acquires and establishes a WebSocket connection to a browser session.
-func (r *DevtoolBrowserService) Launch(ctx context.Context, params DevtoolBrowserLaunchParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
-	if params.AccountID.Value == "" {
-		err = errors.New("missing required account_id parameter")
-		return err
-	}
-	path := fmt.Sprintf("accounts/%s/browser-rendering/devtools/browser", params.AccountID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, params, nil, opts...)
-	return err
 }
 
 // Returns the complete Chrome DevTools Protocol schema including all domains,
@@ -323,10 +296,18 @@ type DevtoolBrowserNewParams struct {
 	// Keep-alive time in milliseconds.
 	KeepAlive param.Field[float64] `query:"keep_alive"`
 	// Use experimental browser.
-	Lab       param.Field[bool] `query:"lab"`
-	Recording param.Field[bool] `query:"recording"`
+	Lab param.Field[bool] `query:"lab"`
+	// How long the live view URL remains valid, in milliseconds (max 60 minutes). Only
+	// used when targets is true.
+	LiveViewURLExpiresInMs param.Field[float64] `query:"liveViewUrlExpiresInMs"`
+	Recording              param.Field[bool]    `query:"recording"`
 	// Include browser targets in response.
-	Targets param.Field[bool] `query:"targets"`
+	Targets    param.Field[bool]                              `query:"targets"`
+	Guardrails param.Field[DevtoolBrowserNewParamsGuardrails] `json:"guardrails"`
+}
+
+func (r DevtoolBrowserNewParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 // URLQuery serializes [DevtoolBrowserNewParams]'s query parameters as
@@ -338,47 +319,23 @@ func (r DevtoolBrowserNewParams) URLQuery() (v url.Values) {
 	})
 }
 
+type DevtoolBrowserNewParamsGuardrails struct {
+	// Hostname patterns, max 50. Supports exact hosts (example.com) or a single _
+	// wildcard anywhere. Prefer _.example.com (subdomain wildcard) over \*example.com
+	// (prefix wildcard) to avoid matching overbroad lookalikes like evilexample.com.
+	AllowedDomains param.Field[[]string] `json:"allowedDomains"`
+	// Max 4 entries: curated preset names (common-cdns) and/or https URLs of
+	// newline-separated hostname lists.
+	AllowedDomainSets param.Field[[]string] `json:"allowedDomainSets"`
+}
+
+func (r DevtoolBrowserNewParamsGuardrails) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
 type DevtoolBrowserDeleteParams struct {
 	// Account ID.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-}
-
-type DevtoolBrowserConnectParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Keep-alive time in ms (only valid when acquiring new session).
-	KeepAlive param.Field[float64] `query:"keep_alive"`
-	// Use experimental browser.
-	Lab       param.Field[bool] `query:"lab"`
-	Recording param.Field[bool] `query:"recording"`
-}
-
-// URLQuery serializes [DevtoolBrowserConnectParams]'s query parameters as
-// `url.Values`.
-func (r DevtoolBrowserConnectParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
-		NestedFormat: apiquery.NestedQueryFormatDots,
-	})
-}
-
-type DevtoolBrowserLaunchParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Keep-alive time in ms (only valid when acquiring new session).
-	KeepAlive param.Field[float64] `query:"keep_alive"`
-	// Use experimental browser.
-	Lab       param.Field[bool] `query:"lab"`
-	Recording param.Field[bool] `query:"recording"`
-}
-
-// URLQuery serializes [DevtoolBrowserLaunchParams]'s query parameters as
-// `url.Values`.
-func (r DevtoolBrowserLaunchParams) URLQuery() (v url.Values) {
-	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
-		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
-		NestedFormat: apiquery.NestedQueryFormatDots,
-	})
 }
 
 type DevtoolBrowserProtocolParams struct {

@@ -104,10 +104,10 @@ func (r *GatewayCertificateService) Delete(ctx context.Context, certificateID st
 }
 
 // Bind a single Zero Trust certificate to the edge.
-func (r *GatewayCertificateService) Activate(ctx context.Context, certificateID string, params GatewayCertificateActivateParams, opts ...option.RequestOption) (res *GatewayCertificateActivateResponse, err error) {
+func (r *GatewayCertificateService) Activate(ctx context.Context, certificateID string, body GatewayCertificateActivateParams, opts ...option.RequestOption) (res *GatewayCertificateActivateResponse, err error) {
 	var env GatewayCertificateActivateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
-	if params.AccountID.Value == "" {
+	if body.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
 		return nil, err
 	}
@@ -115,8 +115,8 @@ func (r *GatewayCertificateService) Activate(ctx context.Context, certificateID 
 		err = errors.New("missing required certificate_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("accounts/%s/gateway/certificates/%s/activate", params.AccountID, certificateID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &env, opts...)
+	path := fmt.Sprintf("accounts/%s/gateway/certificates/%s/activate", body.AccountID, certificateID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &env, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,10 +125,10 @@ func (r *GatewayCertificateService) Activate(ctx context.Context, certificateID 
 }
 
 // Unbind a single Zero Trust certificate from the edge.
-func (r *GatewayCertificateService) Deactivate(ctx context.Context, certificateID string, params GatewayCertificateDeactivateParams, opts ...option.RequestOption) (res *GatewayCertificateDeactivateResponse, err error) {
+func (r *GatewayCertificateService) Deactivate(ctx context.Context, certificateID string, body GatewayCertificateDeactivateParams, opts ...option.RequestOption) (res *GatewayCertificateDeactivateResponse, err error) {
 	var env GatewayCertificateDeactivateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
-	if params.AccountID.Value == "" {
+	if body.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
 		return nil, err
 	}
@@ -136,8 +136,8 @@ func (r *GatewayCertificateService) Deactivate(ctx context.Context, certificateI
 		err = errors.New("missing required certificate_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("accounts/%s/gateway/certificates/%s/deactivate", params.AccountID, certificateID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &env, opts...)
+	path := fmt.Sprintf("accounts/%s/gateway/certificates/%s/deactivate", body.AccountID, certificateID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &env, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,6 +187,9 @@ type GatewayCertificateNewResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateNewResponseType `json:"type"`
 	UpdatedAt  time.Time                         `json:"updated_at" format:"date-time"`
@@ -206,6 +209,7 @@ type gatewayCertificateNewResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -278,6 +282,9 @@ type GatewayCertificateListResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateListResponseType `json:"type"`
 	UpdatedAt  time.Time                          `json:"updated_at" format:"date-time"`
@@ -297,6 +304,7 @@ type gatewayCertificateListResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -369,6 +377,9 @@ type GatewayCertificateDeleteResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateDeleteResponseType `json:"type"`
 	UpdatedAt  time.Time                            `json:"updated_at" format:"date-time"`
@@ -388,6 +399,7 @@ type gatewayCertificateDeleteResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -460,6 +472,9 @@ type GatewayCertificateActivateResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateActivateResponseType `json:"type"`
 	UpdatedAt  time.Time                              `json:"updated_at" format:"date-time"`
@@ -479,6 +494,7 @@ type gatewayCertificateActivateResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -551,6 +567,9 @@ type GatewayCertificateDeactivateResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateDeactivateResponseType `json:"type"`
 	UpdatedAt  time.Time                                `json:"updated_at" format:"date-time"`
@@ -570,6 +589,7 @@ type gatewayCertificateDeactivateResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -642,6 +662,9 @@ type GatewayCertificateGetResponse struct {
 	IssuerOrg string `json:"issuer_org"`
 	// Provide the entire issuer field of the certificate (read-only).
 	IssuerRaw string `json:"issuer_raw"`
+	// Indicate the read-only region the certificate authority's key material is pinned
+	// to. Omitted for certificates that were created without a region.
+	Region string `json:"region"`
 	// Indicate the read-only certificate type, BYO-PKI (custom) or Gateway-managed.
 	Type       GatewayCertificateGetResponseType `json:"type"`
 	UpdatedAt  time.Time                         `json:"updated_at" format:"date-time"`
@@ -661,6 +684,7 @@ type gatewayCertificateGetResponseJSON struct {
 	InUse         apijson.Field
 	IssuerOrg     apijson.Field
 	IssuerRaw     apijson.Field
+	Region        apijson.Field
 	Type          apijson.Field
 	UpdatedAt     apijson.Field
 	UploadedOn    apijson.Field
@@ -713,6 +737,7 @@ func (r GatewayCertificateGetResponseType) IsKnown() bool {
 }
 
 type GatewayCertificateNewParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Sets the certificate validity period in days (range: 1-10,950 days / ~30 years).
 	// Defaults to 1,825 days (5 years). **Important**: This field is only settable
@@ -769,10 +794,12 @@ func (r GatewayCertificateNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayCertificateListParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
 type GatewayCertificateDeleteParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
@@ -820,12 +847,8 @@ func (r GatewayCertificateDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayCertificateActivateParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	Body      interface{}         `json:"body" api:"required"`
-}
-
-func (r GatewayCertificateActivateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Body)
 }
 
 type GatewayCertificateActivateResponseEnvelope struct {
@@ -872,12 +895,8 @@ func (r GatewayCertificateActivateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayCertificateDeactivateParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	Body      interface{}         `json:"body" api:"required"`
-}
-
-func (r GatewayCertificateDeactivateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Body)
 }
 
 type GatewayCertificateDeactivateResponseEnvelope struct {
@@ -924,6 +943,7 @@ func (r GatewayCertificateDeactivateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayCertificateGetParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 

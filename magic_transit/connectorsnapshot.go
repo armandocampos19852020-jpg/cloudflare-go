@@ -38,7 +38,7 @@ func NewConnectorSnapshotService(opts ...option.RequestOption) (r *ConnectorSnap
 	return
 }
 
-// List Snapshots
+// Lists Magic WAN Connector Telemetry Snapshots
 func (r *ConnectorSnapshotService) List(ctx context.Context, connectorID string, params ConnectorSnapshotListParams, opts ...option.RequestOption) (res *ConnectorSnapshotListResponse, err error) {
 	var env ConnectorSnapshotListResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -59,7 +59,7 @@ func (r *ConnectorSnapshotService) List(ctx context.Context, connectorID string,
 	return res, nil
 }
 
-// Get Snapshot
+// Gets Magic WAN Connector Telemetry Snapshot
 func (r *ConnectorSnapshotService) Get(ctx context.Context, connectorID string, snapshotT float64, query ConnectorSnapshotGetParams, opts ...option.RequestOption) (res *ConnectorSnapshotGetResponse, err error) {
 	var env ConnectorSnapshotGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -335,7 +335,10 @@ type ConnectorSnapshotGetResponse struct {
 	Mounts              []ConnectorSnapshotGetResponseMount  `json:"mounts"`
 	Netdevs             []ConnectorSnapshotGetResponseNetdev `json:"netdevs"`
 	// Platform identifier
-	Platform string `json:"platform"`
+	Platform string                              `json:"platform"`
+	Routes   []ConnectorSnapshotGetResponseRoute `json:"routes"`
+	// Site identifier
+	SiteID string `json:"site_id"`
 	// Number of ICMP Address Mask Reply messages received
 	SnmpIcmpInAddrMaskReps float64 `json:"snmp_icmp_in_addr_mask_reps"`
 	// Number of ICMP Address Mask Request messages received
@@ -588,6 +591,8 @@ type connectorSnapshotGetResponseJSON struct {
 	Mounts                         apijson.Field
 	Netdevs                        apijson.Field
 	Platform                       apijson.Field
+	Routes                         apijson.Field
+	SiteID                         apijson.Field
 	SnmpIcmpInAddrMaskReps         apijson.Field
 	SnmpIcmpInAddrMasks            apijson.Field
 	SnmpIcmpInCsumErrors           apijson.Field
@@ -818,7 +823,11 @@ type ConnectorSnapshotGetResponseInterface struct {
 	// Name of the network interface
 	Name string `json:"name" api:"required"`
 	// UP/DOWN state of the network interface
-	Operstate   string                                            `json:"operstate" api:"required"`
+	Operstate string `json:"operstate" api:"required"`
+	// Comma-separated list of reasons for health score
+	HealthReason string `json:"health_reason"`
+	// Aggregate health score (0-100)
+	HealthScore float64                                           `json:"health_score"`
 	IPAddresses []ConnectorSnapshotGetResponseInterfacesIPAddress `json:"ip_addresses"`
 	// Speed of the network interface (bits per second)
 	Speed float64                                   `json:"speed"`
@@ -828,12 +837,14 @@ type ConnectorSnapshotGetResponseInterface struct {
 // connectorSnapshotGetResponseInterfaceJSON contains the JSON metadata for the
 // struct [ConnectorSnapshotGetResponseInterface]
 type connectorSnapshotGetResponseInterfaceJSON struct {
-	Name        apijson.Field
-	Operstate   apijson.Field
-	IPAddresses apijson.Field
-	Speed       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Name         apijson.Field
+	Operstate    apijson.Field
+	HealthReason apijson.Field
+	HealthScore  apijson.Field
+	IPAddresses  apijson.Field
+	Speed        apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
 }
 
 func (r *ConnectorSnapshotGetResponseInterface) UnmarshalJSON(data []byte) (err error) {
@@ -991,6 +1002,44 @@ func (r connectorSnapshotGetResponseNetdevJSON) RawJSON() string {
 	return r.raw
 }
 
+// Snapshot Route
+type ConnectorSnapshotGetResponseRoute struct {
+	// Route destination as default or an IPv4 CIDR
+	Destination string `json:"destination" api:"required"`
+	// Interface used by the next hop
+	InterfaceName string `json:"interface_name" api:"required"`
+	// Routing decision type: tunnel, breakout, or lan
+	Kind string `json:"kind" api:"required"`
+	// Route metric; lower metrics are preferred
+	Metric float64 `json:"metric" api:"required"`
+	// Gateway address for the next hop
+	Gateway string `json:"gateway"`
+	// Relative weight within an equal-cost route
+	Weight float64                               `json:"weight"`
+	JSON   connectorSnapshotGetResponseRouteJSON `json:"-"`
+}
+
+// connectorSnapshotGetResponseRouteJSON contains the JSON metadata for the struct
+// [ConnectorSnapshotGetResponseRoute]
+type connectorSnapshotGetResponseRouteJSON struct {
+	Destination   apijson.Field
+	InterfaceName apijson.Field
+	Kind          apijson.Field
+	Metric        apijson.Field
+	Gateway       apijson.Field
+	Weight        apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *ConnectorSnapshotGetResponseRoute) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorSnapshotGetResponseRouteJSON) RawJSON() string {
+	return r.raw
+}
+
 // Snapshot Thermal
 type ConnectorSnapshotGetResponseThermal struct {
 	// Sensor identifier for the component
@@ -1034,6 +1083,16 @@ type ConnectorSnapshotGetResponseTunnel struct {
 	InterfaceName string `json:"interface_name" api:"required"`
 	// Tunnel identifier
 	TunnelID string `json:"tunnel_id" api:"required"`
+	// Tunnel round-trip latency variation in milliseconds
+	JitterMs float64 `json:"jitter_ms"`
+	// 50th percentile tunnel round-trip latency in milliseconds
+	LatencyMs float64 `json:"latency_ms"`
+	// Public socket address returned by the NAT detector
+	NatdResult string `json:"natd_result"`
+	// Numeric NAT detector state (0 = detected, 1 = missing result, 2 = stale result)
+	NatdState float64 `json:"natd_state"`
+	// Target socket address probed by the NAT detector, using the detector source port
+	NatdTarget string `json:"natd_target"`
 	// MTU as measured between the two ends of the tunnel
 	ProbedMtu float64 `json:"probed_mtu"`
 	// Number of recent healthy pings for this tunnel
@@ -1050,6 +1109,11 @@ type connectorSnapshotGetResponseTunnelJSON struct {
 	HealthValue          apijson.Field
 	InterfaceName        apijson.Field
 	TunnelID             apijson.Field
+	JitterMs             apijson.Field
+	LatencyMs            apijson.Field
+	NatdResult           apijson.Field
+	NatdState            apijson.Field
+	NatdTarget           apijson.Field
 	ProbedMtu            apijson.Field
 	RecentHealthyPings   apijson.Field
 	RecentUnhealthyPings apijson.Field

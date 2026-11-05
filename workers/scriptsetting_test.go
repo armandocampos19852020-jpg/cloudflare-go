@@ -38,6 +38,9 @@ func TestScriptSettingEditWithOptionalParams(t *testing.T) {
 				Observability: cloudflare.F(workers.ScriptSettingObservabilityParam{
 					Enabled:          cloudflare.F(true),
 					HeadSamplingRate: cloudflare.F(0.100000),
+					Issues: cloudflare.F(workers.ScriptSettingObservabilityIssuesParam{
+						Enabled: cloudflare.F(true),
+					}),
 					Logs: cloudflare.F(workers.ScriptSettingObservabilityLogsParam{
 						Enabled:          cloudflare.F(true),
 						InvocationLogs:   cloudflare.F(true),
@@ -45,6 +48,7 @@ func TestScriptSettingEditWithOptionalParams(t *testing.T) {
 						HeadSamplingRate: cloudflare.F(0.100000),
 						Persist:          cloudflare.F(true),
 					}),
+					RedactQueryString: cloudflare.F(false),
 					Traces: cloudflare.F(workers.ScriptSettingObservabilityTracesParam{
 						Destinations:      cloudflare.F([]string{"cloudflare"}),
 						Enabled:           cloudflare.F(true),

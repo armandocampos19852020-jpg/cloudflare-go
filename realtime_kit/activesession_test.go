@@ -15,7 +15,7 @@ import (
 )
 
 func TestActiveSessionNewPollWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -31,7 +31,7 @@ func TestActiveSessionNewPollWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.ActiveSession.NewPoll(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"meeting_id",
 		realtime_kit.ActiveSessionNewPollParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -51,7 +51,7 @@ func TestActiveSessionNewPollWithOptionalParams(t *testing.T) {
 }
 
 func TestActiveSessionGetActiveSession(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -67,7 +67,7 @@ func TestActiveSessionGetActiveSession(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.ActiveSession.GetActiveSession(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"meeting_id",
 		realtime_kit.ActiveSessionGetActiveSessionParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -83,7 +83,7 @@ func TestActiveSessionGetActiveSession(t *testing.T) {
 }
 
 func TestActiveSessionKickAllParticipants(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -99,7 +99,7 @@ func TestActiveSessionKickAllParticipants(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.ActiveSession.KickAllParticipants(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"meeting_id",
 		realtime_kit.ActiveSessionKickAllParticipantsParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -114,8 +114,8 @@ func TestActiveSessionKickAllParticipants(t *testing.T) {
 	}
 }
 
-func TestActiveSessionKickParticipants(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+func TestActiveSessionKickParticipantsWithOptionalParams(t *testing.T) {
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -131,12 +131,12 @@ func TestActiveSessionKickParticipants(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.ActiveSession.KickParticipants(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"meeting_id",
 		realtime_kit.ActiveSessionKickParticipantsParams{
 			AccountID:            cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			CustomParticipantIDs: cloudflare.F([]string{"string"}),
-			ParticipantIDs:       cloudflare.F([]string{"string"}),
+			ParticipantIDs:       cloudflare.F([]string{"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"}),
 		},
 	)
 	if err != nil {

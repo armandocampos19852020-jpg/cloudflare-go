@@ -24,7 +24,10 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewSubscriptionService] method instead.
 type SubscriptionService struct {
-	Options []option.RequestOption
+	Options      []option.RequestOption
+	CancelReason *SubscriptionCancelReasonService
+	Actions      *SubscriptionActionService
+	Bulk         *SubscriptionBulkService
 }
 
 // NewSubscriptionService generates a new service that applies the given options to
@@ -33,18 +36,35 @@ type SubscriptionService struct {
 func NewSubscriptionService(opts ...option.RequestOption) (r *SubscriptionService) {
 	r = &SubscriptionService{}
 	r.Options = opts
+	r.CancelReason = NewSubscriptionCancelReasonService(opts...)
+	r.Actions = NewSubscriptionActionService(opts...)
+	r.Bulk = NewSubscriptionBulkService(opts...)
 	return
 }
 
-// Creates an account subscription.
+// Creates an account or zone subscription.
 func (r *SubscriptionService) New(ctx context.Context, params SubscriptionNewParams, opts ...option.RequestOption) (res *shared.Subscription, err error) {
 	var env SubscriptionNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
-	if params.AccountID.Value == "" {
-		err = errors.New("missing required account_id parameter")
-		return nil, err
+	var accountOrZone string
+	var accountOrZoneID param.Field[string]
+	if params.AccountID.Value != "" && params.ZoneID.Value != "" {
+		err = errors.New("account ID and zone ID are mutually exclusive")
+		return
 	}
-	path := fmt.Sprintf("accounts/%s/subscriptions", params.AccountID)
+	if params.AccountID.Value == "" && params.ZoneID.Value == "" {
+		err = errors.New("either account ID or zone ID must be provided")
+		return
+	}
+	if params.AccountID.Value != "" {
+		accountOrZone = "accounts"
+		accountOrZoneID = params.AccountID
+	}
+	if params.ZoneID.Value != "" {
+		accountOrZone = "zones"
+		accountOrZoneID = params.ZoneID
+	}
+	path := fmt.Sprintf("%s/%s/subscriptions", accountOrZone, accountOrZoneID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &env, opts...)
 	if err != nil {
 		return nil, err
@@ -95,16 +115,47 @@ func (r *SubscriptionService) Delete(ctx context.Context, subscriptionIdentifier
 	return res, nil
 }
 
-// Lists all of an account's subscriptions.
+// Cancels pending delayed downgrades for the specified subscriptions.
+func (r *SubscriptionService) CancelDowngrade(ctx context.Context, params SubscriptionCancelDowngradeParams, opts ...option.RequestOption) (res *interface{}, err error) {
+	var env SubscriptionCancelDowngradeResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if params.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/subscriptions/cancel-downgrade", params.AccountID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
+// Lists all of an account or zone's subscriptions.
 func (r *SubscriptionService) Get(ctx context.Context, query SubscriptionGetParams, opts ...option.RequestOption) (res *pagination.SinglePage[shared.Subscription], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	if query.AccountID.Value == "" {
-		err = errors.New("missing required account_id parameter")
-		return nil, err
+	var accountOrZone string
+	var accountOrZoneID param.Field[string]
+	if query.AccountID.Value != "" && query.ZoneID.Value != "" {
+		err = errors.New("account ID and zone ID are mutually exclusive")
+		return
 	}
-	path := fmt.Sprintf("accounts/%s/subscriptions", query.AccountID)
+	if query.AccountID.Value == "" && query.ZoneID.Value == "" {
+		err = errors.New("either account ID or zone ID must be provided")
+		return
+	}
+	if query.AccountID.Value != "" {
+		accountOrZone = "accounts"
+		accountOrZoneID = query.AccountID
+	}
+	if query.ZoneID.Value != "" {
+		accountOrZone = "zones"
+		accountOrZoneID = query.ZoneID
+	}
+	path := fmt.Sprintf("%s/%s/subscriptions", accountOrZone, accountOrZoneID)
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -117,9 +168,30 @@ func (r *SubscriptionService) Get(ctx context.Context, query SubscriptionGetPara
 	return res, nil
 }
 
-// Lists all of an account's subscriptions.
+// Lists all of an account or zone's subscriptions.
 func (r *SubscriptionService) GetAutoPaging(ctx context.Context, query SubscriptionGetParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[shared.Subscription] {
 	return pagination.NewSinglePageAutoPager(r.Get(ctx, query, opts...))
+}
+
+// Gets an account subscription by identifier.
+func (r *SubscriptionService) GetByIdentifier(ctx context.Context, subscriptionIdentifier string, query SubscriptionGetByIdentifierParams, opts ...option.RequestOption) (res *shared.Subscription, err error) {
+	var env SubscriptionGetByIdentifierResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if query.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if subscriptionIdentifier == "" {
+		err = errors.New("missing required subscription_identifier parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/subscriptions/%s", query.AccountID, subscriptionIdentifier)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
 }
 
 type SubscriptionDeleteResponse struct {
@@ -145,9 +217,11 @@ func (r subscriptionDeleteResponseJSON) RawJSON() string {
 }
 
 type SubscriptionNewParams struct {
-	// Identifier
-	AccountID    param.Field[string]      `path:"account_id" api:"required"`
 	Subscription shared.SubscriptionParam `json:"subscription" api:"required"`
+	// The Account ID to use for this endpoint. Mutually exclusive with the Zone ID.
+	AccountID param.Field[string] `path:"account_id"`
+	// The Zone ID to use for this endpoint. Mutually exclusive with the Account ID.
+	ZoneID param.Field[string] `path:"zone_id"`
 }
 
 func (r SubscriptionNewParams) MarshalJSON() (data []byte, err error) {
@@ -298,7 +372,111 @@ func (r SubscriptionDeleteResponseEnvelopeSuccess) IsKnown() bool {
 	return false
 }
 
-type SubscriptionGetParams struct {
+type SubscriptionCancelDowngradeParams struct {
 	// Identifier
 	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// List of subscription identifiers to cancel downgrades for.
+	SubscriptionIDs param.Field[[]string] `json:"subscription_ids"`
+}
+
+func (r SubscriptionCancelDowngradeParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type SubscriptionCancelDowngradeResponseEnvelope struct {
+	Errors   []shared.ResponseInfo `json:"errors" api:"required"`
+	Messages []shared.ResponseInfo `json:"messages" api:"required"`
+	Result   interface{}           `json:"result" api:"required"`
+	// Whether the API call was successful
+	Success SubscriptionCancelDowngradeResponseEnvelopeSuccess `json:"success" api:"required"`
+	JSON    subscriptionCancelDowngradeResponseEnvelopeJSON    `json:"-"`
+}
+
+// subscriptionCancelDowngradeResponseEnvelopeJSON contains the JSON metadata for
+// the struct [SubscriptionCancelDowngradeResponseEnvelope]
+type subscriptionCancelDowngradeResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
+	Result      apijson.Field
+	Success     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SubscriptionCancelDowngradeResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r subscriptionCancelDowngradeResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the API call was successful
+type SubscriptionCancelDowngradeResponseEnvelopeSuccess bool
+
+const (
+	SubscriptionCancelDowngradeResponseEnvelopeSuccessTrue SubscriptionCancelDowngradeResponseEnvelopeSuccess = true
+)
+
+func (r SubscriptionCancelDowngradeResponseEnvelopeSuccess) IsKnown() bool {
+	switch r {
+	case SubscriptionCancelDowngradeResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
+}
+
+type SubscriptionGetParams struct {
+	// The Account ID to use for this endpoint. Mutually exclusive with the Zone ID.
+	AccountID param.Field[string] `path:"account_id"`
+	// The Zone ID to use for this endpoint. Mutually exclusive with the Account ID.
+	ZoneID param.Field[string] `path:"zone_id"`
+}
+
+type SubscriptionGetByIdentifierParams struct {
+	// Identifier
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+}
+
+type SubscriptionGetByIdentifierResponseEnvelope struct {
+	Errors   []shared.ResponseInfo `json:"errors" api:"required"`
+	Messages []shared.ResponseInfo `json:"messages" api:"required"`
+	Result   shared.Subscription   `json:"result" api:"required"`
+	// Whether the API call was successful
+	Success SubscriptionGetByIdentifierResponseEnvelopeSuccess `json:"success" api:"required"`
+	JSON    subscriptionGetByIdentifierResponseEnvelopeJSON    `json:"-"`
+}
+
+// subscriptionGetByIdentifierResponseEnvelopeJSON contains the JSON metadata for
+// the struct [SubscriptionGetByIdentifierResponseEnvelope]
+type subscriptionGetByIdentifierResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
+	Result      apijson.Field
+	Success     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SubscriptionGetByIdentifierResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r subscriptionGetByIdentifierResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the API call was successful
+type SubscriptionGetByIdentifierResponseEnvelopeSuccess bool
+
+const (
+	SubscriptionGetByIdentifierResponseEnvelopeSuccessTrue SubscriptionGetByIdentifierResponseEnvelopeSuccess = true
+)
+
+func (r SubscriptionGetByIdentifierResponseEnvelopeSuccess) IsKnown() bool {
+	switch r {
+	case SubscriptionGetByIdentifierResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
 }

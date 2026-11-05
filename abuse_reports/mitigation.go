@@ -68,7 +68,16 @@ func (r *MitigationService) ListAutoPaging(ctx context.Context, reportID string,
 	return pagination.NewV4PagePaginationAutoPager(r.List(ctx, reportID, params, opts...))
 }
 
-// Request a review for mitigations on an account.
+// Request a review of mitigations applied because of an abuse report, or submit a
+// report-level appeal.
+//
+//   - To request a review of specific mitigations, send `appeals` with the
+//     mitigation IDs and reasons. Repeating a request for a mitigation with an
+//     unresolved appeal is idempotent and returns that mitigation in the in-review
+//     state.
+//   - To submit a report-level appeal, send `type` and, for a `counter_notice`, the
+//     counter-notice details in `data`. Report-level appeals are currently available
+//     only for DMCA (copyright) reports.
 func (r *MitigationService) Review(ctx context.Context, reportID string, params MitigationReviewParams, opts ...option.RequestOption) (res *pagination.SinglePage[MitigationReviewResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -94,7 +103,16 @@ func (r *MitigationService) Review(ctx context.Context, reportID string, params 
 	return res, nil
 }
 
-// Request a review for mitigations on an account.
+// Request a review of mitigations applied because of an abuse report, or submit a
+// report-level appeal.
+//
+//   - To request a review of specific mitigations, send `appeals` with the
+//     mitigation IDs and reasons. Repeating a request for a mitigation with an
+//     unresolved appeal is idempotent and returns that mitigation in the in-review
+//     state.
+//   - To submit a report-level appeal, send `type` and, for a `counter_notice`, the
+//     counter-notice details in `data`. Report-level appeals are currently available
+//     only for DMCA (copyright) reports.
 func (r *MitigationService) ReviewAutoPaging(ctx context.Context, reportID string, params MitigationReviewParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[MitigationReviewResponse] {
 	return pagination.NewSinglePageAutoPager(r.Review(ctx, reportID, params, opts...))
 }
@@ -125,14 +143,15 @@ type MitigationListResponseMitigation struct {
 	ID string `json:"id" api:"required"`
 	// Date when the mitigation will become active. Time in RFC 3339 format
 	// (https://www.rfc-editor.org/rfc/rfc3339.html)
-	EffectiveDate string                                      `json:"effective_date" api:"required"`
-	EntityID      string                                      `json:"entity_id" api:"required"`
-	EntityType    MitigationListResponseMitigationsEntityType `json:"entity_type" api:"required"`
+	EffectiveDate string `json:"effective_date" api:"required"`
+	EntityID      string `json:"entity_id" api:"required"`
+	// The type of entity targeted by a mitigation.
+	EntityType MitigationListResponseMitigationsEntityType `json:"entity_type" api:"required"`
 	// The status of a mitigation
 	Status MitigationListResponseMitigationsStatus `json:"status" api:"required"`
-	// The type of mitigation
-	Type MitigationListResponseMitigationsType `json:"type" api:"required"`
-	JSON mitigationListResponseMitigationJSON  `json:"-"`
+	// The type of mitigation applied to a reported entity.
+	Type string                               `json:"type" api:"required"`
+	JSON mitigationListResponseMitigationJSON `json:"-"`
 }
 
 // mitigationListResponseMitigationJSON contains the JSON metadata for the struct
@@ -156,17 +175,19 @@ func (r mitigationListResponseMitigationJSON) RawJSON() string {
 	return r.raw
 }
 
+// The type of entity targeted by a mitigation.
 type MitigationListResponseMitigationsEntityType string
 
 const (
-	MitigationListResponseMitigationsEntityTypeURLPattern MitigationListResponseMitigationsEntityType = "url_pattern"
-	MitigationListResponseMitigationsEntityTypeAccount    MitigationListResponseMitigationsEntityType = "account"
-	MitigationListResponseMitigationsEntityTypeZone       MitigationListResponseMitigationsEntityType = "zone"
+	MitigationListResponseMitigationsEntityTypeURLPattern       MitigationListResponseMitigationsEntityType = "url_pattern"
+	MitigationListResponseMitigationsEntityTypeAccount          MitigationListResponseMitigationsEntityType = "account"
+	MitigationListResponseMitigationsEntityTypeZone             MitigationListResponseMitigationsEntityType = "zone"
+	MitigationListResponseMitigationsEntityTypeCustomExpression MitigationListResponseMitigationsEntityType = "custom_expression"
 )
 
 func (r MitigationListResponseMitigationsEntityType) IsKnown() bool {
 	switch r {
-	case MitigationListResponseMitigationsEntityTypeURLPattern, MitigationListResponseMitigationsEntityTypeAccount, MitigationListResponseMitigationsEntityTypeZone:
+	case MitigationListResponseMitigationsEntityTypeURLPattern, MitigationListResponseMitigationsEntityTypeAccount, MitigationListResponseMitigationsEntityTypeZone, MitigationListResponseMitigationsEntityTypeCustomExpression:
 		return true
 	}
 	return false
@@ -191,39 +212,19 @@ func (r MitigationListResponseMitigationsStatus) IsKnown() bool {
 	return false
 }
 
-// The type of mitigation
-type MitigationListResponseMitigationsType string
-
-const (
-	MitigationListResponseMitigationsTypeLegalBlock             MitigationListResponseMitigationsType = "legal_block"
-	MitigationListResponseMitigationsTypeMisleadingInterstitial MitigationListResponseMitigationsType = "misleading_interstitial"
-	MitigationListResponseMitigationsTypePhishingInterstitial   MitigationListResponseMitigationsType = "phishing_interstitial"
-	MitigationListResponseMitigationsTypeNetworkBlock           MitigationListResponseMitigationsType = "network_block"
-	MitigationListResponseMitigationsTypeRateLimitCache         MitigationListResponseMitigationsType = "rate_limit_cache"
-	MitigationListResponseMitigationsTypeAccountSuspend         MitigationListResponseMitigationsType = "account_suspend"
-	MitigationListResponseMitigationsTypeRedirectVideoStream    MitigationListResponseMitigationsType = "redirect_video_stream"
-)
-
-func (r MitigationListResponseMitigationsType) IsKnown() bool {
-	switch r {
-	case MitigationListResponseMitigationsTypeLegalBlock, MitigationListResponseMitigationsTypeMisleadingInterstitial, MitigationListResponseMitigationsTypePhishingInterstitial, MitigationListResponseMitigationsTypeNetworkBlock, MitigationListResponseMitigationsTypeRateLimitCache, MitigationListResponseMitigationsTypeAccountSuspend, MitigationListResponseMitigationsTypeRedirectVideoStream:
-		return true
-	}
-	return false
-}
-
 type MitigationReviewResponse struct {
 	// ID of remediation.
 	ID string `json:"id" api:"required"`
 	// Date when the mitigation will become active. Time in RFC 3339 format
 	// (https://www.rfc-editor.org/rfc/rfc3339.html)
-	EffectiveDate string                             `json:"effective_date" api:"required"`
-	EntityID      string                             `json:"entity_id" api:"required"`
-	EntityType    MitigationReviewResponseEntityType `json:"entity_type" api:"required"`
+	EffectiveDate string `json:"effective_date" api:"required"`
+	EntityID      string `json:"entity_id" api:"required"`
+	// The type of entity targeted by a mitigation.
+	EntityType MitigationReviewResponseEntityType `json:"entity_type" api:"required"`
 	// The status of a mitigation
 	Status MitigationReviewResponseStatus `json:"status" api:"required"`
-	// The type of mitigation
-	Type MitigationReviewResponseType `json:"type" api:"required"`
+	// The type of mitigation applied to a reported entity.
+	Type string                       `json:"type" api:"required"`
 	JSON mitigationReviewResponseJSON `json:"-"`
 }
 
@@ -248,17 +249,19 @@ func (r mitigationReviewResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+// The type of entity targeted by a mitigation.
 type MitigationReviewResponseEntityType string
 
 const (
-	MitigationReviewResponseEntityTypeURLPattern MitigationReviewResponseEntityType = "url_pattern"
-	MitigationReviewResponseEntityTypeAccount    MitigationReviewResponseEntityType = "account"
-	MitigationReviewResponseEntityTypeZone       MitigationReviewResponseEntityType = "zone"
+	MitigationReviewResponseEntityTypeURLPattern       MitigationReviewResponseEntityType = "url_pattern"
+	MitigationReviewResponseEntityTypeAccount          MitigationReviewResponseEntityType = "account"
+	MitigationReviewResponseEntityTypeZone             MitigationReviewResponseEntityType = "zone"
+	MitigationReviewResponseEntityTypeCustomExpression MitigationReviewResponseEntityType = "custom_expression"
 )
 
 func (r MitigationReviewResponseEntityType) IsKnown() bool {
 	switch r {
-	case MitigationReviewResponseEntityTypeURLPattern, MitigationReviewResponseEntityTypeAccount, MitigationReviewResponseEntityTypeZone:
+	case MitigationReviewResponseEntityTypeURLPattern, MitigationReviewResponseEntityTypeAccount, MitigationReviewResponseEntityTypeZone, MitigationReviewResponseEntityTypeCustomExpression:
 		return true
 	}
 	return false
@@ -283,27 +286,6 @@ func (r MitigationReviewResponseStatus) IsKnown() bool {
 	return false
 }
 
-// The type of mitigation
-type MitigationReviewResponseType string
-
-const (
-	MitigationReviewResponseTypeLegalBlock             MitigationReviewResponseType = "legal_block"
-	MitigationReviewResponseTypeMisleadingInterstitial MitigationReviewResponseType = "misleading_interstitial"
-	MitigationReviewResponseTypePhishingInterstitial   MitigationReviewResponseType = "phishing_interstitial"
-	MitigationReviewResponseTypeNetworkBlock           MitigationReviewResponseType = "network_block"
-	MitigationReviewResponseTypeRateLimitCache         MitigationReviewResponseType = "rate_limit_cache"
-	MitigationReviewResponseTypeAccountSuspend         MitigationReviewResponseType = "account_suspend"
-	MitigationReviewResponseTypeRedirectVideoStream    MitigationReviewResponseType = "redirect_video_stream"
-)
-
-func (r MitigationReviewResponseType) IsKnown() bool {
-	switch r {
-	case MitigationReviewResponseTypeLegalBlock, MitigationReviewResponseTypeMisleadingInterstitial, MitigationReviewResponseTypePhishingInterstitial, MitigationReviewResponseTypeNetworkBlock, MitigationReviewResponseTypeRateLimitCache, MitigationReviewResponseTypeAccountSuspend, MitigationReviewResponseTypeRedirectVideoStream:
-		return true
-	}
-	return false
-}
-
 type MitigationListParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Returns mitigation that were dispatched after the given date
@@ -321,9 +303,8 @@ type MitigationListParams struct {
 	// Filter by the status of the mitigation.
 	Status param.Field[MitigationListParamsStatus] `query:"status"`
 	// Filter by the type of mitigation. This filter parameter can be specified
-	// multiple times to include multiple types of mitigations in the result set, e.g.
-	// ?type=rate_limit_cache&type=legal_block.
-	Type param.Field[MitigationListParamsType] `query:"type"`
+	// multiple times to include multiple types of mitigations in the result set.
+	Type param.Field[string] `query:"type"`
 }
 
 // URLQuery serializes [MitigationListParams]'s query parameters as `url.Values`.
@@ -338,14 +319,15 @@ func (r MitigationListParams) URLQuery() (v url.Values) {
 type MitigationListParamsEntityType string
 
 const (
-	MitigationListParamsEntityTypeURLPattern MitigationListParamsEntityType = "url_pattern"
-	MitigationListParamsEntityTypeAccount    MitigationListParamsEntityType = "account"
-	MitigationListParamsEntityTypeZone       MitigationListParamsEntityType = "zone"
+	MitigationListParamsEntityTypeURLPattern       MitigationListParamsEntityType = "url_pattern"
+	MitigationListParamsEntityTypeAccount          MitigationListParamsEntityType = "account"
+	MitigationListParamsEntityTypeZone             MitigationListParamsEntityType = "zone"
+	MitigationListParamsEntityTypeCustomExpression MitigationListParamsEntityType = "custom_expression"
 )
 
 func (r MitigationListParamsEntityType) IsKnown() bool {
 	switch r {
-	case MitigationListParamsEntityTypeURLPattern, MitigationListParamsEntityTypeAccount, MitigationListParamsEntityTypeZone:
+	case MitigationListParamsEntityTypeURLPattern, MitigationListParamsEntityTypeAccount, MitigationListParamsEntityTypeZone, MitigationListParamsEntityTypeCustomExpression:
 		return true
 	}
 	return false
@@ -392,33 +374,14 @@ func (r MitigationListParamsStatus) IsKnown() bool {
 	return false
 }
 
-// Filter by the type of mitigation. This filter parameter can be specified
-// multiple times to include multiple types of mitigations in the result set, e.g.
-// ?type=rate_limit_cache&type=legal_block.
-type MitigationListParamsType string
-
-const (
-	MitigationListParamsTypeLegalBlock             MitigationListParamsType = "legal_block"
-	MitigationListParamsTypeMisleadingInterstitial MitigationListParamsType = "misleading_interstitial"
-	MitigationListParamsTypePhishingInterstitial   MitigationListParamsType = "phishing_interstitial"
-	MitigationListParamsTypeNetworkBlock           MitigationListParamsType = "network_block"
-	MitigationListParamsTypeRateLimitCache         MitigationListParamsType = "rate_limit_cache"
-	MitigationListParamsTypeAccountSuspend         MitigationListParamsType = "account_suspend"
-	MitigationListParamsTypeRedirectVideoStream    MitigationListParamsType = "redirect_video_stream"
-)
-
-func (r MitigationListParamsType) IsKnown() bool {
-	switch r {
-	case MitigationListParamsTypeLegalBlock, MitigationListParamsTypeMisleadingInterstitial, MitigationListParamsTypePhishingInterstitial, MitigationListParamsTypeNetworkBlock, MitigationListParamsTypeRateLimitCache, MitigationListParamsTypeAccountSuspend, MitigationListParamsTypeRedirectVideoStream:
-		return true
-	}
-	return false
-}
-
 type MitigationReviewParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// List of mitigations to appeal.
-	Appeals param.Field[[]MitigationReviewParamsAppeal] `json:"appeals" api:"required"`
+	Appeals param.Field[[]MitigationReviewParamsAppeal] `json:"appeals"`
+	// Counter-notice details supporting an appeal.
+	Data param.Field[MitigationReviewParamsData] `json:"data"`
+	// The type of appeal being submitted.
+	Type param.Field[MitigationReviewParamsType] `json:"type"`
 }
 
 func (r MitigationReviewParams) MarshalJSON() (data []byte, err error) {
@@ -447,6 +410,44 @@ const (
 func (r MitigationReviewParamsAppealsReason) IsKnown() bool {
 	switch r {
 	case MitigationReviewParamsAppealsReasonRemoved, MitigationReviewParamsAppealsReasonMisclassified:
+		return true
+	}
+	return false
+}
+
+// Counter-notice details supporting an appeal.
+type MitigationReviewParamsData struct {
+	City                  param.Field[string]   `json:"city" api:"required"`
+	Country               param.Field[string]   `json:"country" api:"required"`
+	Email                 param.Field[string]   `json:"email" api:"required" format:"email"`
+	FullName              param.Field[string]   `json:"full_name" api:"required"`
+	JurisdictionConsent   param.Field[bool]     `json:"jurisdiction_consent" api:"required"`
+	PerjuryAttestation    param.Field[bool]     `json:"perjury_attestation" api:"required"`
+	PhoneNumber           param.Field[string]   `json:"phone_number" api:"required"`
+	Signature             param.Field[string]   `json:"signature" api:"required"`
+	State                 param.Field[string]   `json:"state" api:"required"`
+	StreetAddress         param.Field[string]   `json:"street_address" api:"required"`
+	URLs                  param.Field[[]string] `json:"urls" api:"required" format:"uri"`
+	ZipCode               param.Field[string]   `json:"zip_code" api:"required"`
+	Company               param.Field[string]   `json:"company"`
+	CounterNoticeResponse param.Field[string]   `json:"counter_notice_response"`
+}
+
+func (r MitigationReviewParamsData) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The type of appeal being submitted.
+type MitigationReviewParamsType string
+
+const (
+	MitigationReviewParamsTypeCounterNotice  MitigationReviewParamsType = "counter_notice"
+	MitigationReviewParamsTypeContentRemoved MitigationReviewParamsType = "content_removed"
+)
+
+func (r MitigationReviewParamsType) IsKnown() bool {
+	switch r {
+	case MitigationReviewParamsTypeCounterNotice, MitigationReviewParamsTypeContentRemoved:
 		return true
 	}
 	return false

@@ -234,6 +234,9 @@ type AzureAD struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -255,6 +258,7 @@ type azureADJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -560,7 +564,8 @@ type IdentityProvider struct {
 	// [IdentityProviderAccessOIDCConfig], [IdentityProviderAccessOktaConfig],
 	// [IdentityProviderAccessOneloginConfig], [IdentityProviderAccessPingoneConfig],
 	// [IdentityProviderAccessSAMLConfig], [IdentityProviderAccessOnetimepinConfig],
-	// [IdentityProviderAccessCloudflareConfig].
+	// [IdentityProviderAccessCloudflareConfig],
+	// [IdentityProviderAccessPasskeysConfig].
 	Config interface{} `json:"config" api:"required"`
 	// The name of the identity provider, shown to users on the login page.
 	Name string `json:"name" api:"required"`
@@ -570,6 +575,9 @@ type IdentityProvider struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// This field can have the runtime type of [AzureADSAMLCertificateSet],
 	// [IdentityProviderAccessCentrifySAMLCertificateSet],
 	// [IdentityProviderAccessFacebookSAMLCertificateSet],
@@ -584,7 +592,8 @@ type IdentityProvider struct {
 	// [IdentityProviderAccessSAMLSAMLCertificateSet],
 	// [IdentityProviderAccessYandexSAMLCertificateSet],
 	// [IdentityProviderAccessOnetimepinSAMLCertificateSet],
-	// [IdentityProviderAccessCloudflareSAMLCertificateSet].
+	// [IdentityProviderAccessCloudflareSAMLCertificateSet],
+	// [IdentityProviderAccessPasskeysSAMLCertificateSet].
 	SAMLCertificateSet interface{} `json:"saml_certificate_set"`
 	// The UID of the SAML encryption certificate set assigned to this Identity
 	// Provider. Only present for SAML identity providers with encryption configured.
@@ -605,6 +614,7 @@ type identityProviderJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -635,7 +645,8 @@ func (r *IdentityProvider) UnmarshalJSON(data []byte) (err error) {
 // [IdentityProviderAccessOIDC], [IdentityProviderAccessOkta],
 // [IdentityProviderAccessOnelogin], [IdentityProviderAccessPingone],
 // [IdentityProviderAccessSAML], [IdentityProviderAccessYandex],
-// [IdentityProviderAccessOnetimepin], [IdentityProviderAccessCloudflare].
+// [IdentityProviderAccessOnetimepin], [IdentityProviderAccessCloudflare],
+// [IdentityProviderAccessPasskeys].
 func (r IdentityProvider) AsUnion() IdentityProviderUnion {
 	return r.union
 }
@@ -646,8 +657,8 @@ func (r IdentityProvider) AsUnion() IdentityProviderUnion {
 // [IdentityProviderAccessLinkedin], [IdentityProviderAccessOIDC],
 // [IdentityProviderAccessOkta], [IdentityProviderAccessOnelogin],
 // [IdentityProviderAccessPingone], [IdentityProviderAccessSAML],
-// [IdentityProviderAccessYandex], [IdentityProviderAccessOnetimepin] or
-// [IdentityProviderAccessCloudflare].
+// [IdentityProviderAccessYandex], [IdentityProviderAccessOnetimepin],
+// [IdentityProviderAccessCloudflare] or [IdentityProviderAccessPasskeys].
 type IdentityProviderUnion interface {
 	implementsIdentityProvider()
 }
@@ -716,6 +727,10 @@ func init() {
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(IdentityProviderAccessCloudflare{}),
 		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(IdentityProviderAccessPasskeys{}),
+		},
 	)
 }
 
@@ -732,6 +747,9 @@ type IdentityProviderAccessCentrify struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -754,6 +772,7 @@ type identityProviderAccessCentrifyJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -897,6 +916,9 @@ type IdentityProviderAccessFacebook struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -919,6 +941,7 @@ type identityProviderAccessFacebookJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1022,6 +1045,9 @@ type IdentityProviderAccessGitHub struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1044,6 +1070,7 @@ type identityProviderAccessGitHubJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1147,6 +1174,9 @@ type IdentityProviderAccessGoogle struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1169,6 +1199,7 @@ type identityProviderAccessGoogleJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1306,6 +1337,9 @@ type IdentityProviderAccessGoogleApps struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1328,6 +1362,7 @@ type identityProviderAccessGoogleAppsJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1358,8 +1393,13 @@ type IdentityProviderAccessGoogleAppsConfig struct {
 	// Your OAuth Client Secret
 	ClientSecret string `json:"client_secret"`
 	// The claim name for email in the id_token response.
-	EmailClaimName string                                     `json:"email_claim_name"`
-	JSON           identityProviderAccessGoogleAppsConfigJSON `json:"-"`
+	EmailClaimName string `json:"email_claim_name"`
+	// Configures the prompt behavior for Google authentication.
+	Prompt IdentityProviderAccessGoogleAppsConfigPrompt `json:"prompt"`
+	// Whether to use a previously authenticated Access email as a Google login hint
+	// when exactly one email matches the Workspace domain.
+	UseLoginHint bool                                       `json:"use_login_hint"`
+	JSON         identityProviderAccessGoogleAppsConfigJSON `json:"-"`
 }
 
 // identityProviderAccessGoogleAppsConfigJSON contains the JSON metadata for the
@@ -1370,6 +1410,8 @@ type identityProviderAccessGoogleAppsConfigJSON struct {
 	ClientID       apijson.Field
 	ClientSecret   apijson.Field
 	EmailClaimName apijson.Field
+	Prompt         apijson.Field
+	UseLoginHint   apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -1380,6 +1422,23 @@ func (r *IdentityProviderAccessGoogleAppsConfig) UnmarshalJSON(data []byte) (err
 
 func (r identityProviderAccessGoogleAppsConfigJSON) RawJSON() string {
 	return r.raw
+}
+
+// Configures the prompt behavior for Google authentication.
+type IdentityProviderAccessGoogleAppsConfigPrompt string
+
+const (
+	IdentityProviderAccessGoogleAppsConfigPromptNone          IdentityProviderAccessGoogleAppsConfigPrompt = "none"
+	IdentityProviderAccessGoogleAppsConfigPromptConsent       IdentityProviderAccessGoogleAppsConfigPrompt = "consent"
+	IdentityProviderAccessGoogleAppsConfigPromptSelectAccount IdentityProviderAccessGoogleAppsConfigPrompt = "select_account"
+)
+
+func (r IdentityProviderAccessGoogleAppsConfigPrompt) IsKnown() bool {
+	switch r {
+	case IdentityProviderAccessGoogleAppsConfigPromptNone, IdentityProviderAccessGoogleAppsConfigPromptConsent, IdentityProviderAccessGoogleAppsConfigPromptSelectAccount:
+		return true
+	}
+	return false
 }
 
 // The SAML encryption certificate set details, including current and previous
@@ -1468,6 +1527,9 @@ type IdentityProviderAccessLinkedin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1490,6 +1552,7 @@ type identityProviderAccessLinkedinJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1593,6 +1656,9 @@ type IdentityProviderAccessOIDC struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1615,6 +1681,7 @@ type identityProviderAccessOIDCJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1767,6 +1834,9 @@ type IdentityProviderAccessOkta struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1789,6 +1859,7 @@ type identityProviderAccessOktaJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -1932,6 +2003,9 @@ type IdentityProviderAccessOnelogin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -1954,6 +2028,7 @@ type identityProviderAccessOneloginJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2094,6 +2169,9 @@ type IdentityProviderAccessPingone struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -2116,6 +2194,7 @@ type identityProviderAccessPingoneJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2256,6 +2335,9 @@ type IdentityProviderAccessSAML struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -2278,6 +2360,7 @@ type identityProviderAccessSAMLJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2317,6 +2400,8 @@ type IdentityProviderAccessSAMLConfig struct {
 	//
 	// Note: Requires `saml_certificate_set_id` to be set when `true`.
 	EnableEncryption bool `json:"enable_encryption"`
+	// Asks the IdP to reauthenticate the user for each SAML authentication request.
+	ForceAuthn bool `json:"force_authn"`
 	// Add a list of attribute names that will be returned in the response header from
 	// the Access callback.
 	HeaderAttributes []IdentityProviderAccessSAMLConfigHeaderAttribute `json:"header_attributes"`
@@ -2324,6 +2409,11 @@ type IdentityProviderAccessSAMLConfig struct {
 	IdPPublicCERTs []string `json:"idp_public_certs"`
 	// IdP Entity ID or Issuer URL
 	IssuerURL string `json:"issuer_url"`
+	// The maximum URL length the IdP accepts for the SSO redirect URL. When the
+	// constructed SSO URL would exceed this length, the RelayState is stored
+	// server-side and a short nonce is passed to the IdP instead. Set this if your IdP
+	// enforces a URL length limit.
+	MaxSSOURLLength int64 `json:"max_sso_url_length"`
 	// Sign the SAML authentication request with Access credentials. To verify the
 	// signature, use the public key from the Access certs endpoints.
 	SignRequest bool `json:"sign_request"`
@@ -2338,9 +2428,11 @@ type identityProviderAccessSAMLConfigJSON struct {
 	Attributes         apijson.Field
 	EmailAttributeName apijson.Field
 	EnableEncryption   apijson.Field
+	ForceAuthn         apijson.Field
 	HeaderAttributes   apijson.Field
 	IdPPublicCERTs     apijson.Field
 	IssuerURL          apijson.Field
+	MaxSSOURLLength    apijson.Field
 	SignRequest        apijson.Field
 	SSOTargetURL       apijson.Field
 	raw                string
@@ -2466,6 +2558,9 @@ type IdentityProviderAccessYandex struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -2488,6 +2583,7 @@ type identityProviderAccessYandexJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2591,6 +2687,9 @@ type IdentityProviderAccessOnetimepin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -2613,6 +2712,7 @@ type identityProviderAccessOnetimepinJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2740,6 +2840,9 @@ type IdentityProviderAccessCloudflare struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -2762,6 +2865,7 @@ type identityProviderAccessCloudflareJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -2881,6 +2985,163 @@ func (r identityProviderAccessCloudflareSAMLCertificateSetCurrentCertificateJSON
 	return r.raw
 }
 
+type IdentityProviderAccessPasskeys struct {
+	// The configuration parameters for the identity provider. To view the required
+	// parameters for a specific provider, refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Config IdentityProviderAccessPasskeysConfig `json:"config" api:"required"`
+	// The name of the identity provider, shown to users on the login page.
+	Name string `json:"name" api:"required"`
+	// The type of identity provider. To determine the value for a specific provider,
+	// refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Type IdentityProviderType `json:"type" api:"required"`
+	// UUID.
+	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
+	// The SAML encryption certificate set details, including current and previous
+	// certificates. Only present for SAML identity providers with a certificate set
+	// assigned.
+	SAMLCertificateSet IdentityProviderAccessPasskeysSAMLCertificateSet `json:"saml_certificate_set"`
+	// The UID of the SAML encryption certificate set assigned to this Identity
+	// Provider. Only present for SAML identity providers with encryption configured.
+	// Create a certificate set via POST to
+	// `/identity_providers/{id}/saml_certificate`.
+	SAMLCertificateSetID string `json:"saml_certificate_set_id" format:"uuid"`
+	// The configuration settings for enabling a System for Cross-Domain Identity
+	// Management (SCIM) with the identity provider.
+	SCIMConfig IdentityProviderSCIMConfig         `json:"scim_config"`
+	JSON       identityProviderAccessPasskeysJSON `json:"-"`
+}
+
+// identityProviderAccessPasskeysJSON contains the JSON metadata for the struct
+// [IdentityProviderAccessPasskeys]
+type identityProviderAccessPasskeysJSON struct {
+	Config               apijson.Field
+	Name                 apijson.Field
+	Type                 apijson.Field
+	ID                   apijson.Field
+	ReadOnly             apijson.Field
+	SAMLCertificateSet   apijson.Field
+	SAMLCertificateSetID apijson.Field
+	SCIMConfig           apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
+}
+
+func (r *IdentityProviderAccessPasskeys) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderAccessPasskeysJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r IdentityProviderAccessPasskeys) implementsIdentityProvider() {}
+
+// The configuration parameters for the identity provider. To view the required
+// parameters for a specific provider, refer to our
+// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+type IdentityProviderAccessPasskeysConfig struct {
+	// When enabled, the Access login page automatically prompts the user to
+	// authenticate with a passkey.
+	LoginPageAutoPrompt bool                                     `json:"login_page_auto_prompt"`
+	RedirectURL         string                                   `json:"redirect_url"`
+	JSON                identityProviderAccessPasskeysConfigJSON `json:"-"`
+}
+
+// identityProviderAccessPasskeysConfigJSON contains the JSON metadata for the
+// struct [IdentityProviderAccessPasskeysConfig]
+type identityProviderAccessPasskeysConfigJSON struct {
+	LoginPageAutoPrompt apijson.Field
+	RedirectURL         apijson.Field
+	raw                 string
+	ExtraFields         map[string]apijson.Field
+}
+
+func (r *IdentityProviderAccessPasskeysConfig) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderAccessPasskeysConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+// The SAML encryption certificate set details, including current and previous
+// certificates. Only present for SAML identity providers with a certificate set
+// assigned.
+type IdentityProviderAccessPasskeysSAMLCertificateSet struct {
+	// Timestamp when the certificate set was created
+	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	// Unique identifier for the certificate set
+	UID string `json:"uid" api:"required" format:"uuid"`
+	// Timestamp when the certificate set was last updated (e.g., during rotation)
+	UpdatedAt time.Time `json:"updated_at" api:"required" format:"date-time"`
+	// The currently active certificate used for encrypting SAML assertions
+	CurrentCertificate IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificate `json:"current_certificate"`
+	// The previous certificate, maintained during rotation to ensure continuity. Null
+	// if no rotation has occurred. Mirrors the structure of `saml_certificate`.
+	PreviousCertificate interface{}                                          `json:"previous_certificate" api:"nullable"`
+	JSON                identityProviderAccessPasskeysSAMLCertificateSetJSON `json:"-"`
+}
+
+// identityProviderAccessPasskeysSAMLCertificateSetJSON contains the JSON metadata
+// for the struct [IdentityProviderAccessPasskeysSAMLCertificateSet]
+type identityProviderAccessPasskeysSAMLCertificateSetJSON struct {
+	CreatedAt           apijson.Field
+	UID                 apijson.Field
+	UpdatedAt           apijson.Field
+	CurrentCertificate  apijson.Field
+	PreviousCertificate apijson.Field
+	raw                 string
+	ExtraFields         map[string]apijson.Field
+}
+
+func (r *IdentityProviderAccessPasskeysSAMLCertificateSet) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderAccessPasskeysSAMLCertificateSetJSON) RawJSON() string {
+	return r.raw
+}
+
+// The currently active certificate used for encrypting SAML assertions
+type IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificate struct {
+	// Indicates whether this is the currently active certificate
+	IsCurrent bool `json:"is_current" api:"required"`
+	// Certificate expiration date. Certificates are automatically rotated 30 days
+	// before expiration.
+	NotAfter time.Time `json:"not_after" api:"required" format:"date-time"`
+	// PEM-encoded X.509 certificate containing the public key. Configure this
+	// certificate in your external SAML Identity Provider to enable encryption.
+	PublicCertificate string `json:"public_certificate" api:"required"`
+	// Unique identifier for the certificate
+	UID  string                                                                 `json:"uid" api:"required" format:"uuid"`
+	JSON identityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateJSON `json:"-"`
+}
+
+// identityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateJSON contains
+// the JSON metadata for the struct
+// [IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificate]
+type identityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateJSON struct {
+	IsCurrent         apijson.Field
+	NotAfter          apijson.Field
+	PublicCertificate apijson.Field
+	UID               apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificate) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateJSON) RawJSON() string {
+	return r.raw
+}
+
 type IdentityProviderParam struct {
 	Config param.Field[interface{}] `json:"config" api:"required"`
 	// The name of the identity provider, shown to users on the login page.
@@ -2920,7 +3181,8 @@ func (r IdentityProviderParam) implementsIdentityProviderUnionParam() {}
 // [zero_trust.IdentityProviderAccessSAMLParam],
 // [zero_trust.IdentityProviderAccessYandexParam],
 // [zero_trust.IdentityProviderAccessOnetimepinParam],
-// [zero_trust.IdentityProviderAccessCloudflareParam], [IdentityProviderParam].
+// [zero_trust.IdentityProviderAccessCloudflareParam],
+// [zero_trust.IdentityProviderAccessPasskeysParam], [IdentityProviderParam].
 type IdentityProviderUnionParam interface {
 	implementsIdentityProviderUnionParam()
 }
@@ -3254,6 +3516,11 @@ type IdentityProviderAccessGoogleAppsConfigParam struct {
 	ClientSecret param.Field[string] `json:"client_secret"`
 	// The claim name for email in the id_token response.
 	EmailClaimName param.Field[string] `json:"email_claim_name"`
+	// Configures the prompt behavior for Google authentication.
+	Prompt param.Field[IdentityProviderAccessGoogleAppsConfigPrompt] `json:"prompt"`
+	// Whether to use a previously authenticated Access email as a Google login hint
+	// when exactly one email matches the Workspace domain.
+	UseLoginHint param.Field[bool] `json:"use_login_hint"`
 }
 
 func (r IdentityProviderAccessGoogleAppsConfigParam) MarshalJSON() (data []byte, err error) {
@@ -3744,6 +4011,8 @@ type IdentityProviderAccessSAMLConfigParam struct {
 	//
 	// Note: Requires `saml_certificate_set_id` to be set when `true`.
 	EnableEncryption param.Field[bool] `json:"enable_encryption"`
+	// Asks the IdP to reauthenticate the user for each SAML authentication request.
+	ForceAuthn param.Field[bool] `json:"force_authn"`
 	// Add a list of attribute names that will be returned in the response header from
 	// the Access callback.
 	HeaderAttributes param.Field[[]IdentityProviderAccessSAMLConfigHeaderAttributeParam] `json:"header_attributes"`
@@ -3751,6 +4020,11 @@ type IdentityProviderAccessSAMLConfigParam struct {
 	IdPPublicCERTs param.Field[[]string] `json:"idp_public_certs"`
 	// IdP Entity ID or Issuer URL
 	IssuerURL param.Field[string] `json:"issuer_url"`
+	// The maximum URL length the IdP accepts for the SSO redirect URL. When the
+	// constructed SSO URL would exceed this length, the RelayState is stored
+	// server-side and a short nonce is passed to the IdP instead. Set this if your IdP
+	// enforces a URL length limit.
+	MaxSSOURLLength param.Field[int64] `json:"max_sso_url_length"`
 	// Sign the SAML authentication request with Access credentials. To verify the
 	// signature, use the public key from the Access certs endpoints.
 	SignRequest param.Field[bool] `json:"sign_request"`
@@ -4018,6 +4292,81 @@ func (r IdentityProviderAccessCloudflareSAMLCertificateSetCurrentCertificatePara
 	return apijson.MarshalRoot(r)
 }
 
+type IdentityProviderAccessPasskeysParam struct {
+	// The configuration parameters for the identity provider. To view the required
+	// parameters for a specific provider, refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Config param.Field[IdentityProviderAccessPasskeysConfigParam] `json:"config" api:"required"`
+	// The name of the identity provider, shown to users on the login page.
+	Name param.Field[string] `json:"name" api:"required"`
+	// The type of identity provider. To determine the value for a specific provider,
+	// refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Type param.Field[IdentityProviderType] `json:"type" api:"required"`
+	// The UID of the SAML encryption certificate set assigned to this Identity
+	// Provider. Only present for SAML identity providers with encryption configured.
+	// Create a certificate set via POST to
+	// `/identity_providers/{id}/saml_certificate`.
+	SAMLCertificateSetID param.Field[string] `json:"saml_certificate_set_id" format:"uuid"`
+	// The configuration settings for enabling a System for Cross-Domain Identity
+	// Management (SCIM) with the identity provider.
+	SCIMConfig param.Field[IdentityProviderSCIMConfigParam] `json:"scim_config"`
+}
+
+func (r IdentityProviderAccessPasskeysParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r IdentityProviderAccessPasskeysParam) implementsIdentityProviderUnionParam() {}
+
+// The configuration parameters for the identity provider. To view the required
+// parameters for a specific provider, refer to our
+// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+type IdentityProviderAccessPasskeysConfigParam struct {
+	// When enabled, the Access login page automatically prompts the user to
+	// authenticate with a passkey.
+	LoginPageAutoPrompt param.Field[bool] `json:"login_page_auto_prompt"`
+}
+
+func (r IdentityProviderAccessPasskeysConfigParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The SAML encryption certificate set details, including current and previous
+// certificates. Only present for SAML identity providers with a certificate set
+// assigned.
+type IdentityProviderAccessPasskeysSAMLCertificateSetParam struct {
+	// Unique identifier for the certificate set
+	UID param.Field[string] `json:"uid" api:"required" format:"uuid"`
+	// The currently active certificate used for encrypting SAML assertions
+	CurrentCertificate param.Field[IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateParam] `json:"current_certificate"`
+	// The previous certificate, maintained during rotation to ensure continuity. Null
+	// if no rotation has occurred. Mirrors the structure of `saml_certificate`.
+	PreviousCertificate param.Field[interface{}] `json:"previous_certificate"`
+}
+
+func (r IdentityProviderAccessPasskeysSAMLCertificateSetParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// The currently active certificate used for encrypting SAML assertions
+type IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateParam struct {
+	// Indicates whether this is the currently active certificate
+	IsCurrent param.Field[bool] `json:"is_current" api:"required"`
+	// Certificate expiration date. Certificates are automatically rotated 30 days
+	// before expiration.
+	NotAfter param.Field[time.Time] `json:"not_after" api:"required" format:"date-time"`
+	// PEM-encoded X.509 certificate containing the public key. Configure this
+	// certificate in your external SAML Identity Provider to enable encryption.
+	PublicCertificate param.Field[string] `json:"public_certificate" api:"required"`
+	// Unique identifier for the certificate
+	UID param.Field[string] `json:"uid" api:"required" format:"uuid"`
+}
+
+func (r IdentityProviderAccessPasskeysSAMLCertificateSetCurrentCertificateParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
 // The configuration settings for enabling a System for Cross-Domain Identity
 // Management (SCIM) with the identity provider.
 type IdentityProviderSCIMConfig struct {
@@ -4138,11 +4487,12 @@ const (
 	IdentityProviderTypePingone    IdentityProviderType = "pingone"
 	IdentityProviderTypeYandex     IdentityProviderType = "yandex"
 	IdentityProviderTypeCloudflare IdentityProviderType = "cloudflare"
+	IdentityProviderTypePasskeys   IdentityProviderType = "passkeys"
 )
 
 func (r IdentityProviderType) IsKnown() bool {
 	switch r {
-	case IdentityProviderTypeOnetimepin, IdentityProviderTypeAzureAD, IdentityProviderTypeSAML, IdentityProviderTypeCentrify, IdentityProviderTypeFacebook, IdentityProviderTypeGitHub, IdentityProviderTypeGoogleApps, IdentityProviderTypeGoogle, IdentityProviderTypeLinkedin, IdentityProviderTypeOIDC, IdentityProviderTypeOkta, IdentityProviderTypeOnelogin, IdentityProviderTypePingone, IdentityProviderTypeYandex, IdentityProviderTypeCloudflare:
+	case IdentityProviderTypeOnetimepin, IdentityProviderTypeAzureAD, IdentityProviderTypeSAML, IdentityProviderTypeCentrify, IdentityProviderTypeFacebook, IdentityProviderTypeGitHub, IdentityProviderTypeGoogleApps, IdentityProviderTypeGoogle, IdentityProviderTypeLinkedin, IdentityProviderTypeOIDC, IdentityProviderTypeOkta, IdentityProviderTypeOnelogin, IdentityProviderTypePingone, IdentityProviderTypeYandex, IdentityProviderTypeCloudflare, IdentityProviderTypePasskeys:
 		return true
 	}
 	return false
@@ -4159,7 +4509,8 @@ type IdentityProviderListResponse struct {
 	// [IdentityProviderListResponseAccessPingoneConfig],
 	// [IdentityProviderListResponseAccessSAMLConfig],
 	// [IdentityProviderListResponseAccessOnetimepinConfig],
-	// [IdentityProviderListResponseAccessCloudflareConfig].
+	// [IdentityProviderListResponseAccessCloudflareConfig],
+	// [IdentityProviderListResponseAccessPasskeysConfig].
 	Config interface{} `json:"config" api:"required"`
 	// The name of the identity provider, shown to users on the login page.
 	Name string `json:"name" api:"required"`
@@ -4169,6 +4520,9 @@ type IdentityProviderListResponse struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// This field can have the runtime type of [AzureADSAMLCertificateSet],
 	// [IdentityProviderListResponseAccessCentrifySAMLCertificateSet],
 	// [IdentityProviderListResponseAccessFacebookSAMLCertificateSet],
@@ -4183,7 +4537,8 @@ type IdentityProviderListResponse struct {
 	// [IdentityProviderListResponseAccessSAMLSAMLCertificateSet],
 	// [IdentityProviderListResponseAccessYandexSAMLCertificateSet],
 	// [IdentityProviderListResponseAccessOnetimepinSAMLCertificateSet],
-	// [IdentityProviderListResponseAccessCloudflareSAMLCertificateSet].
+	// [IdentityProviderListResponseAccessCloudflareSAMLCertificateSet],
+	// [IdentityProviderListResponseAccessPasskeysSAMLCertificateSet].
 	SAMLCertificateSet interface{} `json:"saml_certificate_set"`
 	// The UID of the SAML encryption certificate set assigned to this Identity
 	// Provider. Only present for SAML identity providers with encryption configured.
@@ -4204,6 +4559,7 @@ type identityProviderListResponseJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4241,7 +4597,8 @@ func (r *IdentityProviderListResponse) UnmarshalJSON(data []byte) (err error) {
 // [IdentityProviderListResponseAccessSAML],
 // [IdentityProviderListResponseAccessYandex],
 // [IdentityProviderListResponseAccessOnetimepin],
-// [IdentityProviderListResponseAccessCloudflare].
+// [IdentityProviderListResponseAccessCloudflare],
+// [IdentityProviderListResponseAccessPasskeys].
 func (r IdentityProviderListResponse) AsUnion() IdentityProviderListResponseUnion {
 	return r.union
 }
@@ -4258,8 +4615,9 @@ func (r IdentityProviderListResponse) AsUnion() IdentityProviderListResponseUnio
 // [IdentityProviderListResponseAccessPingone],
 // [IdentityProviderListResponseAccessSAML],
 // [IdentityProviderListResponseAccessYandex],
-// [IdentityProviderListResponseAccessOnetimepin] or
-// [IdentityProviderListResponseAccessCloudflare].
+// [IdentityProviderListResponseAccessOnetimepin],
+// [IdentityProviderListResponseAccessCloudflare] or
+// [IdentityProviderListResponseAccessPasskeys].
 type IdentityProviderListResponseUnion interface {
 	implementsIdentityProviderListResponse()
 }
@@ -4328,6 +4686,10 @@ func init() {
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(IdentityProviderListResponseAccessCloudflare{}),
 		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(IdentityProviderListResponseAccessPasskeys{}),
+		},
 	)
 }
 
@@ -4344,6 +4706,9 @@ type IdentityProviderListResponseAccessCentrify struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -4366,6 +4731,7 @@ type identityProviderListResponseAccessCentrifyJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4510,6 +4876,9 @@ type IdentityProviderListResponseAccessFacebook struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -4532,6 +4901,7 @@ type identityProviderListResponseAccessFacebookJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4636,6 +5006,9 @@ type IdentityProviderListResponseAccessGitHub struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -4658,6 +5031,7 @@ type identityProviderListResponseAccessGitHubJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4762,6 +5136,9 @@ type IdentityProviderListResponseAccessGoogle struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -4784,6 +5161,7 @@ type identityProviderListResponseAccessGoogleJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4922,6 +5300,9 @@ type IdentityProviderListResponseAccessGoogleApps struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -4944,6 +5325,7 @@ type identityProviderListResponseAccessGoogleAppsJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -4974,8 +5356,13 @@ type IdentityProviderListResponseAccessGoogleAppsConfig struct {
 	// Your OAuth Client Secret
 	ClientSecret string `json:"client_secret"`
 	// The claim name for email in the id_token response.
-	EmailClaimName string                                                 `json:"email_claim_name"`
-	JSON           identityProviderListResponseAccessGoogleAppsConfigJSON `json:"-"`
+	EmailClaimName string `json:"email_claim_name"`
+	// Configures the prompt behavior for Google authentication.
+	Prompt IdentityProviderListResponseAccessGoogleAppsConfigPrompt `json:"prompt"`
+	// Whether to use a previously authenticated Access email as a Google login hint
+	// when exactly one email matches the Workspace domain.
+	UseLoginHint bool                                                   `json:"use_login_hint"`
+	JSON         identityProviderListResponseAccessGoogleAppsConfigJSON `json:"-"`
 }
 
 // identityProviderListResponseAccessGoogleAppsConfigJSON contains the JSON
@@ -4986,6 +5373,8 @@ type identityProviderListResponseAccessGoogleAppsConfigJSON struct {
 	ClientID       apijson.Field
 	ClientSecret   apijson.Field
 	EmailClaimName apijson.Field
+	Prompt         apijson.Field
+	UseLoginHint   apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -4996,6 +5385,23 @@ func (r *IdentityProviderListResponseAccessGoogleAppsConfig) UnmarshalJSON(data 
 
 func (r identityProviderListResponseAccessGoogleAppsConfigJSON) RawJSON() string {
 	return r.raw
+}
+
+// Configures the prompt behavior for Google authentication.
+type IdentityProviderListResponseAccessGoogleAppsConfigPrompt string
+
+const (
+	IdentityProviderListResponseAccessGoogleAppsConfigPromptNone          IdentityProviderListResponseAccessGoogleAppsConfigPrompt = "none"
+	IdentityProviderListResponseAccessGoogleAppsConfigPromptConsent       IdentityProviderListResponseAccessGoogleAppsConfigPrompt = "consent"
+	IdentityProviderListResponseAccessGoogleAppsConfigPromptSelectAccount IdentityProviderListResponseAccessGoogleAppsConfigPrompt = "select_account"
+)
+
+func (r IdentityProviderListResponseAccessGoogleAppsConfigPrompt) IsKnown() bool {
+	switch r {
+	case IdentityProviderListResponseAccessGoogleAppsConfigPromptNone, IdentityProviderListResponseAccessGoogleAppsConfigPromptConsent, IdentityProviderListResponseAccessGoogleAppsConfigPromptSelectAccount:
+		return true
+	}
+	return false
 }
 
 // The SAML encryption certificate set details, including current and previous
@@ -5085,6 +5491,9 @@ type IdentityProviderListResponseAccessLinkedin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5107,6 +5516,7 @@ type identityProviderListResponseAccessLinkedinJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5211,6 +5621,9 @@ type IdentityProviderListResponseAccessOIDC struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5233,6 +5646,7 @@ type identityProviderListResponseAccessOIDCJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5386,6 +5800,9 @@ type IdentityProviderListResponseAccessOkta struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5408,6 +5825,7 @@ type identityProviderListResponseAccessOktaJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5552,6 +5970,9 @@ type IdentityProviderListResponseAccessOnelogin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5574,6 +5995,7 @@ type identityProviderListResponseAccessOneloginJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5715,6 +6137,9 @@ type IdentityProviderListResponseAccessPingone struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5737,6 +6162,7 @@ type identityProviderListResponseAccessPingoneJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5878,6 +6304,9 @@ type IdentityProviderListResponseAccessSAML struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -5900,6 +6329,7 @@ type identityProviderListResponseAccessSAMLJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -5939,6 +6369,8 @@ type IdentityProviderListResponseAccessSAMLConfig struct {
 	//
 	// Note: Requires `saml_certificate_set_id` to be set when `true`.
 	EnableEncryption bool `json:"enable_encryption"`
+	// Asks the IdP to reauthenticate the user for each SAML authentication request.
+	ForceAuthn bool `json:"force_authn"`
 	// Add a list of attribute names that will be returned in the response header from
 	// the Access callback.
 	HeaderAttributes []IdentityProviderListResponseAccessSAMLConfigHeaderAttribute `json:"header_attributes"`
@@ -5946,6 +6378,11 @@ type IdentityProviderListResponseAccessSAMLConfig struct {
 	IdPPublicCERTs []string `json:"idp_public_certs"`
 	// IdP Entity ID or Issuer URL
 	IssuerURL string `json:"issuer_url"`
+	// The maximum URL length the IdP accepts for the SSO redirect URL. When the
+	// constructed SSO URL would exceed this length, the RelayState is stored
+	// server-side and a short nonce is passed to the IdP instead. Set this if your IdP
+	// enforces a URL length limit.
+	MaxSSOURLLength int64 `json:"max_sso_url_length"`
 	// Sign the SAML authentication request with Access credentials. To verify the
 	// signature, use the public key from the Access certs endpoints.
 	SignRequest bool `json:"sign_request"`
@@ -5960,9 +6397,11 @@ type identityProviderListResponseAccessSAMLConfigJSON struct {
 	Attributes         apijson.Field
 	EmailAttributeName apijson.Field
 	EnableEncryption   apijson.Field
+	ForceAuthn         apijson.Field
 	HeaderAttributes   apijson.Field
 	IdPPublicCERTs     apijson.Field
 	IssuerURL          apijson.Field
+	MaxSSOURLLength    apijson.Field
 	SignRequest        apijson.Field
 	SSOTargetURL       apijson.Field
 	raw                string
@@ -6090,6 +6529,9 @@ type IdentityProviderListResponseAccessYandex struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -6112,6 +6554,7 @@ type identityProviderListResponseAccessYandexJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -6216,6 +6659,9 @@ type IdentityProviderListResponseAccessOnetimepin struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -6238,6 +6684,7 @@ type identityProviderListResponseAccessOnetimepinJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -6366,6 +6813,9 @@ type IdentityProviderListResponseAccessCloudflare struct {
 	Type IdentityProviderType `json:"type" api:"required"`
 	// UUID.
 	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
 	// The SAML encryption certificate set details, including current and previous
 	// certificates. Only present for SAML identity providers with a certificate set
 	// assigned.
@@ -6388,6 +6838,7 @@ type identityProviderListResponseAccessCloudflareJSON struct {
 	Name                 apijson.Field
 	Type                 apijson.Field
 	ID                   apijson.Field
+	ReadOnly             apijson.Field
 	SAMLCertificateSet   apijson.Field
 	SAMLCertificateSetID apijson.Field
 	SCIMConfig           apijson.Field
@@ -6505,6 +6956,164 @@ func (r *IdentityProviderListResponseAccessCloudflareSAMLCertificateSetCurrentCe
 }
 
 func (r identityProviderListResponseAccessCloudflareSAMLCertificateSetCurrentCertificateJSON) RawJSON() string {
+	return r.raw
+}
+
+type IdentityProviderListResponseAccessPasskeys struct {
+	// The configuration parameters for the identity provider. To view the required
+	// parameters for a specific provider, refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Config IdentityProviderListResponseAccessPasskeysConfig `json:"config" api:"required"`
+	// The name of the identity provider, shown to users on the login page.
+	Name string `json:"name" api:"required"`
+	// The type of identity provider. To determine the value for a specific provider,
+	// refer to our
+	// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+	Type IdentityProviderType `json:"type" api:"required"`
+	// UUID.
+	ID string `json:"id"`
+	// Indicates that the identity provider is immutable and cannot be updated or
+	// deleted via the API.
+	ReadOnly bool `json:"read_only"`
+	// The SAML encryption certificate set details, including current and previous
+	// certificates. Only present for SAML identity providers with a certificate set
+	// assigned.
+	SAMLCertificateSet IdentityProviderListResponseAccessPasskeysSAMLCertificateSet `json:"saml_certificate_set"`
+	// The UID of the SAML encryption certificate set assigned to this Identity
+	// Provider. Only present for SAML identity providers with encryption configured.
+	// Create a certificate set via POST to
+	// `/identity_providers/{id}/saml_certificate`.
+	SAMLCertificateSetID string `json:"saml_certificate_set_id" format:"uuid"`
+	// The configuration settings for enabling a System for Cross-Domain Identity
+	// Management (SCIM) with the identity provider.
+	SCIMConfig IdentityProviderSCIMConfig                     `json:"scim_config"`
+	JSON       identityProviderListResponseAccessPasskeysJSON `json:"-"`
+}
+
+// identityProviderListResponseAccessPasskeysJSON contains the JSON metadata for
+// the struct [IdentityProviderListResponseAccessPasskeys]
+type identityProviderListResponseAccessPasskeysJSON struct {
+	Config               apijson.Field
+	Name                 apijson.Field
+	Type                 apijson.Field
+	ID                   apijson.Field
+	ReadOnly             apijson.Field
+	SAMLCertificateSet   apijson.Field
+	SAMLCertificateSetID apijson.Field
+	SCIMConfig           apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
+}
+
+func (r *IdentityProviderListResponseAccessPasskeys) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderListResponseAccessPasskeysJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r IdentityProviderListResponseAccessPasskeys) implementsIdentityProviderListResponse() {}
+
+// The configuration parameters for the identity provider. To view the required
+// parameters for a specific provider, refer to our
+// [developer documentation](https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/).
+type IdentityProviderListResponseAccessPasskeysConfig struct {
+	// When enabled, the Access login page automatically prompts the user to
+	// authenticate with a passkey.
+	LoginPageAutoPrompt bool                                                 `json:"login_page_auto_prompt"`
+	RedirectURL         string                                               `json:"redirect_url"`
+	JSON                identityProviderListResponseAccessPasskeysConfigJSON `json:"-"`
+}
+
+// identityProviderListResponseAccessPasskeysConfigJSON contains the JSON metadata
+// for the struct [IdentityProviderListResponseAccessPasskeysConfig]
+type identityProviderListResponseAccessPasskeysConfigJSON struct {
+	LoginPageAutoPrompt apijson.Field
+	RedirectURL         apijson.Field
+	raw                 string
+	ExtraFields         map[string]apijson.Field
+}
+
+func (r *IdentityProviderListResponseAccessPasskeysConfig) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderListResponseAccessPasskeysConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+// The SAML encryption certificate set details, including current and previous
+// certificates. Only present for SAML identity providers with a certificate set
+// assigned.
+type IdentityProviderListResponseAccessPasskeysSAMLCertificateSet struct {
+	// Timestamp when the certificate set was created
+	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	// Unique identifier for the certificate set
+	UID string `json:"uid" api:"required" format:"uuid"`
+	// Timestamp when the certificate set was last updated (e.g., during rotation)
+	UpdatedAt time.Time `json:"updated_at" api:"required" format:"date-time"`
+	// The currently active certificate used for encrypting SAML assertions
+	CurrentCertificate IdentityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificate `json:"current_certificate"`
+	// The previous certificate, maintained during rotation to ensure continuity. Null
+	// if no rotation has occurred. Mirrors the structure of `saml_certificate`.
+	PreviousCertificate interface{}                                                      `json:"previous_certificate" api:"nullable"`
+	JSON                identityProviderListResponseAccessPasskeysSAMLCertificateSetJSON `json:"-"`
+}
+
+// identityProviderListResponseAccessPasskeysSAMLCertificateSetJSON contains the
+// JSON metadata for the struct
+// [IdentityProviderListResponseAccessPasskeysSAMLCertificateSet]
+type identityProviderListResponseAccessPasskeysSAMLCertificateSetJSON struct {
+	CreatedAt           apijson.Field
+	UID                 apijson.Field
+	UpdatedAt           apijson.Field
+	CurrentCertificate  apijson.Field
+	PreviousCertificate apijson.Field
+	raw                 string
+	ExtraFields         map[string]apijson.Field
+}
+
+func (r *IdentityProviderListResponseAccessPasskeysSAMLCertificateSet) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderListResponseAccessPasskeysSAMLCertificateSetJSON) RawJSON() string {
+	return r.raw
+}
+
+// The currently active certificate used for encrypting SAML assertions
+type IdentityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificate struct {
+	// Indicates whether this is the currently active certificate
+	IsCurrent bool `json:"is_current" api:"required"`
+	// Certificate expiration date. Certificates are automatically rotated 30 days
+	// before expiration.
+	NotAfter time.Time `json:"not_after" api:"required" format:"date-time"`
+	// PEM-encoded X.509 certificate containing the public key. Configure this
+	// certificate in your external SAML Identity Provider to enable encryption.
+	PublicCertificate string `json:"public_certificate" api:"required"`
+	// Unique identifier for the certificate
+	UID  string                                                                             `json:"uid" api:"required" format:"uuid"`
+	JSON identityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificateJSON `json:"-"`
+}
+
+// identityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificateJSON
+// contains the JSON metadata for the struct
+// [IdentityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificate]
+type identityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificateJSON struct {
+	IsCurrent         apijson.Field
+	NotAfter          apijson.Field
+	PublicCertificate apijson.Field
+	UID               apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *IdentityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificate) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r identityProviderListResponseAccessPasskeysSAMLCertificateSetCurrentCertificateJSON) RawJSON() string {
 	return r.raw
 }
 

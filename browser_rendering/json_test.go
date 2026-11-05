@@ -12,7 +12,6 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/browser_rendering"
 	"github.com/cloudflare/cloudflare-go/v7/internal/testutil"
 	"github.com/cloudflare/cloudflare-go/v7/option"
-	"github.com/cloudflare/cloudflare-go/v7/shared"
 )
 
 func TestJsonNewWithOptionalParams(t *testing.T) {
@@ -32,17 +31,17 @@ func TestJsonNewWithOptionalParams(t *testing.T) {
 	_, err := client.BrowserRendering.Json.New(context.TODO(), browser_rendering.JsonNewParams{
 		AccountID: cloudflare.F("account_id"),
 		Body: browser_rendering.JsonNewParamsBodyObject{
-			HTML:          cloudflare.F("x"),
+			URL:           cloudflare.F("https://www.example.com/"),
 			ActionTimeout: cloudflare.F(120000.000000),
 			AddScriptTag: cloudflare.F([]browser_rendering.JsonNewParamsBodyObjectAddScriptTag{{
 				ID:      cloudflare.F("id"),
 				Content: cloudflare.F("content"),
 				Type:    cloudflare.F("type"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AddStyleTag: cloudflare.F([]browser_rendering.JsonNewParamsBodyObjectAddStyleTag{{
 				Content: cloudflare.F("content"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AllowRequestPattern: cloudflare.F([]string{"string"}),
 			AllowResourceTypes:  cloudflare.F([]browser_rendering.JsonNewParamsBodyObjectAllowResourceType{browser_rendering.JsonNewParamsBodyObjectAllowResourceTypeDocument}),
@@ -78,13 +77,14 @@ func TestJsonNewWithOptionalParams(t *testing.T) {
 				Timeout:        cloudflare.F(60000.000000),
 				WaitUntil:      cloudflare.F[browser_rendering.JsonNewParamsBodyObjectGotoOptionsWaitUntilUnion](browser_rendering.JsonNewParamsBodyObjectGotoOptionsWaitUntilString(browser_rendering.JsonNewParamsBodyObjectGotoOptionsWaitUntilStringLoad)),
 			}),
+			HTML:                 cloudflare.F("html"),
 			Prompt:               cloudflare.F("prompt"),
 			RejectRequestPattern: cloudflare.F([]string{"string"}),
 			RejectResourceTypes:  cloudflare.F([]browser_rendering.JsonNewParamsBodyObjectRejectResourceType{browser_rendering.JsonNewParamsBodyObjectRejectResourceTypeDocument}),
 			ResponseFormat: cloudflare.F(browser_rendering.JsonNewParamsBodyObjectResponseFormat{
 				Type: cloudflare.F("type"),
-				JsonSchema: cloudflare.F(map[string]browser_rendering.JsonNewParamsBodyObjectResponseFormatJsonSchemaUnion{
-					"foo": shared.UnionString("string"),
+				JsonSchema: cloudflare.F(map[string]interface{}{
+					"foo": "bar",
 				}),
 			}),
 			SetExtraHTTPHeaders: cloudflare.F(map[string]string{
@@ -108,6 +108,7 @@ func TestJsonNewWithOptionalParams(t *testing.T) {
 			}),
 			WaitForTimeout: cloudflare.F(120000.000000),
 		},
+		Browser:  cloudflare.F(browser_rendering.JsonNewParamsBrowserKitesurf),
 		CacheTTL: cloudflare.F(0.000000),
 	})
 	if err != nil {

@@ -35,7 +35,8 @@ func NewRuleService(opts ...option.RequestOption) (r *RuleService) {
 	return
 }
 
-// Put Rules
+// Updates Cloud Connector rules for a zone, replacing the existing rule
+// configuration.
 func (r *RuleService) Update(ctx context.Context, params RuleUpdateParams, opts ...option.RequestOption) (res *pagination.SinglePage[RuleUpdateResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -57,12 +58,14 @@ func (r *RuleService) Update(ctx context.Context, params RuleUpdateParams, opts 
 	return res, nil
 }
 
-// Put Rules
+// Updates Cloud Connector rules for a zone, replacing the existing rule
+// configuration.
 func (r *RuleService) UpdateAutoPaging(ctx context.Context, params RuleUpdateParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[RuleUpdateResponse] {
 	return pagination.NewSinglePageAutoPager(r.Update(ctx, params, opts...))
 }
 
-// Rules
+// Retrieves the Cloud Connector rules configured for a zone. Rules define how
+// traffic is routed to cloud services.
 func (r *RuleService) List(ctx context.Context, query RuleListParams, opts ...option.RequestOption) (res *pagination.SinglePage[RuleListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -84,7 +87,8 @@ func (r *RuleService) List(ctx context.Context, query RuleListParams, opts ...op
 	return res, nil
 }
 
-// Rules
+// Retrieves the Cloud Connector rules configured for a zone. Rules define how
+// traffic is routed to cloud services.
 func (r *RuleService) ListAutoPaging(ctx context.Context, query RuleListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[RuleListResponse] {
 	return pagination.NewSinglePageAutoPager(r.List(ctx, query, opts...))
 }
@@ -153,11 +157,12 @@ const (
 	RuleUpdateResponseProviderCloudflareR2 RuleUpdateResponseProvider = "cloudflare_r2"
 	RuleUpdateResponseProviderGcpStorage   RuleUpdateResponseProvider = "gcp_storage"
 	RuleUpdateResponseProviderAzureStorage RuleUpdateResponseProvider = "azure_storage"
+	RuleUpdateResponseProviderOciStorage   RuleUpdateResponseProvider = "oci_storage"
 )
 
 func (r RuleUpdateResponseProvider) IsKnown() bool {
 	switch r {
-	case RuleUpdateResponseProviderAwsS3, RuleUpdateResponseProviderCloudflareR2, RuleUpdateResponseProviderGcpStorage, RuleUpdateResponseProviderAzureStorage:
+	case RuleUpdateResponseProviderAwsS3, RuleUpdateResponseProviderCloudflareR2, RuleUpdateResponseProviderGcpStorage, RuleUpdateResponseProviderAzureStorage, RuleUpdateResponseProviderOciStorage:
 		return true
 	}
 	return false
@@ -227,11 +232,12 @@ const (
 	RuleListResponseProviderCloudflareR2 RuleListResponseProvider = "cloudflare_r2"
 	RuleListResponseProviderGcpStorage   RuleListResponseProvider = "gcp_storage"
 	RuleListResponseProviderAzureStorage RuleListResponseProvider = "azure_storage"
+	RuleListResponseProviderOciStorage   RuleListResponseProvider = "oci_storage"
 )
 
 func (r RuleListResponseProvider) IsKnown() bool {
 	switch r {
-	case RuleListResponseProviderAwsS3, RuleListResponseProviderCloudflareR2, RuleListResponseProviderGcpStorage, RuleListResponseProviderAzureStorage:
+	case RuleListResponseProviderAwsS3, RuleListResponseProviderCloudflareR2, RuleListResponseProviderGcpStorage, RuleListResponseProviderAzureStorage, RuleListResponseProviderOciStorage:
 		return true
 	}
 	return false
@@ -240,7 +246,7 @@ func (r RuleListResponseProvider) IsKnown() bool {
 type RuleUpdateParams struct {
 	// Identifier.
 	ZoneID param.Field[string]    `path:"zone_id" api:"required"`
-	Rules  []RuleUpdateParamsRule `json:"rules"`
+	Rules  []RuleUpdateParamsRule `json:"rules" api:"required"`
 }
 
 func (r RuleUpdateParams) MarshalJSON() (data []byte, err error) {
@@ -280,11 +286,12 @@ const (
 	RuleUpdateParamsRulesProviderCloudflareR2 RuleUpdateParamsRulesProvider = "cloudflare_r2"
 	RuleUpdateParamsRulesProviderGcpStorage   RuleUpdateParamsRulesProvider = "gcp_storage"
 	RuleUpdateParamsRulesProviderAzureStorage RuleUpdateParamsRulesProvider = "azure_storage"
+	RuleUpdateParamsRulesProviderOciStorage   RuleUpdateParamsRulesProvider = "oci_storage"
 )
 
 func (r RuleUpdateParamsRulesProvider) IsKnown() bool {
 	switch r {
-	case RuleUpdateParamsRulesProviderAwsS3, RuleUpdateParamsRulesProviderCloudflareR2, RuleUpdateParamsRulesProviderGcpStorage, RuleUpdateParamsRulesProviderAzureStorage:
+	case RuleUpdateParamsRulesProviderAwsS3, RuleUpdateParamsRulesProviderCloudflareR2, RuleUpdateParamsRulesProviderGcpStorage, RuleUpdateParamsRulesProviderAzureStorage, RuleUpdateParamsRulesProviderOciStorage:
 		return true
 	}
 	return false

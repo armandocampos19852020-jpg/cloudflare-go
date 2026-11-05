@@ -38,7 +38,7 @@ func NewDEXFleetStatusService(opts ...option.RequestOption) (r *DEXFleetStatusSe
 	return
 }
 
-// List details for live (up to 60 minutes) devices using WARP
+// Get details for live (up to 60 minutes) devices using WARP.
 func (r *DEXFleetStatusService) Live(ctx context.Context, params DEXFleetStatusLiveParams, opts ...option.RequestOption) (res *DEXFleetStatusLiveResponse, err error) {
 	var env DEXFleetStatusLiveResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -55,7 +55,7 @@ func (r *DEXFleetStatusService) Live(ctx context.Context, params DEXFleetStatusL
 	return res, nil
 }
 
-// List details for devices using WARP, up to 7 days
+// Get aggregate details for devices using WARP, up to 7 days.
 func (r *DEXFleetStatusService) OverTime(ctx context.Context, params DEXFleetStatusOverTimeParams, opts ...option.RequestOption) (res *DEXFleetStatusOverTimeResponse, err error) {
 	var env DEXFleetStatusOverTimeResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -196,7 +196,6 @@ func (r dexFleetStatusOverTimeResponseDeviceStatsJSON) RawJSON() string {
 }
 
 type DEXFleetStatusOverTimeResponseDeviceStatsByMode struct {
-	// Timestamp in ISO format
 	Timestamp string `json:"timestamp"`
 	// Number of unique devices
 	UniqueDevicesTotal float64                                             `json:"uniqueDevicesTotal"`
@@ -223,7 +222,6 @@ func (r dexFleetStatusOverTimeResponseDeviceStatsByModeJSON) RawJSON() string {
 }
 
 type DEXFleetStatusOverTimeResponseDeviceStatsByStatus struct {
-	// Timestamp in ISO format
 	Timestamp string `json:"timestamp"`
 	// Number of unique devices
 	UniqueDevicesTotal float64                                               `json:"uniqueDevicesTotal"`
@@ -250,8 +248,9 @@ func (r dexFleetStatusOverTimeResponseDeviceStatsByStatusJSON) RawJSON() string 
 }
 
 type DEXFleetStatusLiveParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Number of minutes before current time
+	// Number of minutes before current time.
 	SinceMinutes param.Field[float64] `query:"since_minutes" api:"required"`
 }
 
@@ -404,14 +403,17 @@ func (r DEXFleetStatusLiveResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type DEXFleetStatusOverTimeParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Time range beginning in ISO format
+	// Start of the time range to query. Timestamp can be provided in ISO 8601 datetime
+	// format or milliseconds since epoch.
 	From param.Field[string] `query:"from" api:"required"`
-	// Time range end in ISO format
+	// End of the time range to query. Timestamp can be provided in ISO 8601 datetime
+	// format or milliseconds since epoch.
 	To param.Field[string] `query:"to" api:"required"`
-	// Cloudflare colo
+	// Cloudflare colo airport code.
 	Colo param.Field[string] `query:"colo"`
-	// Device-specific ID, given as UUID v4
+	// Device-specific ID, given as UUID.
 	DeviceID param.Field[string] `query:"device_id"`
 }
 
@@ -428,10 +430,9 @@ type DEXFleetStatusOverTimeResponseEnvelope struct {
 	Errors   []DEXFleetStatusOverTimeResponseEnvelopeErrors   `json:"errors" api:"required"`
 	Messages []DEXFleetStatusOverTimeResponseEnvelopeMessages `json:"messages" api:"required"`
 	// Whether the API call was successful.
-	Success    DEXFleetStatusOverTimeResponseEnvelopeSuccess    `json:"success" api:"required"`
-	Result     DEXFleetStatusOverTimeResponse                   `json:"result"`
-	ResultInfo DEXFleetStatusOverTimeResponseEnvelopeResultInfo `json:"result_info"`
-	JSON       dexFleetStatusOverTimeResponseEnvelopeJSON       `json:"-"`
+	Success DEXFleetStatusOverTimeResponseEnvelopeSuccess `json:"success" api:"required"`
+	Result  DEXFleetStatusOverTimeResponse                `json:"result"`
+	JSON    dexFleetStatusOverTimeResponseEnvelopeJSON    `json:"-"`
 }
 
 // dexFleetStatusOverTimeResponseEnvelopeJSON contains the JSON metadata for the
@@ -441,7 +442,6 @@ type dexFleetStatusOverTimeResponseEnvelopeJSON struct {
 	Messages    apijson.Field
 	Success     apijson.Field
 	Result      apijson.Field
-	ResultInfo  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -563,38 +563,4 @@ func (r DEXFleetStatusOverTimeResponseEnvelopeSuccess) IsKnown() bool {
 		return true
 	}
 	return false
-}
-
-type DEXFleetStatusOverTimeResponseEnvelopeResultInfo struct {
-	// Total number of results for the requested service.
-	Count float64 `json:"count"`
-	// Current page within paginated list of results.
-	Page float64 `json:"page"`
-	// Number of results per page of results.
-	PerPage float64 `json:"per_page"`
-	// Total results available without any search parameters.
-	TotalCount float64 `json:"total_count"`
-	// The number of total pages in the entire result set.
-	TotalPages float64                                              `json:"total_pages"`
-	JSON       dexFleetStatusOverTimeResponseEnvelopeResultInfoJSON `json:"-"`
-}
-
-// dexFleetStatusOverTimeResponseEnvelopeResultInfoJSON contains the JSON metadata
-// for the struct [DEXFleetStatusOverTimeResponseEnvelopeResultInfo]
-type dexFleetStatusOverTimeResponseEnvelopeResultInfoJSON struct {
-	Count       apijson.Field
-	Page        apijson.Field
-	PerPage     apijson.Field
-	TotalCount  apijson.Field
-	TotalPages  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *DEXFleetStatusOverTimeResponseEnvelopeResultInfo) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r dexFleetStatusOverTimeResponseEnvelopeResultInfoJSON) RawJSON() string {
-	return r.raw
 }

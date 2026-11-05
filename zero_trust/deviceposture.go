@@ -1381,6 +1381,10 @@ type DevicePostureRule struct {
 	ID string `json:"id"`
 	// The description of the device posture rule.
 	Description string `json:"description"`
+	// Whether the rule is enabled. This is a computed, read-only value. It is false
+	// for deprecated Kolide posture rules that still use the issue_count input, and
+	// true otherwise.
+	Enabled bool `json:"enabled"`
 	// Sets the expiration time for a posture check result. If empty, the result
 	// remains valid until it is overwritten by new data from the WARP client.
 	Expiration string `json:"expiration"`
@@ -1403,6 +1407,7 @@ type DevicePostureRule struct {
 type devicePostureRuleJSON struct {
 	ID          apijson.Field
 	Description apijson.Field
+	Enabled     apijson.Field
 	Expiration  apijson.Field
 	Input       apijson.Field
 	Match       apijson.Field

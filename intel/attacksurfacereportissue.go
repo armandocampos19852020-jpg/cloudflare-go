@@ -90,25 +90,6 @@ func (r *AttackSurfaceReportIssueService) Class(ctx context.Context, params Atta
 	return res, nil
 }
 
-// Deprecated endpoint for archiving Security Center insights. Use the newer
-// archive-security-center-insight endpoint instead.
-//
-// Deprecated: deprecated
-func (r *AttackSurfaceReportIssueService) Dismiss(ctx context.Context, issueID string, params AttackSurfaceReportIssueDismissParams, opts ...option.RequestOption) (res *AttackSurfaceReportIssueDismissResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	if params.AccountID.Value == "" {
-		err = errors.New("missing required account_id parameter")
-		return nil, err
-	}
-	if issueID == "" {
-		err = errors.New("missing required issue_id parameter")
-		return nil, err
-	}
-	path := fmt.Sprintf("accounts/%s/intel/attack-surface-report/%s/dismiss", params.AccountID, issueID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &res, opts...)
-	return res, err
-}
-
 // Retrieves Security Center issue counts aggregated by severity level.
 //
 // Deprecated: deprecated
@@ -361,143 +342,6 @@ func (r attackSurfaceReportIssueClassResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-type AttackSurfaceReportIssueDismissResponse struct {
-	Errors   []AttackSurfaceReportIssueDismissResponseError   `json:"errors" api:"required"`
-	Messages []AttackSurfaceReportIssueDismissResponseMessage `json:"messages" api:"required"`
-	// Whether the API call was successful.
-	Success AttackSurfaceReportIssueDismissResponseSuccess `json:"success" api:"required"`
-	JSON    attackSurfaceReportIssueDismissResponseJSON    `json:"-"`
-}
-
-// attackSurfaceReportIssueDismissResponseJSON contains the JSON metadata for the
-// struct [AttackSurfaceReportIssueDismissResponse]
-type attackSurfaceReportIssueDismissResponseJSON struct {
-	Errors      apijson.Field
-	Messages    apijson.Field
-	Success     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AttackSurfaceReportIssueDismissResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r attackSurfaceReportIssueDismissResponseJSON) RawJSON() string {
-	return r.raw
-}
-
-type AttackSurfaceReportIssueDismissResponseError struct {
-	Code             int64                                               `json:"code" api:"required"`
-	Message          string                                              `json:"message" api:"required"`
-	DocumentationURL string                                              `json:"documentation_url"`
-	Source           AttackSurfaceReportIssueDismissResponseErrorsSource `json:"source"`
-	JSON             attackSurfaceReportIssueDismissResponseErrorJSON    `json:"-"`
-}
-
-// attackSurfaceReportIssueDismissResponseErrorJSON contains the JSON metadata for
-// the struct [AttackSurfaceReportIssueDismissResponseError]
-type attackSurfaceReportIssueDismissResponseErrorJSON struct {
-	Code             apijson.Field
-	Message          apijson.Field
-	DocumentationURL apijson.Field
-	Source           apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *AttackSurfaceReportIssueDismissResponseError) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r attackSurfaceReportIssueDismissResponseErrorJSON) RawJSON() string {
-	return r.raw
-}
-
-type AttackSurfaceReportIssueDismissResponseErrorsSource struct {
-	Pointer string                                                  `json:"pointer"`
-	JSON    attackSurfaceReportIssueDismissResponseErrorsSourceJSON `json:"-"`
-}
-
-// attackSurfaceReportIssueDismissResponseErrorsSourceJSON contains the JSON
-// metadata for the struct [AttackSurfaceReportIssueDismissResponseErrorsSource]
-type attackSurfaceReportIssueDismissResponseErrorsSourceJSON struct {
-	Pointer     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AttackSurfaceReportIssueDismissResponseErrorsSource) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r attackSurfaceReportIssueDismissResponseErrorsSourceJSON) RawJSON() string {
-	return r.raw
-}
-
-type AttackSurfaceReportIssueDismissResponseMessage struct {
-	Code             int64                                                 `json:"code" api:"required"`
-	Message          string                                                `json:"message" api:"required"`
-	DocumentationURL string                                                `json:"documentation_url"`
-	Source           AttackSurfaceReportIssueDismissResponseMessagesSource `json:"source"`
-	JSON             attackSurfaceReportIssueDismissResponseMessageJSON    `json:"-"`
-}
-
-// attackSurfaceReportIssueDismissResponseMessageJSON contains the JSON metadata
-// for the struct [AttackSurfaceReportIssueDismissResponseMessage]
-type attackSurfaceReportIssueDismissResponseMessageJSON struct {
-	Code             apijson.Field
-	Message          apijson.Field
-	DocumentationURL apijson.Field
-	Source           apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
-}
-
-func (r *AttackSurfaceReportIssueDismissResponseMessage) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r attackSurfaceReportIssueDismissResponseMessageJSON) RawJSON() string {
-	return r.raw
-}
-
-type AttackSurfaceReportIssueDismissResponseMessagesSource struct {
-	Pointer string                                                    `json:"pointer"`
-	JSON    attackSurfaceReportIssueDismissResponseMessagesSourceJSON `json:"-"`
-}
-
-// attackSurfaceReportIssueDismissResponseMessagesSourceJSON contains the JSON
-// metadata for the struct [AttackSurfaceReportIssueDismissResponseMessagesSource]
-type attackSurfaceReportIssueDismissResponseMessagesSourceJSON struct {
-	Pointer     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AttackSurfaceReportIssueDismissResponseMessagesSource) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r attackSurfaceReportIssueDismissResponseMessagesSourceJSON) RawJSON() string {
-	return r.raw
-}
-
-// Whether the API call was successful.
-type AttackSurfaceReportIssueDismissResponseSuccess bool
-
-const (
-	AttackSurfaceReportIssueDismissResponseSuccessTrue AttackSurfaceReportIssueDismissResponseSuccess = true
-)
-
-func (r AttackSurfaceReportIssueDismissResponseSuccess) IsKnown() bool {
-	switch r {
-	case AttackSurfaceReportIssueDismissResponseSuccessTrue:
-		return true
-	}
-	return false
-}
-
 type AttackSurfaceReportIssueSeverityResponse struct {
 	Count int64                                        `json:"count"`
 	Value string                                       `json:"value"`
@@ -555,13 +399,14 @@ type AttackSurfaceReportIssueListParams struct {
 	// Specifies the current page within paginated list of results.
 	Page param.Field[int64] `query:"page"`
 	// Sets the number of results per page of results.
-	PerPage     param.Field[int64]                `query:"per_page"`
-	Product     param.Field[[]string]             `query:"product"`
-	ProductNeq  param.Field[[]string]             `query:"product~neq"`
-	Severity    param.Field[[]SeverityQueryParam] `query:"severity"`
-	SeverityNeq param.Field[[]SeverityQueryParam] `query:"severity~neq"`
-	Subject     param.Field[[]string]             `query:"subject"`
-	SubjectNeq  param.Field[[]string]             `query:"subject~neq"`
+	PerPage     param.Field[int64]                                      `query:"per_page"`
+	Product     param.Field[[]string]                                   `query:"product"`
+	ProductNeq  param.Field[[]string]                                   `query:"product~neq"`
+	Severity    param.Field[[]SeverityQueryParam]                       `query:"severity"`
+	SeverityNeq param.Field[[]SeverityQueryParam]                       `query:"severity~neq"`
+	Source      param.Field[[]AttackSurfaceReportIssueListParamsSource] `query:"source"`
+	Subject     param.Field[[]string]                                   `query:"subject"`
+	SubjectNeq  param.Field[[]string]                                   `query:"subject~neq"`
 }
 
 // URLQuery serializes [AttackSurfaceReportIssueListParams]'s query parameters as
@@ -573,20 +418,36 @@ func (r AttackSurfaceReportIssueListParams) URLQuery() (v url.Values) {
 	})
 }
 
+type AttackSurfaceReportIssueListParamsSource string
+
+const (
+	AttackSurfaceReportIssueListParamsSourceCloudflare AttackSurfaceReportIssueListParamsSource = "cloudflare"
+	AttackSurfaceReportIssueListParamsSourceRiskrecon  AttackSurfaceReportIssueListParamsSource = "riskrecon"
+)
+
+func (r AttackSurfaceReportIssueListParamsSource) IsKnown() bool {
+	switch r {
+	case AttackSurfaceReportIssueListParamsSourceCloudflare, AttackSurfaceReportIssueListParamsSourceRiskrecon:
+		return true
+	}
+	return false
+}
+
 type AttackSurfaceReportIssueClassParams struct {
 	// Identifier.
-	AccountID     param.Field[string]               `path:"account_id" api:"required"`
-	Dismissed     param.Field[bool]                 `query:"dismissed"`
-	IssueClass    param.Field[[]string]             `query:"issue_class"`
-	IssueClassNeq param.Field[[]string]             `query:"issue_class~neq"`
-	IssueType     param.Field[[]IssueType]          `query:"issue_type"`
-	IssueTypeNeq  param.Field[[]IssueType]          `query:"issue_type~neq"`
-	Product       param.Field[[]string]             `query:"product"`
-	ProductNeq    param.Field[[]string]             `query:"product~neq"`
-	Severity      param.Field[[]SeverityQueryParam] `query:"severity"`
-	SeverityNeq   param.Field[[]SeverityQueryParam] `query:"severity~neq"`
-	Subject       param.Field[[]string]             `query:"subject"`
-	SubjectNeq    param.Field[[]string]             `query:"subject~neq"`
+	AccountID     param.Field[string]                                      `path:"account_id" api:"required"`
+	Dismissed     param.Field[bool]                                        `query:"dismissed"`
+	IssueClass    param.Field[[]string]                                    `query:"issue_class"`
+	IssueClassNeq param.Field[[]string]                                    `query:"issue_class~neq"`
+	IssueType     param.Field[[]IssueType]                                 `query:"issue_type"`
+	IssueTypeNeq  param.Field[[]IssueType]                                 `query:"issue_type~neq"`
+	Product       param.Field[[]string]                                    `query:"product"`
+	ProductNeq    param.Field[[]string]                                    `query:"product~neq"`
+	Severity      param.Field[[]SeverityQueryParam]                        `query:"severity"`
+	SeverityNeq   param.Field[[]SeverityQueryParam]                        `query:"severity~neq"`
+	Source        param.Field[[]AttackSurfaceReportIssueClassParamsSource] `query:"source"`
+	Subject       param.Field[[]string]                                    `query:"subject"`
+	SubjectNeq    param.Field[[]string]                                    `query:"subject~neq"`
 }
 
 // URLQuery serializes [AttackSurfaceReportIssueClassParams]'s query parameters as
@@ -596,6 +457,21 @@ func (r AttackSurfaceReportIssueClassParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
 		NestedFormat: apiquery.NestedQueryFormatDots,
 	})
+}
+
+type AttackSurfaceReportIssueClassParamsSource string
+
+const (
+	AttackSurfaceReportIssueClassParamsSourceCloudflare AttackSurfaceReportIssueClassParamsSource = "cloudflare"
+	AttackSurfaceReportIssueClassParamsSourceRiskrecon  AttackSurfaceReportIssueClassParamsSource = "riskrecon"
+)
+
+func (r AttackSurfaceReportIssueClassParamsSource) IsKnown() bool {
+	switch r {
+	case AttackSurfaceReportIssueClassParamsSourceCloudflare, AttackSurfaceReportIssueClassParamsSourceRiskrecon:
+		return true
+	}
+	return false
 }
 
 type AttackSurfaceReportIssueClassResponseEnvelope struct {
@@ -739,30 +615,21 @@ func (r AttackSurfaceReportIssueClassResponseEnvelopeSuccess) IsKnown() bool {
 	return false
 }
 
-type AttackSurfaceReportIssueDismissParams struct {
-	// Identifier.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	Dismiss   param.Field[bool]   `json:"dismiss"`
-}
-
-func (r AttackSurfaceReportIssueDismissParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type AttackSurfaceReportIssueSeverityParams struct {
 	// Identifier.
-	AccountID     param.Field[string]               `path:"account_id" api:"required"`
-	Dismissed     param.Field[bool]                 `query:"dismissed"`
-	IssueClass    param.Field[[]string]             `query:"issue_class"`
-	IssueClassNeq param.Field[[]string]             `query:"issue_class~neq"`
-	IssueType     param.Field[[]IssueType]          `query:"issue_type"`
-	IssueTypeNeq  param.Field[[]IssueType]          `query:"issue_type~neq"`
-	Product       param.Field[[]string]             `query:"product"`
-	ProductNeq    param.Field[[]string]             `query:"product~neq"`
-	Severity      param.Field[[]SeverityQueryParam] `query:"severity"`
-	SeverityNeq   param.Field[[]SeverityQueryParam] `query:"severity~neq"`
-	Subject       param.Field[[]string]             `query:"subject"`
-	SubjectNeq    param.Field[[]string]             `query:"subject~neq"`
+	AccountID     param.Field[string]                                         `path:"account_id" api:"required"`
+	Dismissed     param.Field[bool]                                           `query:"dismissed"`
+	IssueClass    param.Field[[]string]                                       `query:"issue_class"`
+	IssueClassNeq param.Field[[]string]                                       `query:"issue_class~neq"`
+	IssueType     param.Field[[]IssueType]                                    `query:"issue_type"`
+	IssueTypeNeq  param.Field[[]IssueType]                                    `query:"issue_type~neq"`
+	Product       param.Field[[]string]                                       `query:"product"`
+	ProductNeq    param.Field[[]string]                                       `query:"product~neq"`
+	Severity      param.Field[[]SeverityQueryParam]                           `query:"severity"`
+	SeverityNeq   param.Field[[]SeverityQueryParam]                           `query:"severity~neq"`
+	Source        param.Field[[]AttackSurfaceReportIssueSeverityParamsSource] `query:"source"`
+	Subject       param.Field[[]string]                                       `query:"subject"`
+	SubjectNeq    param.Field[[]string]                                       `query:"subject~neq"`
 }
 
 // URLQuery serializes [AttackSurfaceReportIssueSeverityParams]'s query parameters
@@ -772,6 +639,21 @@ func (r AttackSurfaceReportIssueSeverityParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
 		NestedFormat: apiquery.NestedQueryFormatDots,
 	})
+}
+
+type AttackSurfaceReportIssueSeverityParamsSource string
+
+const (
+	AttackSurfaceReportIssueSeverityParamsSourceCloudflare AttackSurfaceReportIssueSeverityParamsSource = "cloudflare"
+	AttackSurfaceReportIssueSeverityParamsSourceRiskrecon  AttackSurfaceReportIssueSeverityParamsSource = "riskrecon"
+)
+
+func (r AttackSurfaceReportIssueSeverityParamsSource) IsKnown() bool {
+	switch r {
+	case AttackSurfaceReportIssueSeverityParamsSourceCloudflare, AttackSurfaceReportIssueSeverityParamsSourceRiskrecon:
+		return true
+	}
+	return false
 }
 
 type AttackSurfaceReportIssueSeverityResponseEnvelope struct {
@@ -918,18 +800,19 @@ func (r AttackSurfaceReportIssueSeverityResponseEnvelopeSuccess) IsKnown() bool 
 
 type AttackSurfaceReportIssueTypeParams struct {
 	// Identifier.
-	AccountID     param.Field[string]               `path:"account_id" api:"required"`
-	Dismissed     param.Field[bool]                 `query:"dismissed"`
-	IssueClass    param.Field[[]string]             `query:"issue_class"`
-	IssueClassNeq param.Field[[]string]             `query:"issue_class~neq"`
-	IssueType     param.Field[[]IssueType]          `query:"issue_type"`
-	IssueTypeNeq  param.Field[[]IssueType]          `query:"issue_type~neq"`
-	Product       param.Field[[]string]             `query:"product"`
-	ProductNeq    param.Field[[]string]             `query:"product~neq"`
-	Severity      param.Field[[]SeverityQueryParam] `query:"severity"`
-	SeverityNeq   param.Field[[]SeverityQueryParam] `query:"severity~neq"`
-	Subject       param.Field[[]string]             `query:"subject"`
-	SubjectNeq    param.Field[[]string]             `query:"subject~neq"`
+	AccountID     param.Field[string]                                     `path:"account_id" api:"required"`
+	Dismissed     param.Field[bool]                                       `query:"dismissed"`
+	IssueClass    param.Field[[]string]                                   `query:"issue_class"`
+	IssueClassNeq param.Field[[]string]                                   `query:"issue_class~neq"`
+	IssueType     param.Field[[]IssueType]                                `query:"issue_type"`
+	IssueTypeNeq  param.Field[[]IssueType]                                `query:"issue_type~neq"`
+	Product       param.Field[[]string]                                   `query:"product"`
+	ProductNeq    param.Field[[]string]                                   `query:"product~neq"`
+	Severity      param.Field[[]SeverityQueryParam]                       `query:"severity"`
+	SeverityNeq   param.Field[[]SeverityQueryParam]                       `query:"severity~neq"`
+	Source        param.Field[[]AttackSurfaceReportIssueTypeParamsSource] `query:"source"`
+	Subject       param.Field[[]string]                                   `query:"subject"`
+	SubjectNeq    param.Field[[]string]                                   `query:"subject~neq"`
 }
 
 // URLQuery serializes [AttackSurfaceReportIssueTypeParams]'s query parameters as
@@ -939,6 +822,21 @@ func (r AttackSurfaceReportIssueTypeParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
 		NestedFormat: apiquery.NestedQueryFormatDots,
 	})
+}
+
+type AttackSurfaceReportIssueTypeParamsSource string
+
+const (
+	AttackSurfaceReportIssueTypeParamsSourceCloudflare AttackSurfaceReportIssueTypeParamsSource = "cloudflare"
+	AttackSurfaceReportIssueTypeParamsSourceRiskrecon  AttackSurfaceReportIssueTypeParamsSource = "riskrecon"
+)
+
+func (r AttackSurfaceReportIssueTypeParamsSource) IsKnown() bool {
+	switch r {
+	case AttackSurfaceReportIssueTypeParamsSourceCloudflare, AttackSurfaceReportIssueTypeParamsSourceRiskrecon:
+		return true
+	}
+	return false
 }
 
 type AttackSurfaceReportIssueTypeResponseEnvelope struct {

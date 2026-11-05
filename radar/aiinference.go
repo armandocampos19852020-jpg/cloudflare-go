@@ -40,7 +40,7 @@ func NewAIInferenceService(opts ...option.RequestOption) (r *AIInferenceService)
 	return
 }
 
-// Retrieves an aggregated summary of unique accounts using Workers AI inference
+// Retrieves an aggregated summary of the number of inferences run on Workers AI,
 // grouped by the specified dimension.
 func (r *AIInferenceService) SummaryV2(ctx context.Context, dimension AIInferenceSummaryV2ParamsDimension, query AIInferenceSummaryV2Params, opts ...option.RequestOption) (res *AIInferenceSummaryV2Response, err error) {
 	var env AIInferenceSummaryV2ResponseEnvelope
@@ -54,7 +54,7 @@ func (r *AIInferenceService) SummaryV2(ctx context.Context, dimension AIInferenc
 	return res, nil
 }
 
-// Retrieves the distribution of unique accounts using Workers AI inference,
+// Retrieves the distribution of the number of inferences run on Workers AI,
 // grouped by the specified dimension over time.
 func (r *AIInferenceService) TimeseriesGroupsV2(ctx context.Context, dimension AIInferenceTimeseriesGroupsV2ParamsDimension, query AIInferenceTimeseriesGroupsV2Params, opts ...option.RequestOption) (res *AIInferenceTimeseriesGroupsV2Response, err error) {
 	var env AIInferenceTimeseriesGroupsV2ResponseEnvelope
@@ -162,6 +162,7 @@ type AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                         `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                       `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                    `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                     `json:"tags"`
 	JSON            aiInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -176,6 +177,7 @@ type aiInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -231,7 +233,6 @@ func (r AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsDataSource) IsK
 type AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -241,7 +242,7 @@ const (
 
 func (r AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -439,6 +440,7 @@ type AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                              `json:"tags"`
 	JSON            aiInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -453,6 +455,7 @@ type aiInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationJSON struc
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -508,7 +511,6 @@ func (r AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsDataSo
 type AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -518,7 +520,7 @@ const (
 
 func (r AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIInferenceTimeseriesGroupsV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -627,19 +629,36 @@ type AIInferenceSummaryV2Params struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIInferenceSummaryV2ParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -717,6 +736,9 @@ type AIInferenceTimeseriesGroupsV2Params struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AIInferenceTimeseriesGroupsV2ParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
@@ -727,19 +749,36 @@ type AIInferenceTimeseriesGroupsV2Params struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIInferenceTimeseriesGroupsV2ParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -780,6 +819,9 @@ func (r AIInferenceTimeseriesGroupsV2ParamsDimension) IsKnown() bool {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AIInferenceTimeseriesGroupsV2ParamsAggInterval string
 
 const (

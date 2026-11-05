@@ -639,6 +639,7 @@ const (
 	QueryDefaultTemplateLanguageDaDK QueryDefaultTemplateLanguage = "da-DK"
 	QueryDefaultTemplateLanguageFiFi QueryDefaultTemplateLanguage = "fi-FI"
 	QueryDefaultTemplateLanguageLtLt QueryDefaultTemplateLanguage = "lt-LT"
+	QueryDefaultTemplateLanguageLvLv QueryDefaultTemplateLanguage = "lv-LV"
 	QueryDefaultTemplateLanguageMsMy QueryDefaultTemplateLanguage = "ms-MY"
 	QueryDefaultTemplateLanguageNbNo QueryDefaultTemplateLanguage = "nb-NO"
 	QueryDefaultTemplateLanguageRoRo QueryDefaultTemplateLanguage = "ro-RO"
@@ -658,7 +659,7 @@ const (
 
 func (r QueryDefaultTemplateLanguage) IsKnown() bool {
 	switch r {
-	case QueryDefaultTemplateLanguageEnUs, QueryDefaultTemplateLanguageEsEs, QueryDefaultTemplateLanguageDeDe, QueryDefaultTemplateLanguageFrFr, QueryDefaultTemplateLanguageItIt, QueryDefaultTemplateLanguageJaJp, QueryDefaultTemplateLanguageKoKr, QueryDefaultTemplateLanguagePtBr, QueryDefaultTemplateLanguageZhCn, QueryDefaultTemplateLanguageZhTw, QueryDefaultTemplateLanguageNlNl, QueryDefaultTemplateLanguagePlPl, QueryDefaultTemplateLanguageIDID, QueryDefaultTemplateLanguageTrTr, QueryDefaultTemplateLanguageArEg, QueryDefaultTemplateLanguageRuRu, QueryDefaultTemplateLanguageFaIr, QueryDefaultTemplateLanguageBgBg, QueryDefaultTemplateLanguageHrHr, QueryDefaultTemplateLanguageCsCz, QueryDefaultTemplateLanguageDaDK, QueryDefaultTemplateLanguageFiFi, QueryDefaultTemplateLanguageLtLt, QueryDefaultTemplateLanguageMsMy, QueryDefaultTemplateLanguageNbNo, QueryDefaultTemplateLanguageRoRo, QueryDefaultTemplateLanguageElGr, QueryDefaultTemplateLanguageHeIl, QueryDefaultTemplateLanguageHiIn, QueryDefaultTemplateLanguageHuHu, QueryDefaultTemplateLanguageSrBa, QueryDefaultTemplateLanguageSkSk, QueryDefaultTemplateLanguageSlSi, QueryDefaultTemplateLanguageSvSe, QueryDefaultTemplateLanguageTlPh, QueryDefaultTemplateLanguageThTh, QueryDefaultTemplateLanguageUkUA, QueryDefaultTemplateLanguageViVn:
+	case QueryDefaultTemplateLanguageEnUs, QueryDefaultTemplateLanguageEsEs, QueryDefaultTemplateLanguageDeDe, QueryDefaultTemplateLanguageFrFr, QueryDefaultTemplateLanguageItIt, QueryDefaultTemplateLanguageJaJp, QueryDefaultTemplateLanguageKoKr, QueryDefaultTemplateLanguagePtBr, QueryDefaultTemplateLanguageZhCn, QueryDefaultTemplateLanguageZhTw, QueryDefaultTemplateLanguageNlNl, QueryDefaultTemplateLanguagePlPl, QueryDefaultTemplateLanguageIDID, QueryDefaultTemplateLanguageTrTr, QueryDefaultTemplateLanguageArEg, QueryDefaultTemplateLanguageRuRu, QueryDefaultTemplateLanguageFaIr, QueryDefaultTemplateLanguageBgBg, QueryDefaultTemplateLanguageHrHr, QueryDefaultTemplateLanguageCsCz, QueryDefaultTemplateLanguageDaDK, QueryDefaultTemplateLanguageFiFi, QueryDefaultTemplateLanguageLtLt, QueryDefaultTemplateLanguageLvLv, QueryDefaultTemplateLanguageMsMy, QueryDefaultTemplateLanguageNbNo, QueryDefaultTemplateLanguageRoRo, QueryDefaultTemplateLanguageElGr, QueryDefaultTemplateLanguageHeIl, QueryDefaultTemplateLanguageHiIn, QueryDefaultTemplateLanguageHuHu, QueryDefaultTemplateLanguageSrBa, QueryDefaultTemplateLanguageSkSk, QueryDefaultTemplateLanguageSlSi, QueryDefaultTemplateLanguageSvSe, QueryDefaultTemplateLanguageTlPh, QueryDefaultTemplateLanguageThTh, QueryDefaultTemplateLanguageUkUA, QueryDefaultTemplateLanguageViVn:
 		return true
 	}
 	return false
@@ -1135,6 +1136,7 @@ const (
 	WaitingRoomDefaultTemplateLanguageDaDK WaitingRoomDefaultTemplateLanguage = "da-DK"
 	WaitingRoomDefaultTemplateLanguageFiFi WaitingRoomDefaultTemplateLanguage = "fi-FI"
 	WaitingRoomDefaultTemplateLanguageLtLt WaitingRoomDefaultTemplateLanguage = "lt-LT"
+	WaitingRoomDefaultTemplateLanguageLvLv WaitingRoomDefaultTemplateLanguage = "lv-LV"
 	WaitingRoomDefaultTemplateLanguageMsMy WaitingRoomDefaultTemplateLanguage = "ms-MY"
 	WaitingRoomDefaultTemplateLanguageNbNo WaitingRoomDefaultTemplateLanguage = "nb-NO"
 	WaitingRoomDefaultTemplateLanguageRoRo WaitingRoomDefaultTemplateLanguage = "ro-RO"
@@ -1154,7 +1156,7 @@ const (
 
 func (r WaitingRoomDefaultTemplateLanguage) IsKnown() bool {
 	switch r {
-	case WaitingRoomDefaultTemplateLanguageEnUs, WaitingRoomDefaultTemplateLanguageEsEs, WaitingRoomDefaultTemplateLanguageDeDe, WaitingRoomDefaultTemplateLanguageFrFr, WaitingRoomDefaultTemplateLanguageItIt, WaitingRoomDefaultTemplateLanguageJaJp, WaitingRoomDefaultTemplateLanguageKoKr, WaitingRoomDefaultTemplateLanguagePtBr, WaitingRoomDefaultTemplateLanguageZhCn, WaitingRoomDefaultTemplateLanguageZhTw, WaitingRoomDefaultTemplateLanguageNlNl, WaitingRoomDefaultTemplateLanguagePlPl, WaitingRoomDefaultTemplateLanguageIDID, WaitingRoomDefaultTemplateLanguageTrTr, WaitingRoomDefaultTemplateLanguageArEg, WaitingRoomDefaultTemplateLanguageRuRu, WaitingRoomDefaultTemplateLanguageFaIr, WaitingRoomDefaultTemplateLanguageBgBg, WaitingRoomDefaultTemplateLanguageHrHr, WaitingRoomDefaultTemplateLanguageCsCz, WaitingRoomDefaultTemplateLanguageDaDK, WaitingRoomDefaultTemplateLanguageFiFi, WaitingRoomDefaultTemplateLanguageLtLt, WaitingRoomDefaultTemplateLanguageMsMy, WaitingRoomDefaultTemplateLanguageNbNo, WaitingRoomDefaultTemplateLanguageRoRo, WaitingRoomDefaultTemplateLanguageElGr, WaitingRoomDefaultTemplateLanguageHeIl, WaitingRoomDefaultTemplateLanguageHiIn, WaitingRoomDefaultTemplateLanguageHuHu, WaitingRoomDefaultTemplateLanguageSrBa, WaitingRoomDefaultTemplateLanguageSkSk, WaitingRoomDefaultTemplateLanguageSlSi, WaitingRoomDefaultTemplateLanguageSvSe, WaitingRoomDefaultTemplateLanguageTlPh, WaitingRoomDefaultTemplateLanguageThTh, WaitingRoomDefaultTemplateLanguageUkUA, WaitingRoomDefaultTemplateLanguageViVn:
+	case WaitingRoomDefaultTemplateLanguageEnUs, WaitingRoomDefaultTemplateLanguageEsEs, WaitingRoomDefaultTemplateLanguageDeDe, WaitingRoomDefaultTemplateLanguageFrFr, WaitingRoomDefaultTemplateLanguageItIt, WaitingRoomDefaultTemplateLanguageJaJp, WaitingRoomDefaultTemplateLanguageKoKr, WaitingRoomDefaultTemplateLanguagePtBr, WaitingRoomDefaultTemplateLanguageZhCn, WaitingRoomDefaultTemplateLanguageZhTw, WaitingRoomDefaultTemplateLanguageNlNl, WaitingRoomDefaultTemplateLanguagePlPl, WaitingRoomDefaultTemplateLanguageIDID, WaitingRoomDefaultTemplateLanguageTrTr, WaitingRoomDefaultTemplateLanguageArEg, WaitingRoomDefaultTemplateLanguageRuRu, WaitingRoomDefaultTemplateLanguageFaIr, WaitingRoomDefaultTemplateLanguageBgBg, WaitingRoomDefaultTemplateLanguageHrHr, WaitingRoomDefaultTemplateLanguageCsCz, WaitingRoomDefaultTemplateLanguageDaDK, WaitingRoomDefaultTemplateLanguageFiFi, WaitingRoomDefaultTemplateLanguageLtLt, WaitingRoomDefaultTemplateLanguageLvLv, WaitingRoomDefaultTemplateLanguageMsMy, WaitingRoomDefaultTemplateLanguageNbNo, WaitingRoomDefaultTemplateLanguageRoRo, WaitingRoomDefaultTemplateLanguageElGr, WaitingRoomDefaultTemplateLanguageHeIl, WaitingRoomDefaultTemplateLanguageHiIn, WaitingRoomDefaultTemplateLanguageHuHu, WaitingRoomDefaultTemplateLanguageSrBa, WaitingRoomDefaultTemplateLanguageSkSk, WaitingRoomDefaultTemplateLanguageSlSi, WaitingRoomDefaultTemplateLanguageSvSe, WaitingRoomDefaultTemplateLanguageTlPh, WaitingRoomDefaultTemplateLanguageThTh, WaitingRoomDefaultTemplateLanguageUkUA, WaitingRoomDefaultTemplateLanguageViVn:
 		return true
 	}
 	return false
@@ -1309,14 +1311,20 @@ func (r WaitingRoomNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type WaitingRoomNewResponseEnvelope struct {
-	Result WaitingRoom                        `json:"result" api:"required"`
-	JSON   waitingRoomNewResponseEnvelopeJSON `json:"-"`
+	Errors   []WaitingRoomNewResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []WaitingRoomNewResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   WaitingRoom                              `json:"result" api:"required,nullable"`
+	Success  bool                                     `json:"success" api:"required"`
+	JSON     waitingRoomNewResponseEnvelopeJSON       `json:"-"`
 }
 
 // waitingRoomNewResponseEnvelopeJSON contains the JSON metadata for the struct
 // [WaitingRoomNewResponseEnvelope]
 type waitingRoomNewResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
 	Result      apijson.Field
+	Success     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1326,6 +1334,102 @@ func (r *WaitingRoomNewResponseEnvelope) UnmarshalJSON(data []byte) (err error) 
 }
 
 func (r waitingRoomNewResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomNewResponseEnvelopeErrors struct {
+	Code             int64                                      `json:"code" api:"required"`
+	Message          string                                     `json:"message" api:"required"`
+	DocumentationURL string                                     `json:"documentation_url"`
+	Source           WaitingRoomNewResponseEnvelopeErrorsSource `json:"source"`
+	JSON             waitingRoomNewResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// waitingRoomNewResponseEnvelopeErrorsJSON contains the JSON metadata for the
+// struct [WaitingRoomNewResponseEnvelopeErrors]
+type waitingRoomNewResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomNewResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomNewResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomNewResponseEnvelopeErrorsSource struct {
+	Pointer string                                         `json:"pointer"`
+	JSON    waitingRoomNewResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// waitingRoomNewResponseEnvelopeErrorsSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomNewResponseEnvelopeErrorsSource]
+type waitingRoomNewResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomNewResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomNewResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomNewResponseEnvelopeMessages struct {
+	Code             int64                                        `json:"code" api:"required"`
+	Message          string                                       `json:"message" api:"required"`
+	DocumentationURL string                                       `json:"documentation_url"`
+	Source           WaitingRoomNewResponseEnvelopeMessagesSource `json:"source"`
+	JSON             waitingRoomNewResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// waitingRoomNewResponseEnvelopeMessagesJSON contains the JSON metadata for the
+// struct [WaitingRoomNewResponseEnvelopeMessages]
+type waitingRoomNewResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomNewResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomNewResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomNewResponseEnvelopeMessagesSource struct {
+	Pointer string                                           `json:"pointer"`
+	JSON    waitingRoomNewResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// waitingRoomNewResponseEnvelopeMessagesSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomNewResponseEnvelopeMessagesSource]
+type waitingRoomNewResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomNewResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomNewResponseEnvelopeMessagesSourceJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -1340,14 +1444,20 @@ func (r WaitingRoomUpdateParams) MarshalJSON() (data []byte, err error) {
 }
 
 type WaitingRoomUpdateResponseEnvelope struct {
-	Result WaitingRoom                           `json:"result" api:"required"`
-	JSON   waitingRoomUpdateResponseEnvelopeJSON `json:"-"`
+	Errors   []WaitingRoomUpdateResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []WaitingRoomUpdateResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   WaitingRoom                                 `json:"result" api:"required,nullable"`
+	Success  bool                                        `json:"success" api:"required"`
+	JSON     waitingRoomUpdateResponseEnvelopeJSON       `json:"-"`
 }
 
 // waitingRoomUpdateResponseEnvelopeJSON contains the JSON metadata for the struct
 // [WaitingRoomUpdateResponseEnvelope]
 type waitingRoomUpdateResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
 	Result      apijson.Field
+	Success     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1357,6 +1467,102 @@ func (r *WaitingRoomUpdateResponseEnvelope) UnmarshalJSON(data []byte) (err erro
 }
 
 func (r waitingRoomUpdateResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomUpdateResponseEnvelopeErrors struct {
+	Code             int64                                         `json:"code" api:"required"`
+	Message          string                                        `json:"message" api:"required"`
+	DocumentationURL string                                        `json:"documentation_url"`
+	Source           WaitingRoomUpdateResponseEnvelopeErrorsSource `json:"source"`
+	JSON             waitingRoomUpdateResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// waitingRoomUpdateResponseEnvelopeErrorsJSON contains the JSON metadata for the
+// struct [WaitingRoomUpdateResponseEnvelopeErrors]
+type waitingRoomUpdateResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomUpdateResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomUpdateResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomUpdateResponseEnvelopeErrorsSource struct {
+	Pointer string                                            `json:"pointer"`
+	JSON    waitingRoomUpdateResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// waitingRoomUpdateResponseEnvelopeErrorsSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomUpdateResponseEnvelopeErrorsSource]
+type waitingRoomUpdateResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomUpdateResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomUpdateResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomUpdateResponseEnvelopeMessages struct {
+	Code             int64                                           `json:"code" api:"required"`
+	Message          string                                          `json:"message" api:"required"`
+	DocumentationURL string                                          `json:"documentation_url"`
+	Source           WaitingRoomUpdateResponseEnvelopeMessagesSource `json:"source"`
+	JSON             waitingRoomUpdateResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// waitingRoomUpdateResponseEnvelopeMessagesJSON contains the JSON metadata for the
+// struct [WaitingRoomUpdateResponseEnvelopeMessages]
+type waitingRoomUpdateResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomUpdateResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomUpdateResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomUpdateResponseEnvelopeMessagesSource struct {
+	Pointer string                                              `json:"pointer"`
+	JSON    waitingRoomUpdateResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// waitingRoomUpdateResponseEnvelopeMessagesSourceJSON contains the JSON metadata
+// for the struct [WaitingRoomUpdateResponseEnvelopeMessagesSource]
+type waitingRoomUpdateResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomUpdateResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomUpdateResponseEnvelopeMessagesSourceJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -1385,14 +1591,20 @@ type WaitingRoomDeleteParams struct {
 }
 
 type WaitingRoomDeleteResponseEnvelope struct {
-	Result WaitingRoomDeleteResponse             `json:"result" api:"required"`
-	JSON   waitingRoomDeleteResponseEnvelopeJSON `json:"-"`
+	Errors   []WaitingRoomDeleteResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []WaitingRoomDeleteResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   WaitingRoomDeleteResponse                   `json:"result" api:"required,nullable"`
+	Success  bool                                        `json:"success" api:"required"`
+	JSON     waitingRoomDeleteResponseEnvelopeJSON       `json:"-"`
 }
 
 // waitingRoomDeleteResponseEnvelopeJSON contains the JSON metadata for the struct
 // [WaitingRoomDeleteResponseEnvelope]
 type waitingRoomDeleteResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
 	Result      apijson.Field
+	Success     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1402,6 +1614,102 @@ func (r *WaitingRoomDeleteResponseEnvelope) UnmarshalJSON(data []byte) (err erro
 }
 
 func (r waitingRoomDeleteResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomDeleteResponseEnvelopeErrors struct {
+	Code             int64                                         `json:"code" api:"required"`
+	Message          string                                        `json:"message" api:"required"`
+	DocumentationURL string                                        `json:"documentation_url"`
+	Source           WaitingRoomDeleteResponseEnvelopeErrorsSource `json:"source"`
+	JSON             waitingRoomDeleteResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// waitingRoomDeleteResponseEnvelopeErrorsJSON contains the JSON metadata for the
+// struct [WaitingRoomDeleteResponseEnvelopeErrors]
+type waitingRoomDeleteResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomDeleteResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomDeleteResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomDeleteResponseEnvelopeErrorsSource struct {
+	Pointer string                                            `json:"pointer"`
+	JSON    waitingRoomDeleteResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// waitingRoomDeleteResponseEnvelopeErrorsSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomDeleteResponseEnvelopeErrorsSource]
+type waitingRoomDeleteResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomDeleteResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomDeleteResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomDeleteResponseEnvelopeMessages struct {
+	Code             int64                                           `json:"code" api:"required"`
+	Message          string                                          `json:"message" api:"required"`
+	DocumentationURL string                                          `json:"documentation_url"`
+	Source           WaitingRoomDeleteResponseEnvelopeMessagesSource `json:"source"`
+	JSON             waitingRoomDeleteResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// waitingRoomDeleteResponseEnvelopeMessagesJSON contains the JSON metadata for the
+// struct [WaitingRoomDeleteResponseEnvelopeMessages]
+type waitingRoomDeleteResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomDeleteResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomDeleteResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomDeleteResponseEnvelopeMessagesSource struct {
+	Pointer string                                              `json:"pointer"`
+	JSON    waitingRoomDeleteResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// waitingRoomDeleteResponseEnvelopeMessagesSourceJSON contains the JSON metadata
+// for the struct [WaitingRoomDeleteResponseEnvelopeMessagesSource]
+type waitingRoomDeleteResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomDeleteResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomDeleteResponseEnvelopeMessagesSourceJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -1416,14 +1724,20 @@ func (r WaitingRoomEditParams) MarshalJSON() (data []byte, err error) {
 }
 
 type WaitingRoomEditResponseEnvelope struct {
-	Result WaitingRoom                         `json:"result" api:"required"`
-	JSON   waitingRoomEditResponseEnvelopeJSON `json:"-"`
+	Errors   []WaitingRoomEditResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []WaitingRoomEditResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   WaitingRoom                               `json:"result" api:"required,nullable"`
+	Success  bool                                      `json:"success" api:"required"`
+	JSON     waitingRoomEditResponseEnvelopeJSON       `json:"-"`
 }
 
 // waitingRoomEditResponseEnvelopeJSON contains the JSON metadata for the struct
 // [WaitingRoomEditResponseEnvelope]
 type waitingRoomEditResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
 	Result      apijson.Field
+	Success     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1436,20 +1750,122 @@ func (r waitingRoomEditResponseEnvelopeJSON) RawJSON() string {
 	return r.raw
 }
 
+type WaitingRoomEditResponseEnvelopeErrors struct {
+	Code             int64                                       `json:"code" api:"required"`
+	Message          string                                      `json:"message" api:"required"`
+	DocumentationURL string                                      `json:"documentation_url"`
+	Source           WaitingRoomEditResponseEnvelopeErrorsSource `json:"source"`
+	JSON             waitingRoomEditResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// waitingRoomEditResponseEnvelopeErrorsJSON contains the JSON metadata for the
+// struct [WaitingRoomEditResponseEnvelopeErrors]
+type waitingRoomEditResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomEditResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomEditResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomEditResponseEnvelopeErrorsSource struct {
+	Pointer string                                          `json:"pointer"`
+	JSON    waitingRoomEditResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// waitingRoomEditResponseEnvelopeErrorsSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomEditResponseEnvelopeErrorsSource]
+type waitingRoomEditResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomEditResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomEditResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomEditResponseEnvelopeMessages struct {
+	Code             int64                                         `json:"code" api:"required"`
+	Message          string                                        `json:"message" api:"required"`
+	DocumentationURL string                                        `json:"documentation_url"`
+	Source           WaitingRoomEditResponseEnvelopeMessagesSource `json:"source"`
+	JSON             waitingRoomEditResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// waitingRoomEditResponseEnvelopeMessagesJSON contains the JSON metadata for the
+// struct [WaitingRoomEditResponseEnvelopeMessages]
+type waitingRoomEditResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomEditResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomEditResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomEditResponseEnvelopeMessagesSource struct {
+	Pointer string                                            `json:"pointer"`
+	JSON    waitingRoomEditResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// waitingRoomEditResponseEnvelopeMessagesSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomEditResponseEnvelopeMessagesSource]
+type waitingRoomEditResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomEditResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomEditResponseEnvelopeMessagesSourceJSON) RawJSON() string {
+	return r.raw
+}
+
 type WaitingRoomGetParams struct {
 	// Identifier.
 	ZoneID param.Field[string] `path:"zone_id" api:"required"`
 }
 
 type WaitingRoomGetResponseEnvelope struct {
-	Result WaitingRoom                        `json:"result" api:"required"`
-	JSON   waitingRoomGetResponseEnvelopeJSON `json:"-"`
+	Errors   []WaitingRoomGetResponseEnvelopeErrors   `json:"errors" api:"required"`
+	Messages []WaitingRoomGetResponseEnvelopeMessages `json:"messages" api:"required"`
+	Result   WaitingRoom                              `json:"result" api:"required,nullable"`
+	Success  bool                                     `json:"success" api:"required"`
+	JSON     waitingRoomGetResponseEnvelopeJSON       `json:"-"`
 }
 
 // waitingRoomGetResponseEnvelopeJSON contains the JSON metadata for the struct
 // [WaitingRoomGetResponseEnvelope]
 type waitingRoomGetResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
 	Result      apijson.Field
+	Success     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1459,5 +1875,101 @@ func (r *WaitingRoomGetResponseEnvelope) UnmarshalJSON(data []byte) (err error) 
 }
 
 func (r waitingRoomGetResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomGetResponseEnvelopeErrors struct {
+	Code             int64                                      `json:"code" api:"required"`
+	Message          string                                     `json:"message" api:"required"`
+	DocumentationURL string                                     `json:"documentation_url"`
+	Source           WaitingRoomGetResponseEnvelopeErrorsSource `json:"source"`
+	JSON             waitingRoomGetResponseEnvelopeErrorsJSON   `json:"-"`
+}
+
+// waitingRoomGetResponseEnvelopeErrorsJSON contains the JSON metadata for the
+// struct [WaitingRoomGetResponseEnvelopeErrors]
+type waitingRoomGetResponseEnvelopeErrorsJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomGetResponseEnvelopeErrors) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomGetResponseEnvelopeErrorsJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomGetResponseEnvelopeErrorsSource struct {
+	Pointer string                                         `json:"pointer"`
+	JSON    waitingRoomGetResponseEnvelopeErrorsSourceJSON `json:"-"`
+}
+
+// waitingRoomGetResponseEnvelopeErrorsSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomGetResponseEnvelopeErrorsSource]
+type waitingRoomGetResponseEnvelopeErrorsSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomGetResponseEnvelopeErrorsSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomGetResponseEnvelopeErrorsSourceJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomGetResponseEnvelopeMessages struct {
+	Code             int64                                        `json:"code" api:"required"`
+	Message          string                                       `json:"message" api:"required"`
+	DocumentationURL string                                       `json:"documentation_url"`
+	Source           WaitingRoomGetResponseEnvelopeMessagesSource `json:"source"`
+	JSON             waitingRoomGetResponseEnvelopeMessagesJSON   `json:"-"`
+}
+
+// waitingRoomGetResponseEnvelopeMessagesJSON contains the JSON metadata for the
+// struct [WaitingRoomGetResponseEnvelopeMessages]
+type waitingRoomGetResponseEnvelopeMessagesJSON struct {
+	Code             apijson.Field
+	Message          apijson.Field
+	DocumentationURL apijson.Field
+	Source           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *WaitingRoomGetResponseEnvelopeMessages) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomGetResponseEnvelopeMessagesJSON) RawJSON() string {
+	return r.raw
+}
+
+type WaitingRoomGetResponseEnvelopeMessagesSource struct {
+	Pointer string                                           `json:"pointer"`
+	JSON    waitingRoomGetResponseEnvelopeMessagesSourceJSON `json:"-"`
+}
+
+// waitingRoomGetResponseEnvelopeMessagesSourceJSON contains the JSON metadata for
+// the struct [WaitingRoomGetResponseEnvelopeMessagesSource]
+type waitingRoomGetResponseEnvelopeMessagesSourceJSON struct {
+	Pointer     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *WaitingRoomGetResponseEnvelopeMessagesSource) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r waitingRoomGetResponseEnvelopeMessagesSourceJSON) RawJSON() string {
 	return r.raw
 }

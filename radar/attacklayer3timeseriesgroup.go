@@ -275,6 +275,7 @@ type AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotation stru
 	IsInstantaneous bool                                                                       `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                     `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                  `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                   `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -289,6 +290,7 @@ type attackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationJSON 
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -344,7 +346,6 @@ func (r AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsD
 type AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -354,7 +355,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupBitrateResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -584,6 +585,7 @@ type AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotation str
 	IsInstantaneous bool                                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                    `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -598,6 +600,7 @@ type attackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationJSON
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -653,7 +656,6 @@ func (r AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotations
 type AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -663,7 +665,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupDurationResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -895,6 +897,7 @@ type AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotation str
 	IsInstantaneous bool                                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                    `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -909,6 +912,7 @@ type attackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationJSON
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -964,7 +968,6 @@ func (r AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotations
 type AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -974,7 +977,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupIndustryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1195,6 +1198,7 @@ type AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotation st
 	IsInstantaneous bool                                                                         `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                       `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                    `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                     `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1209,6 +1213,7 @@ type attackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationJSO
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1264,7 +1269,6 @@ func (r AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotation
 type AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1274,7 +1278,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1498,6 +1502,7 @@ type AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotation str
 	IsInstantaneous bool                                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                    `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1512,6 +1517,7 @@ type attackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationJSON
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1567,7 +1573,6 @@ func (r AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotations
 type AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1577,7 +1582,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1805,6 +1810,7 @@ type AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotation struc
 	IsInstantaneous bool                                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                  `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1819,6 +1825,7 @@ type attackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationJSON s
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1874,7 +1881,6 @@ func (r AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsDa
 type AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1884,7 +1890,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupVectorResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2104,6 +2110,7 @@ type AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotation str
 	IsInstantaneous bool                                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                    `json:"tags"`
 	JSON            attackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2118,6 +2125,7 @@ type attackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationJSON
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2173,7 +2181,6 @@ func (r AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotations
 type AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2183,7 +2190,7 @@ const (
 
 func (r AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer3TimeseriesGroupVerticalResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2287,18 +2294,37 @@ type AttackLayer3TimeseriesGroupBitrateParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupBitrateParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -2332,6 +2358,9 @@ func (r AttackLayer3TimeseriesGroupBitrateParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupBitrateParamsAggInterval string
 
 const (
@@ -2458,18 +2487,37 @@ type AttackLayer3TimeseriesGroupDurationParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupDurationParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -2503,6 +2551,9 @@ func (r AttackLayer3TimeseriesGroupDurationParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupDurationParamsAggInterval string
 
 const (
@@ -2629,18 +2680,37 @@ type AttackLayer3TimeseriesGroupIndustryParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupIndustryParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -2651,7 +2721,8 @@ type AttackLayer3TimeseriesGroupIndustryParams struct {
 	IPVersion param.Field[[]AttackLayer3TimeseriesGroupIndustryParamsIPVersion] `query:"ipVersion"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -2678,6 +2749,9 @@ func (r AttackLayer3TimeseriesGroupIndustryParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupIndustryParamsAggInterval string
 
 const (
@@ -2804,18 +2878,37 @@ type AttackLayer3TimeseriesGroupIPVersionParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupIPVersionParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -2847,6 +2940,9 @@ func (r AttackLayer3TimeseriesGroupIPVersionParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupIPVersionParamsAggInterval string
 
 const (
@@ -2958,18 +3054,37 @@ type AttackLayer3TimeseriesGroupProtocolParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupProtocolParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -3001,6 +3116,9 @@ func (r AttackLayer3TimeseriesGroupProtocolParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupProtocolParamsAggInterval string
 
 const (
@@ -3110,18 +3228,37 @@ type AttackLayer3TimeseriesGroupVectorParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupVectorParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -3132,7 +3269,8 @@ type AttackLayer3TimeseriesGroupVectorParams struct {
 	IPVersion param.Field[[]AttackLayer3TimeseriesGroupVectorParamsIPVersion] `query:"ipVersion"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -3159,6 +3297,9 @@ func (r AttackLayer3TimeseriesGroupVectorParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupVectorParamsAggInterval string
 
 const (
@@ -3285,18 +3426,37 @@ type AttackLayer3TimeseriesGroupVerticalParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AttackLayer3TimeseriesGroupVerticalParamsAggInterval] `query:"aggInterval"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Specifies whether the `location` filter applies to the source or target
 	// location.
@@ -3307,7 +3467,8 @@ type AttackLayer3TimeseriesGroupVerticalParams struct {
 	IPVersion param.Field[[]AttackLayer3TimeseriesGroupVerticalParamsIPVersion] `query:"ipVersion"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -3334,6 +3495,9 @@ func (r AttackLayer3TimeseriesGroupVerticalParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AttackLayer3TimeseriesGroupVerticalParamsAggInterval string
 
 const (

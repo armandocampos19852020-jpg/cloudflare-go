@@ -40,7 +40,8 @@ func TestInstanceNewWithOptionalParams(t *testing.T) {
 				ErrorRetention:   cloudflare.F[workflows.InstanceNewParamsInstanceRetentionErrorRetentionUnion](shared.UnionString("5 minutes")),
 				SuccessRetention: cloudflare.F[workflows.InstanceNewParamsInstanceRetentionSuccessRetentionUnion](shared.UnionString("5 minutes")),
 			}),
-			Params: cloudflare.F[any](map[string]interface{}{}),
+			LocationHint: cloudflare.F(workflows.InstanceNewParamsLocationHintWnam),
+			Params:       cloudflare.F("params"),
 		},
 	)
 	if err != nil {
@@ -89,7 +90,7 @@ func TestInstanceListWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestInstanceBulkWithOptionalParams(t *testing.T) {
+func TestInstanceBulk(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -114,7 +115,8 @@ func TestInstanceBulkWithOptionalParams(t *testing.T) {
 					ErrorRetention:   cloudflare.F[workflows.InstanceBulkParamsBodyInstanceRetentionErrorRetentionUnion](shared.UnionString("5 minutes")),
 					SuccessRetention: cloudflare.F[workflows.InstanceBulkParamsBodyInstanceRetentionSuccessRetentionUnion](shared.UnionString("5 minutes")),
 				}),
-				Params: cloudflare.F[any](map[string]interface{}{}),
+				LocationHint: cloudflare.F(workflows.InstanceBulkParamsBodyLocationHintWnam),
+				Params:       cloudflare.F("params"),
 			}},
 		},
 	)
@@ -149,6 +151,40 @@ func TestInstanceGetWithOptionalParams(t *testing.T) {
 			AccountID: cloudflare.F("account_id"),
 			Order:     cloudflare.F(workflows.InstanceGetParamsOrderAsc),
 			Simple:    cloudflare.F(workflows.InstanceGetParamsSimpleTrue),
+		},
+	)
+	if err != nil {
+		var apierr *cloudflare.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestInstanceStepWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := cloudflare.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
+		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
+		option.WithAPIEmail("user@example.com"),
+	)
+	_, err := client.Workflows.Instances.Step(
+		context.TODO(),
+		"x",
+		"x",
+		workflows.InstanceStepParams{
+			AccountID: cloudflare.F("account_id"),
+			Name:      cloudflare.F("x"),
+			Type:      cloudflare.F(workflows.InstanceStepParamsTypeStep),
+			Attempt:   cloudflare.F(int64(1)),
 		},
 	)
 	if err != nil {

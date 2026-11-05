@@ -38,7 +38,8 @@ func NewLogService(opts ...option.RequestOption) (r *LogService) {
 	return
 }
 
-// List Gateway Logs
+// Lists request/response log entries for the AI gateway with filtering and
+// pagination.
 func (r *LogService) List(ctx context.Context, gatewayID string, params LogListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[LogListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -64,12 +65,13 @@ func (r *LogService) List(ctx context.Context, gatewayID string, params LogListP
 	return res, nil
 }
 
-// List Gateway Logs
+// Lists request/response log entries for the AI gateway with filtering and
+// pagination.
 func (r *LogService) ListAutoPaging(ctx context.Context, gatewayID string, params LogListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[LogListResponse] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, gatewayID, params, opts...))
 }
 
-// Delete Gateway Logs
+// Deletes gateway log entries matching the specified criteria.
 func (r *LogService) Delete(ctx context.Context, gatewayID string, params LogDeleteParams, opts ...option.RequestOption) (res *LogDeleteResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -327,23 +329,24 @@ type LogRequestResponse = interface{}
 type LogResponseResponse = interface{}
 
 type LogListParams struct {
-	AccountID           param.Field[string]                        `path:"account_id" api:"required"`
-	Cached              param.Field[bool]                          `query:"cached"`
-	Direction           param.Field[LogListParamsDirection]        `query:"direction"`
-	EndDate             param.Field[time.Time]                     `query:"end_date" format:"date-time"`
-	Feedback            param.Field[LogListParamsFeedback]         `query:"feedback"`
-	Filters             param.Field[[]LogListParamsFilter]         `query:"filters"`
-	MaxCost             param.Field[float64]                       `query:"max_cost"`
-	MaxDuration         param.Field[float64]                       `query:"max_duration"`
-	MaxTokensIn         param.Field[float64]                       `query:"max_tokens_in"`
-	MaxTokensOut        param.Field[float64]                       `query:"max_tokens_out"`
-	MaxTotalTokens      param.Field[float64]                       `query:"max_total_tokens"`
-	MetaInfo            param.Field[bool]                          `query:"meta_info"`
-	MinCost             param.Field[float64]                       `query:"min_cost"`
-	MinDuration         param.Field[float64]                       `query:"min_duration"`
-	MinTokensIn         param.Field[float64]                       `query:"min_tokens_in"`
-	MinTokensOut        param.Field[float64]                       `query:"min_tokens_out"`
-	MinTotalTokens      param.Field[float64]                       `query:"min_total_tokens"`
+	AccountID      param.Field[string]                 `path:"account_id" api:"required"`
+	Cached         param.Field[bool]                   `query:"cached"`
+	Direction      param.Field[LogListParamsDirection] `query:"direction"`
+	EndDate        param.Field[time.Time]              `query:"end_date" format:"date-time"`
+	Feedback       param.Field[LogListParamsFeedback]  `query:"feedback"`
+	Filters        param.Field[[]LogListParamsFilter]  `query:"filters"`
+	MaxCost        param.Field[float64]                `query:"max_cost"`
+	MaxDuration    param.Field[float64]                `query:"max_duration"`
+	MaxTokensIn    param.Field[float64]                `query:"max_tokens_in"`
+	MaxTokensOut   param.Field[float64]                `query:"max_tokens_out"`
+	MaxTotalTokens param.Field[float64]                `query:"max_total_tokens"`
+	MetaInfo       param.Field[bool]                   `query:"meta_info"`
+	MinCost        param.Field[float64]                `query:"min_cost"`
+	MinDuration    param.Field[float64]                `query:"min_duration"`
+	MinTokensIn    param.Field[float64]                `query:"min_tokens_in"`
+	MinTokensOut   param.Field[float64]                `query:"min_tokens_out"`
+	MinTotalTokens param.Field[float64]                `query:"min_total_tokens"`
+	// Model filter.
 	Model               param.Field[string]                        `query:"model"`
 	ModelType           param.Field[string]                        `query:"model_type"`
 	OrderBy             param.Field[LogListParamsOrderBy]          `query:"order_by"`
@@ -353,9 +356,10 @@ type LogListParams struct {
 	Provider            param.Field[string]                        `query:"provider"`
 	RequestContentType  param.Field[string]                        `query:"request_content_type"`
 	ResponseContentType param.Field[string]                        `query:"response_content_type"`
-	Search              param.Field[string]                        `query:"search"`
-	StartDate           param.Field[time.Time]                     `query:"start_date" format:"date-time"`
-	Success             param.Field[bool]                          `query:"success"`
+	// Free-text search over log metadata.
+	Search    param.Field[string]    `query:"search"`
+	StartDate param.Field[time.Time] `query:"start_date" format:"date-time"`
+	Success   param.Field[bool]      `query:"success"`
 }
 
 // URLQuery serializes [LogListParams]'s query parameters as `url.Values`.
@@ -397,9 +401,10 @@ func (r LogListParamsFeedback) IsKnown() bool {
 }
 
 type LogListParamsFilter struct {
-	Key      param.Field[LogListParamsFiltersKey]          `query:"key" api:"required"`
-	Operator param.Field[LogListParamsFiltersOperator]     `query:"operator" api:"required"`
-	Value    param.Field[[]LogListParamsFiltersValueUnion] `query:"value" api:"required"`
+	Key      param.Field[LogListParamsFiltersKey]      `query:"key" api:"required"`
+	Operator param.Field[LogListParamsFiltersOperator] `query:"operator" api:"required"`
+	// Filter values.
+	Value param.Field[[]LogListParamsFiltersValueUnion] `query:"value" api:"required"`
 }
 
 // URLQuery serializes [LogListParamsFilter]'s query parameters as `url.Values`.
@@ -436,11 +441,12 @@ const (
 	LogListParamsFiltersKeyWholesale           LogListParamsFiltersKey = "wholesale"
 	LogListParamsFiltersKeyCompatibilityMode   LogListParamsFiltersKey = "compatibilityMode"
 	LogListParamsFiltersKeyDLPAction           LogListParamsFiltersKey = "dlp_action"
+	LogListParamsFiltersKeyUserAgent           LogListParamsFiltersKey = "user_agent"
 )
 
 func (r LogListParamsFiltersKey) IsKnown() bool {
 	switch r {
-	case LogListParamsFiltersKeyID, LogListParamsFiltersKeyCreatedAt, LogListParamsFiltersKeyRequestContentType, LogListParamsFiltersKeyResponseContentType, LogListParamsFiltersKeyRequestType, LogListParamsFiltersKeySuccess, LogListParamsFiltersKeyCached, LogListParamsFiltersKeyProvider, LogListParamsFiltersKeyModel, LogListParamsFiltersKeyModelType, LogListParamsFiltersKeyCost, LogListParamsFiltersKeyTokens, LogListParamsFiltersKeyTokensIn, LogListParamsFiltersKeyTokensOut, LogListParamsFiltersKeyDuration, LogListParamsFiltersKeyFeedback, LogListParamsFiltersKeyEventID, LogListParamsFiltersKeyMetadataKey, LogListParamsFiltersKeyMetadataValue, LogListParamsFiltersKeyAuthentication, LogListParamsFiltersKeyWholesale, LogListParamsFiltersKeyCompatibilityMode, LogListParamsFiltersKeyDLPAction:
+	case LogListParamsFiltersKeyID, LogListParamsFiltersKeyCreatedAt, LogListParamsFiltersKeyRequestContentType, LogListParamsFiltersKeyResponseContentType, LogListParamsFiltersKeyRequestType, LogListParamsFiltersKeySuccess, LogListParamsFiltersKeyCached, LogListParamsFiltersKeyProvider, LogListParamsFiltersKeyModel, LogListParamsFiltersKeyModelType, LogListParamsFiltersKeyCost, LogListParamsFiltersKeyTokens, LogListParamsFiltersKeyTokensIn, LogListParamsFiltersKeyTokensOut, LogListParamsFiltersKeyDuration, LogListParamsFiltersKeyFeedback, LogListParamsFiltersKeyEventID, LogListParamsFiltersKeyMetadataKey, LogListParamsFiltersKeyMetadataValue, LogListParamsFiltersKeyAuthentication, LogListParamsFiltersKeyWholesale, LogListParamsFiltersKeyCompatibilityMode, LogListParamsFiltersKeyDLPAction, LogListParamsFiltersKeyUserAgent:
 		return true
 	}
 	return false
@@ -520,9 +526,10 @@ func (r LogDeleteParams) URLQuery() (v url.Values) {
 }
 
 type LogDeleteParamsFilter struct {
-	Key      param.Field[LogDeleteParamsFiltersKey]          `query:"key" api:"required"`
-	Operator param.Field[LogDeleteParamsFiltersOperator]     `query:"operator" api:"required"`
-	Value    param.Field[[]LogDeleteParamsFiltersValueUnion] `query:"value" api:"required"`
+	Key      param.Field[LogDeleteParamsFiltersKey]      `query:"key" api:"required"`
+	Operator param.Field[LogDeleteParamsFiltersOperator] `query:"operator" api:"required"`
+	// Filter values.
+	Value param.Field[[]LogDeleteParamsFiltersValueUnion] `query:"value" api:"required"`
 }
 
 // URLQuery serializes [LogDeleteParamsFilter]'s query parameters as `url.Values`.
@@ -559,11 +566,12 @@ const (
 	LogDeleteParamsFiltersKeyWholesale           LogDeleteParamsFiltersKey = "wholesale"
 	LogDeleteParamsFiltersKeyCompatibilityMode   LogDeleteParamsFiltersKey = "compatibilityMode"
 	LogDeleteParamsFiltersKeyDLPAction           LogDeleteParamsFiltersKey = "dlp_action"
+	LogDeleteParamsFiltersKeyUserAgent           LogDeleteParamsFiltersKey = "user_agent"
 )
 
 func (r LogDeleteParamsFiltersKey) IsKnown() bool {
 	switch r {
-	case LogDeleteParamsFiltersKeyID, LogDeleteParamsFiltersKeyCreatedAt, LogDeleteParamsFiltersKeyRequestContentType, LogDeleteParamsFiltersKeyResponseContentType, LogDeleteParamsFiltersKeyRequestType, LogDeleteParamsFiltersKeySuccess, LogDeleteParamsFiltersKeyCached, LogDeleteParamsFiltersKeyProvider, LogDeleteParamsFiltersKeyModel, LogDeleteParamsFiltersKeyModelType, LogDeleteParamsFiltersKeyCost, LogDeleteParamsFiltersKeyTokens, LogDeleteParamsFiltersKeyTokensIn, LogDeleteParamsFiltersKeyTokensOut, LogDeleteParamsFiltersKeyDuration, LogDeleteParamsFiltersKeyFeedback, LogDeleteParamsFiltersKeyEventID, LogDeleteParamsFiltersKeyMetadataKey, LogDeleteParamsFiltersKeyMetadataValue, LogDeleteParamsFiltersKeyAuthentication, LogDeleteParamsFiltersKeyWholesale, LogDeleteParamsFiltersKeyCompatibilityMode, LogDeleteParamsFiltersKeyDLPAction:
+	case LogDeleteParamsFiltersKeyID, LogDeleteParamsFiltersKeyCreatedAt, LogDeleteParamsFiltersKeyRequestContentType, LogDeleteParamsFiltersKeyResponseContentType, LogDeleteParamsFiltersKeyRequestType, LogDeleteParamsFiltersKeySuccess, LogDeleteParamsFiltersKeyCached, LogDeleteParamsFiltersKeyProvider, LogDeleteParamsFiltersKeyModel, LogDeleteParamsFiltersKeyModelType, LogDeleteParamsFiltersKeyCost, LogDeleteParamsFiltersKeyTokens, LogDeleteParamsFiltersKeyTokensIn, LogDeleteParamsFiltersKeyTokensOut, LogDeleteParamsFiltersKeyDuration, LogDeleteParamsFiltersKeyFeedback, LogDeleteParamsFiltersKeyEventID, LogDeleteParamsFiltersKeyMetadataKey, LogDeleteParamsFiltersKeyMetadataValue, LogDeleteParamsFiltersKeyAuthentication, LogDeleteParamsFiltersKeyWholesale, LogDeleteParamsFiltersKeyCompatibilityMode, LogDeleteParamsFiltersKeyDLPAction, LogDeleteParamsFiltersKeyUserAgent:
 		return true
 	}
 	return false

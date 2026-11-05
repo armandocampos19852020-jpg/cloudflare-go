@@ -35,14 +35,26 @@ func TestCfInterconnectUpdateWithOptionalParams(t *testing.T) {
 		magic_transit.CfInterconnectUpdateParams{
 			AccountID:              cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			AutomaticReturnRouting: cloudflare.F(true),
-			Description:            cloudflare.F("Tunnel for Interconnect to ORD"),
+			BGP: cloudflare.F(magic_transit.CfInterconnectUpdateParamsBGP{
+				AsNo:               cloudflare.F(int64(0)),
+				CloudflareEndpoint: cloudflare.F("192.168.1.1"),
+				CustomerASN:        cloudflare.F(int64(0)),
+				CustomerEndpoint:   cloudflare.F("192.168.1.1"),
+				ExportFilterID:     cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+				ExtraPrefixes:      cloudflare.F([]string{"string"}),
+				ImportFilterID:     cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+				Md5Key:             cloudflare.F("md5_key"),
+			}),
+			Description: cloudflare.F("Tunnel for Interconnect to ORD"),
 			GRE: cloudflare.F(magic_transit.CfInterconnectUpdateParamsGRE{
 				CloudflareEndpoint: cloudflare.F("203.0.113.1"),
 			}),
-			HealthCheck: cloudflare.F(magic_transit.HealthCheckParam{
-				Enabled: cloudflare.F(true),
-				Rate:    cloudflare.F(magic_transit.HealthCheckRateLow),
-				Target: cloudflare.F[magic_transit.HealthCheckTargetUnionParam](magic_transit.HealthCheckTargetMagicHealthCheckTargetParam{
+			HealthCheck: cloudflare.F(magic_transit.CfInterconnectUpdateParamsHealthCheck{
+				Direction: cloudflare.F(magic_transit.CfInterconnectUpdateParamsHealthCheckDirectionBidirectional),
+				Enabled:   cloudflare.F(true),
+				Rate:      cloudflare.F(magic_transit.HealthCheckRateLow),
+				Source:    cloudflare.F("198.41.199.225"),
+				Target: cloudflare.F[magic_transit.CfInterconnectUpdateParamsHealthCheckTargetUnion](magic_transit.CfInterconnectUpdateParamsHealthCheckTargetMagicHealthCheckTarget{
 					Saved: cloudflare.F("203.0.113.1"),
 				}),
 				Type: cloudflare.F(magic_transit.HealthCheckTypeRequest),

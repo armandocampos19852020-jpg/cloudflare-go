@@ -31,7 +31,7 @@ import (
 // the [NewUserSchemaService] method instead.
 //
 // Deprecated: Use the
-// [github.com/cloudflare/cloudflare-go/v7/schema_validation.SchemaService] service
+// [github.com/cloudflare/cloudflare-go/v6/schema_validation.SchemaService] service
 // instead
 type UserSchemaService struct {
 	Options    []option.RequestOption
@@ -50,7 +50,8 @@ func NewUserSchemaService(opts ...option.RequestOption) (r *UserSchemaService) {
 	return
 }
 
-// Upload a schema to a zone
+// Uploads an OpenAPI schema that defines expected request formats for API
+// endpoints. Deprecated; use `/zones/{zone_id}/schema_validation/schemas` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -72,7 +73,8 @@ func (r *UserSchemaService) New(ctx context.Context, params UserSchemaNewParams,
 }
 
 // Lists all OpenAPI schemas uploaded to API Shield for the zone, including their
-// validation status and associated operations.
+// validation status and associated operations. Deprecated; use
+// `/zones/{zone_id}/schema_validation/schemas` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -99,7 +101,8 @@ func (r *UserSchemaService) List(ctx context.Context, params UserSchemaListParam
 }
 
 // Lists all OpenAPI schemas uploaded to API Shield for the zone, including their
-// validation status and associated operations.
+// validation status and associated operations. Deprecated; use
+// `/zones/{zone_id}/schema_validation/schemas` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -110,6 +113,8 @@ func (r *UserSchemaService) ListAutoPaging(ctx context.Context, params UserSchem
 
 // Permanently removes an uploaded OpenAPI schema from API Shield schema
 // validation. Operations using this schema will lose their validation rules.
+// Deprecated; use `/zones/{zone_id}/schema_validation/schemas/{schema_id}`
+// instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -130,7 +135,8 @@ func (r *UserSchemaService) Delete(ctx context.Context, schemaID string, body Us
 }
 
 // Activates schema validation for an uploaded OpenAPI schema. Requests to matching
-// endpoints will be validated against the schema definitions.
+// endpoints will be validated against the schema definitions. Deprecated; use
+// `/zones/{zone_id}/schema_validation/schemas/{schema_id}` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -156,7 +162,8 @@ func (r *UserSchemaService) Edit(ctx context.Context, schemaID string, params Us
 }
 
 // Gets detailed information about a specific uploaded OpenAPI schema, including
-// its contents and validation configuration.
+// its contents and validation configuration. Deprecated; use
+// `/zones/{zone_id}/schema_validation/schemas/{schema_id}` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)

@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go/v7/internal/apijson"
+	"github.com/cloudflare/cloudflare-go/v7/internal/apiquery"
 	"github.com/cloudflare/cloudflare-go/v7/internal/param"
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
@@ -76,16 +78,16 @@ func (r *GatewayRuleService) Update(ctx context.Context, ruleID string, params G
 }
 
 // List Zero Trust Gateway rules for an account.
-func (r *GatewayRuleService) List(ctx context.Context, query GatewayRuleListParams, opts ...option.RequestOption) (res *pagination.SinglePage[GatewayRule], err error) {
+func (r *GatewayRuleService) List(ctx context.Context, params GatewayRuleListParams, opts ...option.RequestOption) (res *pagination.SinglePage[GatewayRule], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	if query.AccountID.Value == "" {
+	if params.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("accounts/%s/gateway/rules", query.AccountID)
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
+	path := fmt.Sprintf("accounts/%s/gateway/rules", params.AccountID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +100,8 @@ func (r *GatewayRuleService) List(ctx context.Context, query GatewayRuleListPara
 }
 
 // List Zero Trust Gateway rules for an account.
-func (r *GatewayRuleService) ListAutoPaging(ctx context.Context, query GatewayRuleListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[GatewayRule] {
-	return pagination.NewSinglePageAutoPager(r.List(ctx, query, opts...))
+func (r *GatewayRuleService) ListAutoPaging(ctx context.Context, params GatewayRuleListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[GatewayRule] {
+	return pagination.NewSinglePageAutoPager(r.List(ctx, params, opts...))
 }
 
 // Delete a Zero Trust Gateway rule.
@@ -342,7 +344,7 @@ type GatewayRule struct {
 	// response.
 	Traffic string `json:"traffic" api:"required"`
 	// Identify the API resource with a UUID.
-	ID        string    `json:"id"`
+	ID        string    `json:"id" format:"uuid"`
 	CreatedAt time.Time `json:"created_at" format:"date-time"`
 	// Indicate the date of deletion, if any.
 	DeletedAt time.Time `json:"deleted_at" api:"nullable" format:"date-time"`
@@ -492,8 +494,12 @@ func (r gatewayRuleExpirationJSON) RawJSON() string {
 // API-returned values in your configuration to prevent drift.
 type RuleSetting struct {
 	// Add custom headers to allowed requests as key-value pairs. Use header names as
-	// keys that map to arrays of header values. Settable only for `http` rules with
-	// the action set to `allow`.
+	// keys that map to arrays of header values. Header values may contain
+	// `@{selector.name}` variable references that are interpolated at the edge. Use
+	// `@@{` to escape a literal `@{`. A maximum of 20 header operations (add + set +
+	// delete) is allowed per policy. Each header name may not exceed 256 bytes and
+	// each header value may not exceed 4 KB. Settable only for `http` rules with the
+	// action set to `allow`.
 	AddHeaders map[string][]string `json:"add_headers" api:"nullable"`
 	// Set to enable MSP children to bypass this rule. Only parent MSP accounts can set
 	// this. this rule. Settable for all types of rules.
@@ -519,6 +525,10 @@ type RuleSetting struct {
 	// Configure session check behavior. Settable only for `l4` and `http` rules with
 	// the action set to `allow`.
 	CheckSession RuleSettingCheckSession `json:"check_session" api:"nullable"`
+	// Remove headers from allowed requests by name. A maximum of 20 header operations
+	// (add + set + delete) is allowed per policy. Each header name may not exceed 256
+	// bytes. Settable only for `http` rules with the action set to `allow`.
+	DeleteHeaders []string `json:"delete_headers" api:"nullable"`
 	// Configure custom resolvers to route queries that match the resolver policy.
 	// Unused with 'resolve_dns_through_cloudflare' or 'resolve_dns_internally'
 	// settings. DNS queries get routed to the address closest to their origin. Only
@@ -577,6 +587,14 @@ type RuleSetting struct {
 	// is set. Only valid when a rule's action set to 'resolve'. Settable only for
 	// `dns_resolver` rules.
 	ResolveDNSThroughCloudflare bool `json:"resolve_dns_through_cloudflare" api:"nullable"`
+	// Replace existing headers on allowed requests with the specified key-value pairs.
+	// If a header does not exist, it is added. Header values may contain
+	// `@{selector.name}` variable references that are interpolated at the edge. Use
+	// `@@{` to escape a literal `@{`. A maximum of 20 header operations (add + set +
+	// delete) is allowed per policy. Each header name may not exceed 256 bytes and
+	// each header value may not exceed 4 KB. Settable only for `http` rules with the
+	// action set to `allow`.
+	SetHeaders map[string][]string `json:"set_headers" api:"nullable"`
 	// Configure behavior when an upstream certificate is invalid or an SSL error
 	// occurs. Settable only for `http` rules with the action set to `allow`.
 	UntrustedCERT RuleSettingUntrustedCERT `json:"untrusted_cert" api:"nullable"`
@@ -594,6 +612,7 @@ type ruleSettingJSON struct {
 	BlockReason                     apijson.Field
 	BypassParentRule                apijson.Field
 	CheckSession                    apijson.Field
+	DeleteHeaders                   apijson.Field
 	DNSResolvers                    apijson.Field
 	Egress                          apijson.Field
 	ForensicCopy                    apijson.Field
@@ -610,6 +629,7 @@ type ruleSettingJSON struct {
 	Redirect                        apijson.Field
 	ResolveDNSInternally            apijson.Field
 	ResolveDNSThroughCloudflare     apijson.Field
+	SetHeaders                      apijson.Field
 	UntrustedCERT                   apijson.Field
 	raw                             string
 	ExtraFields                     map[string]apijson.Field
@@ -1243,8 +1263,12 @@ func (r RuleSettingUntrustedCERTAction) IsKnown() bool {
 // API-returned values in your configuration to prevent drift.
 type RuleSettingParam struct {
 	// Add custom headers to allowed requests as key-value pairs. Use header names as
-	// keys that map to arrays of header values. Settable only for `http` rules with
-	// the action set to `allow`.
+	// keys that map to arrays of header values. Header values may contain
+	// `@{selector.name}` variable references that are interpolated at the edge. Use
+	// `@@{` to escape a literal `@{`. A maximum of 20 header operations (add + set +
+	// delete) is allowed per policy. Each header name may not exceed 256 bytes and
+	// each header value may not exceed 4 KB. Settable only for `http` rules with the
+	// action set to `allow`.
 	AddHeaders param.Field[map[string][]string] `json:"add_headers"`
 	// Set to enable MSP children to bypass this rule. Only parent MSP accounts can set
 	// this. this rule. Settable for all types of rules.
@@ -1270,6 +1294,10 @@ type RuleSettingParam struct {
 	// Configure session check behavior. Settable only for `l4` and `http` rules with
 	// the action set to `allow`.
 	CheckSession param.Field[RuleSettingCheckSessionParam] `json:"check_session"`
+	// Remove headers from allowed requests by name. A maximum of 20 header operations
+	// (add + set + delete) is allowed per policy. Each header name may not exceed 256
+	// bytes. Settable only for `http` rules with the action set to `allow`.
+	DeleteHeaders param.Field[[]string] `json:"delete_headers"`
 	// Configure custom resolvers to route queries that match the resolver policy.
 	// Unused with 'resolve_dns_through_cloudflare' or 'resolve_dns_internally'
 	// settings. DNS queries get routed to the address closest to their origin. Only
@@ -1328,6 +1356,14 @@ type RuleSettingParam struct {
 	// is set. Only valid when a rule's action set to 'resolve'. Settable only for
 	// `dns_resolver` rules.
 	ResolveDNSThroughCloudflare param.Field[bool] `json:"resolve_dns_through_cloudflare"`
+	// Replace existing headers on allowed requests with the specified key-value pairs.
+	// If a header does not exist, it is added. Header values may contain
+	// `@{selector.name}` variable references that are interpolated at the edge. Use
+	// `@@{` to escape a literal `@{`. A maximum of 20 header operations (add + set +
+	// delete) is allowed per policy. Each header name may not exceed 256 bytes and
+	// each header value may not exceed 4 KB. Settable only for `http` rules with the
+	// action set to `allow`.
+	SetHeaders param.Field[map[string][]string] `json:"set_headers"`
 	// Configure behavior when an upstream certificate is invalid or an SSL error
 	// occurs. Settable only for `http` rules with the action set to `allow`.
 	UntrustedCERT param.Field[RuleSettingUntrustedCERTParam] `json:"untrusted_cert"`
@@ -1683,6 +1719,7 @@ func (r ScheduleParam) MarshalJSON() (data []byte, err error) {
 type GatewayRuleDeleteResponse = interface{}
 
 type GatewayRuleNewParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify the action to perform when the associated traffic, identity, and device
 	// posture expressions either absent or evaluate to `true`.
@@ -1829,6 +1866,7 @@ func (r GatewayRuleNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayRuleUpdateParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify the action to perform when the associated traffic, identity, and device
 	// posture expressions either absent or evaluate to `true`.
@@ -1975,10 +2013,76 @@ func (r GatewayRuleUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayRuleListParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// Sort direction. When `order_by` is omitted, this controls the direction of the
+	// existing precedence ordering. Shared rules remain first in either direction.
+	// Accepted values are `asc` and `desc`.
+	Direction param.Field[GatewayRuleListParamsDirection] `query:"direction"`
+	// Filter the returned rules by one or more `field:value` pairs. Repeat the
+	// parameter to combine filters with logical AND.
+	//
+	// Supported fields are `name`, `id`, `action`, `enabled`, `source_account`,
+	// `is_shared`, `filters`, and `expression` (max 1024 bytes). The `source_account`
+	// value is matched as a normalized UUID substring. The `filters` value must be one
+	// of the rule filter names and matches a member of the rule's `filters` array. The
+	// `expression` filter performs a case-insensitive literal substring match across
+	// traffic, identity, and device posture expressions.
+	Filter param.Field[[]string] `query:"filter"`
+	// Field to sort the returned rules by. Supported values are `name`, `created_at`,
+	// `updated_at`, and `precedence`.
+	OrderBy param.Field[GatewayRuleListParamsOrderBy] `query:"order_by"`
+	// Case-insensitive substring search across rule name and description.
+	Search param.Field[string] `query:"search"`
+}
+
+// URLQuery serializes [GatewayRuleListParams]'s query parameters as `url.Values`.
+func (r GatewayRuleListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
+		NestedFormat: apiquery.NestedQueryFormatDots,
+	})
+}
+
+// Sort direction. When `order_by` is omitted, this controls the direction of the
+// existing precedence ordering. Shared rules remain first in either direction.
+// Accepted values are `asc` and `desc`.
+type GatewayRuleListParamsDirection string
+
+const (
+	GatewayRuleListParamsDirectionAsc  GatewayRuleListParamsDirection = "asc"
+	GatewayRuleListParamsDirectionDesc GatewayRuleListParamsDirection = "desc"
+)
+
+func (r GatewayRuleListParamsDirection) IsKnown() bool {
+	switch r {
+	case GatewayRuleListParamsDirectionAsc, GatewayRuleListParamsDirectionDesc:
+		return true
+	}
+	return false
+}
+
+// Field to sort the returned rules by. Supported values are `name`, `created_at`,
+// `updated_at`, and `precedence`.
+type GatewayRuleListParamsOrderBy string
+
+const (
+	GatewayRuleListParamsOrderByName       GatewayRuleListParamsOrderBy = "name"
+	GatewayRuleListParamsOrderByCreatedAt  GatewayRuleListParamsOrderBy = "created_at"
+	GatewayRuleListParamsOrderByUpdatedAt  GatewayRuleListParamsOrderBy = "updated_at"
+	GatewayRuleListParamsOrderByPrecedence GatewayRuleListParamsOrderBy = "precedence"
+)
+
+func (r GatewayRuleListParamsOrderBy) IsKnown() bool {
+	switch r {
+	case GatewayRuleListParamsOrderByName, GatewayRuleListParamsOrderByCreatedAt, GatewayRuleListParamsOrderByUpdatedAt, GatewayRuleListParamsOrderByPrecedence:
+		return true
+	}
+	return false
 }
 
 type GatewayRuleDeleteParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
@@ -2026,6 +2130,7 @@ func (r GatewayRuleDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayRuleGetParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
@@ -2073,10 +2178,12 @@ func (r GatewayRuleGetResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayRuleListTenantParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
 type GatewayRuleResetExpirationParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 

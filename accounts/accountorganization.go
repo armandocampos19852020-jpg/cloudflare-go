@@ -35,9 +35,12 @@ func NewAccountOrganizationService(opts ...option.RequestOption) (r *AccountOrga
 	return
 }
 
-// Move an account within an organization hierarchy or an account outside an
-// organization. (Currently in Public Beta - see
-// https://developers.cloudflare.com/fundamentals/organizations/)
+// Move an account into a destination organization, either assigning a standalone
+// account to an organization or moving it between organizations in the same
+// hierarchy. Availability depends on the organization's capabilities.
+//
+// Authentication: A Global API key is required. User API Tokens do not include the
+// required `com.cloudflare.api.account.move` permission.
 func (r *AccountOrganizationService) New(ctx context.Context, params AccountOrganizationNewParams, opts ...option.RequestOption) (res *AccountOrganizationNewResponse, err error) {
 	var env AccountOrganizationNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -80,7 +83,8 @@ func (r accountOrganizationNewResponseJSON) RawJSON() string {
 }
 
 type AccountOrganizationNewParams struct {
-	AccountID                 param.Field[string] `path:"account_id" api:"required"`
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// The ID of the organization to move the account into.
 	DestinationOrganizationID param.Field[string] `json:"destination_organization_id" api:"required"`
 }
 

@@ -57,9 +57,9 @@ func (r *GatewayConfigurationService) Update(ctx context.Context, params Gateway
 
 // Update (PATCH) a single subcollection of settings such as `antivirus`,
 // `tls_decrypt`, `activity_log`, `block_page`, `browser_isolation`, `fips`,
-// `body_scanning`, or `certificate` without updating the entire configuration
-// object. This endpoint returns an error if any settings collection lacks proper
-// configuration.
+// `body_scanning`, `certificate`, or `max_ttl_secs` without updating the entire
+// configuration object. This endpoint returns an error if any settings collection
+// lacks proper configuration.
 func (r *GatewayConfigurationService) Edit(ctx context.Context, params GatewayConfigurationEditParams, opts ...option.RequestOption) (res *GatewayConfigurationEditResponse, err error) {
 	var env GatewayConfigurationEditResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -557,6 +557,11 @@ type GatewayConfigurationSettings struct {
 	HostSelector GatewayConfigurationSettingsHostSelector `json:"host_selector" api:"nullable"`
 	// Define the proxy inspection mode.
 	Inspection GatewayConfigurationSettingsInspection `json:"inspection" api:"nullable"`
+	// Account-level cap on DNS response TTLs, in seconds. Gateway rewrites DNS
+	// responses so returned record TTLs do not exceed this value. Null means no cap.
+	// Each DNS location can inherit, override, or disable it through the location
+	// `max_ttl` setting.
+	MaxTTLSecs int64 `json:"max_ttl_secs" api:"nullable"`
 	// Specify whether to detect protocols from the initial bytes of client traffic.
 	ProtocolDetection ProtocolDetection `json:"protocol_detection" api:"nullable"`
 	// Specify whether to enable the sandbox.
@@ -580,6 +585,7 @@ type gatewayConfigurationSettingsJSON struct {
 	Fips                  apijson.Field
 	HostSelector          apijson.Field
 	Inspection            apijson.Field
+	MaxTTLSecs            apijson.Field
 	ProtocolDetection     apijson.Field
 	Sandbox               apijson.Field
 	TLSDecrypt            apijson.Field
@@ -765,6 +771,11 @@ type GatewayConfigurationSettingsParam struct {
 	HostSelector param.Field[GatewayConfigurationSettingsHostSelectorParam] `json:"host_selector"`
 	// Define the proxy inspection mode.
 	Inspection param.Field[GatewayConfigurationSettingsInspectionParam] `json:"inspection"`
+	// Account-level cap on DNS response TTLs, in seconds. Gateway rewrites DNS
+	// responses so returned record TTLs do not exceed this value. Null means no cap.
+	// Each DNS location can inherit, override, or disable it through the location
+	// `max_ttl` setting.
+	MaxTTLSecs param.Field[int64] `json:"max_ttl_secs"`
 	// Specify whether to detect protocols from the initial bytes of client traffic.
 	ProtocolDetection param.Field[ProtocolDetectionParam] `json:"protocol_detection"`
 	// Specify whether to enable the sandbox.
@@ -1023,6 +1034,7 @@ func (r gatewayConfigurationGetResponseJSON) RawJSON() string {
 }
 
 type GatewayConfigurationUpdateParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify account settings.
 	Settings param.Field[GatewayConfigurationSettingsParam] `json:"settings"`
@@ -1077,6 +1089,7 @@ func (r GatewayConfigurationUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayConfigurationEditParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify account settings.
 	Settings param.Field[GatewayConfigurationSettingsParam] `json:"settings"`
@@ -1131,6 +1144,7 @@ func (r GatewayConfigurationEditResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayConfigurationGetParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 

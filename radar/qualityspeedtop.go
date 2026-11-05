@@ -157,6 +157,7 @@ type QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            qualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -171,6 +172,7 @@ type qualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -226,7 +228,6 @@ func (r QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -236,7 +237,7 @@ const (
 
 func (r QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -314,17 +315,23 @@ func (r qualitySpeedTopAsesResponseMetaUnitJSON) RawJSON() string {
 }
 
 type QualitySpeedTopAsesResponseTop0 struct {
-	BandwidthDownload string                              `json:"bandwidthDownload" api:"required"`
-	BandwidthUpload   string                              `json:"bandwidthUpload" api:"required"`
-	ClientASN         float64                             `json:"clientASN" api:"required"`
-	ClientAsName      string                              `json:"clientASName" api:"required"`
-	JitterIdle        string                              `json:"jitterIdle" api:"required"`
-	JitterLoaded      string                              `json:"jitterLoaded" api:"required"`
-	LatencyIdle       string                              `json:"latencyIdle" api:"required"`
-	LatencyLoaded     string                              `json:"latencyLoaded" api:"required"`
-	NumTests          float64                             `json:"numTests" api:"required"`
-	RankPower         float64                             `json:"rankPower" api:"required"`
-	JSON              qualitySpeedTopAsesResponseTop0JSON `json:"-"`
+	// A numeric string.
+	BandwidthDownload string `json:"bandwidthDownload" api:"required"`
+	// A numeric string.
+	BandwidthUpload string `json:"bandwidthUpload" api:"required"`
+	ClientASN       int64  `json:"clientASN" api:"required"`
+	ClientAsName    string `json:"clientASName" api:"required"`
+	// A numeric string.
+	JitterIdle string `json:"jitterIdle" api:"required"`
+	// A numeric string.
+	JitterLoaded string `json:"jitterLoaded" api:"required"`
+	// A numeric string.
+	LatencyIdle string `json:"latencyIdle" api:"required"`
+	// A numeric string.
+	LatencyLoaded string                              `json:"latencyLoaded" api:"required"`
+	NumTests      int64                               `json:"numTests" api:"required"`
+	RankPower     float64                             `json:"rankPower" api:"required"`
+	JSON          qualitySpeedTopAsesResponseTop0JSON `json:"-"`
 }
 
 // qualitySpeedTopAsesResponseTop0JSON contains the JSON metadata for the struct
@@ -446,6 +453,7 @@ type QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                             `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                           `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                        `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                         `json:"tags"`
 	JSON            qualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -460,6 +468,7 @@ type qualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -515,7 +524,6 @@ func (r QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsDataSource)
 type QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -525,7 +533,7 @@ const (
 
 func (r QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -603,17 +611,23 @@ func (r qualitySpeedTopLocationsResponseMetaUnitJSON) RawJSON() string {
 }
 
 type QualitySpeedTopLocationsResponseTop0 struct {
-	BandwidthDownload   string                                   `json:"bandwidthDownload" api:"required"`
-	BandwidthUpload     string                                   `json:"bandwidthUpload" api:"required"`
-	ClientCountryAlpha2 string                                   `json:"clientCountryAlpha2" api:"required"`
-	ClientCountryName   string                                   `json:"clientCountryName" api:"required"`
-	JitterIdle          string                                   `json:"jitterIdle" api:"required"`
-	JitterLoaded        string                                   `json:"jitterLoaded" api:"required"`
-	LatencyIdle         string                                   `json:"latencyIdle" api:"required"`
-	LatencyLoaded       string                                   `json:"latencyLoaded" api:"required"`
-	NumTests            float64                                  `json:"numTests" api:"required"`
-	RankPower           float64                                  `json:"rankPower" api:"required"`
-	JSON                qualitySpeedTopLocationsResponseTop0JSON `json:"-"`
+	// A numeric string.
+	BandwidthDownload string `json:"bandwidthDownload" api:"required"`
+	// A numeric string.
+	BandwidthUpload     string `json:"bandwidthUpload" api:"required"`
+	ClientCountryAlpha2 string `json:"clientCountryAlpha2" api:"required"`
+	ClientCountryName   string `json:"clientCountryName" api:"required"`
+	// A numeric string.
+	JitterIdle string `json:"jitterIdle" api:"required"`
+	// A numeric string.
+	JitterLoaded string `json:"jitterLoaded" api:"required"`
+	// A numeric string.
+	LatencyIdle string `json:"latencyIdle" api:"required"`
+	// A numeric string.
+	LatencyLoaded string                                   `json:"latencyLoaded" api:"required"`
+	NumTests      int64                                    `json:"numTests" api:"required"`
+	RankPower     float64                                  `json:"rankPower" api:"required"`
+	JSON          qualitySpeedTopLocationsResponseTop0JSON `json:"-"`
 }
 
 // qualitySpeedTopLocationsResponseTop0JSON contains the JSON metadata for the
@@ -651,7 +665,11 @@ type QualitySpeedTopAsesParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualitySpeedTopAsesParamsFormat] `query:"format"`
@@ -747,7 +765,11 @@ type QualitySpeedTopLocationsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualitySpeedTopLocationsParamsFormat] `query:"format"`

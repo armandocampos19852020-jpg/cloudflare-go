@@ -160,6 +160,7 @@ type AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                              `json:"tags"`
 	JSON            attackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -174,6 +175,7 @@ type attackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationJSON struc
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -229,7 +231,6 @@ func (r AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsDataSo
 type AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -239,7 +240,7 @@ const (
 
 func (r AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer7TopLocationOriginResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -319,7 +320,7 @@ func (r attackLayer7TopLocationOriginResponseMetaUnitJSON) RawJSON() string {
 type AttackLayer7TopLocationOriginResponseTop0 struct {
 	OriginCountryAlpha2 string                                        `json:"originCountryAlpha2" api:"required"`
 	OriginCountryName   string                                        `json:"originCountryName" api:"required"`
-	Rank                float64                                       `json:"rank" api:"required"`
+	Rank                int64                                         `json:"rank" api:"required"`
 	Value               string                                        `json:"value" api:"required"`
 	JSON                attackLayer7TopLocationOriginResponseTop0JSON `json:"-"`
 }
@@ -438,6 +439,7 @@ type AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                              `json:"tags"`
 	JSON            attackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -452,6 +454,7 @@ type attackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationJSON struc
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -507,7 +510,6 @@ func (r AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsDataSo
 type AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -517,7 +519,7 @@ const (
 
 func (r AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AttackLayer7TopLocationTargetResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -595,7 +597,7 @@ func (r attackLayer7TopLocationTargetResponseMetaUnitJSON) RawJSON() string {
 }
 
 type AttackLayer7TopLocationTargetResponseTop0 struct {
-	Rank                float64                                       `json:"rank" api:"required"`
+	Rank                int64                                         `json:"rank" api:"required"`
 	TargetCountryAlpha2 string                                        `json:"targetCountryAlpha2" api:"required"`
 	TargetCountryName   string                                        `json:"targetCountryName" api:"required"`
 	Value               string                                        `json:"value" api:"required"`
@@ -631,13 +633,29 @@ type AttackLayer7TopLocationOriginParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AttackLayer7TopLocationOriginParamsFormat] `query:"format"`
@@ -818,13 +836,29 @@ type AttackLayer7TopLocationTargetParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AttackLayer7TopLocationTargetParamsFormat] `query:"format"`

@@ -60,6 +60,32 @@ func (r *ResourceService) New(ctx context.Context, shareID string, params Resour
 	return res, nil
 }
 
+// Update is not immediate, an updated share resource object with a new status will
+// be returned.
+func (r *ResourceService) Update(ctx context.Context, shareID string, shareResourceID string, params ResourceUpdateParams, opts ...option.RequestOption) (res *ResourceUpdateResponse, err error) {
+	var env ResourceUpdateResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if params.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if shareID == "" {
+		err = errors.New("missing required share_id parameter")
+		return nil, err
+	}
+	if shareResourceID == "" {
+		err = errors.New("missing required share_resource_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/shares/%s/resources/%s", params.AccountID, shareID, shareResourceID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, params, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
 // List share resources by share ID.
 func (r *ResourceService) List(ctx context.Context, shareID string, params ResourceListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[ResourceListResponse], err error) {
 	var raw *http.Response
@@ -89,6 +115,57 @@ func (r *ResourceService) List(ctx context.Context, shareID string, params Resou
 // List share resources by share ID.
 func (r *ResourceService) ListAutoPaging(ctx context.Context, shareID string, params ResourceListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[ResourceListResponse] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, shareID, params, opts...))
+}
+
+// Deletion is not immediate, an updated share resource object with a new status
+// will be returned.
+func (r *ResourceService) Delete(ctx context.Context, shareID string, shareResourceID string, body ResourceDeleteParams, opts ...option.RequestOption) (res *ResourceDeleteResponse, err error) {
+	var env ResourceDeleteResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if body.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if shareID == "" {
+		err = errors.New("missing required share_id parameter")
+		return nil, err
+	}
+	if shareResourceID == "" {
+		err = errors.New("missing required share_resource_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/shares/%s/resources/%s", body.AccountID, shareID, shareResourceID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
+// Get share resource by ID.
+func (r *ResourceService) Get(ctx context.Context, shareID string, shareResourceID string, query ResourceGetParams, opts ...option.RequestOption) (res *ResourceGetResponse, err error) {
+	var env ResourceGetResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if query.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if shareID == "" {
+		err = errors.New("missing required share_id parameter")
+		return nil, err
+	}
+	if shareResourceID == "" {
+		err = errors.New("missing required share_resource_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/shares/%s/resources/%s", query.AccountID, shareID, shareResourceID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
 }
 
 type ResourceNewResponse struct {
@@ -147,11 +224,12 @@ const (
 	ResourceNewResponseResourceTypeGatewayBlockPageSettings     ResourceNewResponseResourceType = "gateway-block-page-settings"
 	ResourceNewResponseResourceTypeGatewayExtendedEmailMatching ResourceNewResponseResourceType = "gateway-extended-email-matching"
 	ResourceNewResponseResourceTypeIdPFederationGrant           ResourceNewResponseResourceType = "idp-federation-grant"
+	ResourceNewResponseResourceTypeTrustGrant                   ResourceNewResponseResourceType = "trust-grant"
 )
 
 func (r ResourceNewResponseResourceType) IsKnown() bool {
 	switch r {
-	case ResourceNewResponseResourceTypeCustomRuleset, ResourceNewResponseResourceTypeGatewayPolicy, ResourceNewResponseResourceTypeGatewayDestinationIP, ResourceNewResponseResourceTypeGatewayBlockPageSettings, ResourceNewResponseResourceTypeGatewayExtendedEmailMatching, ResourceNewResponseResourceTypeIdPFederationGrant:
+	case ResourceNewResponseResourceTypeCustomRuleset, ResourceNewResponseResourceTypeGatewayPolicy, ResourceNewResponseResourceTypeGatewayDestinationIP, ResourceNewResponseResourceTypeGatewayBlockPageSettings, ResourceNewResponseResourceTypeGatewayExtendedEmailMatching, ResourceNewResponseResourceTypeIdPFederationGrant, ResourceNewResponseResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -169,6 +247,90 @@ const (
 func (r ResourceNewResponseStatus) IsKnown() bool {
 	switch r {
 	case ResourceNewResponseStatusActive, ResourceNewResponseStatusDeleting, ResourceNewResponseStatusDeleted:
+		return true
+	}
+	return false
+}
+
+type ResourceUpdateResponse struct {
+	// Share Resource identifier.
+	ID string `json:"id" api:"required"`
+	// When the share was created.
+	Created time.Time `json:"created" api:"required" format:"date-time"`
+	// Resource Metadata.
+	Meta interface{} `json:"meta" api:"required"`
+	// When the share was modified.
+	Modified time.Time `json:"modified" api:"required" format:"date-time"`
+	// Account identifier.
+	ResourceAccountID string `json:"resource_account_id" api:"required"`
+	// Share Resource identifier.
+	ResourceID string `json:"resource_id" api:"required"`
+	// Resource Type.
+	ResourceType ResourceUpdateResponseResourceType `json:"resource_type" api:"required"`
+	// Resource Version.
+	ResourceVersion int64 `json:"resource_version" api:"required"`
+	// Resource Status.
+	Status ResourceUpdateResponseStatus `json:"status" api:"required"`
+	JSON   resourceUpdateResponseJSON   `json:"-"`
+}
+
+// resourceUpdateResponseJSON contains the JSON metadata for the struct
+// [ResourceUpdateResponse]
+type resourceUpdateResponseJSON struct {
+	ID                apijson.Field
+	Created           apijson.Field
+	Meta              apijson.Field
+	Modified          apijson.Field
+	ResourceAccountID apijson.Field
+	ResourceID        apijson.Field
+	ResourceType      apijson.Field
+	ResourceVersion   apijson.Field
+	Status            apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *ResourceUpdateResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceUpdateResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Resource Type.
+type ResourceUpdateResponseResourceType string
+
+const (
+	ResourceUpdateResponseResourceTypeCustomRuleset                ResourceUpdateResponseResourceType = "custom-ruleset"
+	ResourceUpdateResponseResourceTypeGatewayPolicy                ResourceUpdateResponseResourceType = "gateway-policy"
+	ResourceUpdateResponseResourceTypeGatewayDestinationIP         ResourceUpdateResponseResourceType = "gateway-destination-ip"
+	ResourceUpdateResponseResourceTypeGatewayBlockPageSettings     ResourceUpdateResponseResourceType = "gateway-block-page-settings"
+	ResourceUpdateResponseResourceTypeGatewayExtendedEmailMatching ResourceUpdateResponseResourceType = "gateway-extended-email-matching"
+	ResourceUpdateResponseResourceTypeIdPFederationGrant           ResourceUpdateResponseResourceType = "idp-federation-grant"
+	ResourceUpdateResponseResourceTypeTrustGrant                   ResourceUpdateResponseResourceType = "trust-grant"
+)
+
+func (r ResourceUpdateResponseResourceType) IsKnown() bool {
+	switch r {
+	case ResourceUpdateResponseResourceTypeCustomRuleset, ResourceUpdateResponseResourceTypeGatewayPolicy, ResourceUpdateResponseResourceTypeGatewayDestinationIP, ResourceUpdateResponseResourceTypeGatewayBlockPageSettings, ResourceUpdateResponseResourceTypeGatewayExtendedEmailMatching, ResourceUpdateResponseResourceTypeIdPFederationGrant, ResourceUpdateResponseResourceTypeTrustGrant:
+		return true
+	}
+	return false
+}
+
+// Resource Status.
+type ResourceUpdateResponseStatus string
+
+const (
+	ResourceUpdateResponseStatusActive   ResourceUpdateResponseStatus = "active"
+	ResourceUpdateResponseStatusDeleting ResourceUpdateResponseStatus = "deleting"
+	ResourceUpdateResponseStatusDeleted  ResourceUpdateResponseStatus = "deleted"
+)
+
+func (r ResourceUpdateResponseStatus) IsKnown() bool {
+	switch r {
+	case ResourceUpdateResponseStatusActive, ResourceUpdateResponseStatusDeleting, ResourceUpdateResponseStatusDeleted:
 		return true
 	}
 	return false
@@ -230,11 +392,12 @@ const (
 	ResourceListResponseResourceTypeGatewayBlockPageSettings     ResourceListResponseResourceType = "gateway-block-page-settings"
 	ResourceListResponseResourceTypeGatewayExtendedEmailMatching ResourceListResponseResourceType = "gateway-extended-email-matching"
 	ResourceListResponseResourceTypeIdPFederationGrant           ResourceListResponseResourceType = "idp-federation-grant"
+	ResourceListResponseResourceTypeTrustGrant                   ResourceListResponseResourceType = "trust-grant"
 )
 
 func (r ResourceListResponseResourceType) IsKnown() bool {
 	switch r {
-	case ResourceListResponseResourceTypeCustomRuleset, ResourceListResponseResourceTypeGatewayPolicy, ResourceListResponseResourceTypeGatewayDestinationIP, ResourceListResponseResourceTypeGatewayBlockPageSettings, ResourceListResponseResourceTypeGatewayExtendedEmailMatching, ResourceListResponseResourceTypeIdPFederationGrant:
+	case ResourceListResponseResourceTypeCustomRuleset, ResourceListResponseResourceTypeGatewayPolicy, ResourceListResponseResourceTypeGatewayDestinationIP, ResourceListResponseResourceTypeGatewayBlockPageSettings, ResourceListResponseResourceTypeGatewayExtendedEmailMatching, ResourceListResponseResourceTypeIdPFederationGrant, ResourceListResponseResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -252,6 +415,174 @@ const (
 func (r ResourceListResponseStatus) IsKnown() bool {
 	switch r {
 	case ResourceListResponseStatusActive, ResourceListResponseStatusDeleting, ResourceListResponseStatusDeleted:
+		return true
+	}
+	return false
+}
+
+type ResourceDeleteResponse struct {
+	// Share Resource identifier.
+	ID string `json:"id" api:"required"`
+	// When the share was created.
+	Created time.Time `json:"created" api:"required" format:"date-time"`
+	// Resource Metadata.
+	Meta interface{} `json:"meta" api:"required"`
+	// When the share was modified.
+	Modified time.Time `json:"modified" api:"required" format:"date-time"`
+	// Account identifier.
+	ResourceAccountID string `json:"resource_account_id" api:"required"`
+	// Share Resource identifier.
+	ResourceID string `json:"resource_id" api:"required"`
+	// Resource Type.
+	ResourceType ResourceDeleteResponseResourceType `json:"resource_type" api:"required"`
+	// Resource Version.
+	ResourceVersion int64 `json:"resource_version" api:"required"`
+	// Resource Status.
+	Status ResourceDeleteResponseStatus `json:"status" api:"required"`
+	JSON   resourceDeleteResponseJSON   `json:"-"`
+}
+
+// resourceDeleteResponseJSON contains the JSON metadata for the struct
+// [ResourceDeleteResponse]
+type resourceDeleteResponseJSON struct {
+	ID                apijson.Field
+	Created           apijson.Field
+	Meta              apijson.Field
+	Modified          apijson.Field
+	ResourceAccountID apijson.Field
+	ResourceID        apijson.Field
+	ResourceType      apijson.Field
+	ResourceVersion   apijson.Field
+	Status            apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *ResourceDeleteResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceDeleteResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Resource Type.
+type ResourceDeleteResponseResourceType string
+
+const (
+	ResourceDeleteResponseResourceTypeCustomRuleset                ResourceDeleteResponseResourceType = "custom-ruleset"
+	ResourceDeleteResponseResourceTypeGatewayPolicy                ResourceDeleteResponseResourceType = "gateway-policy"
+	ResourceDeleteResponseResourceTypeGatewayDestinationIP         ResourceDeleteResponseResourceType = "gateway-destination-ip"
+	ResourceDeleteResponseResourceTypeGatewayBlockPageSettings     ResourceDeleteResponseResourceType = "gateway-block-page-settings"
+	ResourceDeleteResponseResourceTypeGatewayExtendedEmailMatching ResourceDeleteResponseResourceType = "gateway-extended-email-matching"
+	ResourceDeleteResponseResourceTypeIdPFederationGrant           ResourceDeleteResponseResourceType = "idp-federation-grant"
+	ResourceDeleteResponseResourceTypeTrustGrant                   ResourceDeleteResponseResourceType = "trust-grant"
+)
+
+func (r ResourceDeleteResponseResourceType) IsKnown() bool {
+	switch r {
+	case ResourceDeleteResponseResourceTypeCustomRuleset, ResourceDeleteResponseResourceTypeGatewayPolicy, ResourceDeleteResponseResourceTypeGatewayDestinationIP, ResourceDeleteResponseResourceTypeGatewayBlockPageSettings, ResourceDeleteResponseResourceTypeGatewayExtendedEmailMatching, ResourceDeleteResponseResourceTypeIdPFederationGrant, ResourceDeleteResponseResourceTypeTrustGrant:
+		return true
+	}
+	return false
+}
+
+// Resource Status.
+type ResourceDeleteResponseStatus string
+
+const (
+	ResourceDeleteResponseStatusActive   ResourceDeleteResponseStatus = "active"
+	ResourceDeleteResponseStatusDeleting ResourceDeleteResponseStatus = "deleting"
+	ResourceDeleteResponseStatusDeleted  ResourceDeleteResponseStatus = "deleted"
+)
+
+func (r ResourceDeleteResponseStatus) IsKnown() bool {
+	switch r {
+	case ResourceDeleteResponseStatusActive, ResourceDeleteResponseStatusDeleting, ResourceDeleteResponseStatusDeleted:
+		return true
+	}
+	return false
+}
+
+type ResourceGetResponse struct {
+	// Share Resource identifier.
+	ID string `json:"id" api:"required"`
+	// When the share was created.
+	Created time.Time `json:"created" api:"required" format:"date-time"`
+	// Resource Metadata.
+	Meta interface{} `json:"meta" api:"required"`
+	// When the share was modified.
+	Modified time.Time `json:"modified" api:"required" format:"date-time"`
+	// Account identifier.
+	ResourceAccountID string `json:"resource_account_id" api:"required"`
+	// Share Resource identifier.
+	ResourceID string `json:"resource_id" api:"required"`
+	// Resource Type.
+	ResourceType ResourceGetResponseResourceType `json:"resource_type" api:"required"`
+	// Resource Version.
+	ResourceVersion int64 `json:"resource_version" api:"required"`
+	// Resource Status.
+	Status ResourceGetResponseStatus `json:"status" api:"required"`
+	JSON   resourceGetResponseJSON   `json:"-"`
+}
+
+// resourceGetResponseJSON contains the JSON metadata for the struct
+// [ResourceGetResponse]
+type resourceGetResponseJSON struct {
+	ID                apijson.Field
+	Created           apijson.Field
+	Meta              apijson.Field
+	Modified          apijson.Field
+	ResourceAccountID apijson.Field
+	ResourceID        apijson.Field
+	ResourceType      apijson.Field
+	ResourceVersion   apijson.Field
+	Status            apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *ResourceGetResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceGetResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Resource Type.
+type ResourceGetResponseResourceType string
+
+const (
+	ResourceGetResponseResourceTypeCustomRuleset                ResourceGetResponseResourceType = "custom-ruleset"
+	ResourceGetResponseResourceTypeGatewayPolicy                ResourceGetResponseResourceType = "gateway-policy"
+	ResourceGetResponseResourceTypeGatewayDestinationIP         ResourceGetResponseResourceType = "gateway-destination-ip"
+	ResourceGetResponseResourceTypeGatewayBlockPageSettings     ResourceGetResponseResourceType = "gateway-block-page-settings"
+	ResourceGetResponseResourceTypeGatewayExtendedEmailMatching ResourceGetResponseResourceType = "gateway-extended-email-matching"
+	ResourceGetResponseResourceTypeIdPFederationGrant           ResourceGetResponseResourceType = "idp-federation-grant"
+	ResourceGetResponseResourceTypeTrustGrant                   ResourceGetResponseResourceType = "trust-grant"
+)
+
+func (r ResourceGetResponseResourceType) IsKnown() bool {
+	switch r {
+	case ResourceGetResponseResourceTypeCustomRuleset, ResourceGetResponseResourceTypeGatewayPolicy, ResourceGetResponseResourceTypeGatewayDestinationIP, ResourceGetResponseResourceTypeGatewayBlockPageSettings, ResourceGetResponseResourceTypeGatewayExtendedEmailMatching, ResourceGetResponseResourceTypeIdPFederationGrant, ResourceGetResponseResourceTypeTrustGrant:
+		return true
+	}
+	return false
+}
+
+// Resource Status.
+type ResourceGetResponseStatus string
+
+const (
+	ResourceGetResponseStatusActive   ResourceGetResponseStatus = "active"
+	ResourceGetResponseStatusDeleting ResourceGetResponseStatus = "deleting"
+	ResourceGetResponseStatusDeleted  ResourceGetResponseStatus = "deleted"
+)
+
+func (r ResourceGetResponseStatus) IsKnown() bool {
+	switch r {
+	case ResourceGetResponseStatusActive, ResourceGetResponseStatusDeleting, ResourceGetResponseStatusDeleted:
 		return true
 	}
 	return false
@@ -284,11 +615,12 @@ const (
 	ResourceNewParamsResourceTypeGatewayBlockPageSettings     ResourceNewParamsResourceType = "gateway-block-page-settings"
 	ResourceNewParamsResourceTypeGatewayExtendedEmailMatching ResourceNewParamsResourceType = "gateway-extended-email-matching"
 	ResourceNewParamsResourceTypeIdPFederationGrant           ResourceNewParamsResourceType = "idp-federation-grant"
+	ResourceNewParamsResourceTypeTrustGrant                   ResourceNewParamsResourceType = "trust-grant"
 )
 
 func (r ResourceNewParamsResourceType) IsKnown() bool {
 	switch r {
-	case ResourceNewParamsResourceTypeCustomRuleset, ResourceNewParamsResourceTypeGatewayPolicy, ResourceNewParamsResourceTypeGatewayDestinationIP, ResourceNewParamsResourceTypeGatewayBlockPageSettings, ResourceNewParamsResourceTypeGatewayExtendedEmailMatching, ResourceNewParamsResourceTypeIdPFederationGrant:
+	case ResourceNewParamsResourceTypeCustomRuleset, ResourceNewParamsResourceTypeGatewayPolicy, ResourceNewParamsResourceTypeGatewayDestinationIP, ResourceNewParamsResourceTypeGatewayBlockPageSettings, ResourceNewParamsResourceTypeGatewayExtendedEmailMatching, ResourceNewParamsResourceTypeIdPFederationGrant, ResourceNewParamsResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -317,6 +649,43 @@ func (r *ResourceNewResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r resourceNewResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type ResourceUpdateParams struct {
+	// Account identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// Resource Metadata.
+	Meta param.Field[interface{}] `json:"meta" api:"required"`
+}
+
+func (r ResourceUpdateParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type ResourceUpdateResponseEnvelope struct {
+	Errors []shared.ResponseInfo `json:"errors" api:"required"`
+	// Whether the API call was successful.
+	Success bool                               `json:"success" api:"required"`
+	Result  ResourceUpdateResponse             `json:"result"`
+	JSON    resourceUpdateResponseEnvelopeJSON `json:"-"`
+}
+
+// resourceUpdateResponseEnvelopeJSON contains the JSON metadata for the struct
+// [ResourceUpdateResponseEnvelope]
+type resourceUpdateResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Success     apijson.Field
+	Result      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ResourceUpdateResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceUpdateResponseEnvelopeJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -354,11 +723,12 @@ const (
 	ResourceListParamsResourceTypeGatewayBlockPageSettings     ResourceListParamsResourceType = "gateway-block-page-settings"
 	ResourceListParamsResourceTypeGatewayExtendedEmailMatching ResourceListParamsResourceType = "gateway-extended-email-matching"
 	ResourceListParamsResourceTypeIdPFederationGrant           ResourceListParamsResourceType = "idp-federation-grant"
+	ResourceListParamsResourceTypeTrustGrant                   ResourceListParamsResourceType = "trust-grant"
 )
 
 func (r ResourceListParamsResourceType) IsKnown() bool {
 	switch r {
-	case ResourceListParamsResourceTypeCustomRuleset, ResourceListParamsResourceTypeGatewayPolicy, ResourceListParamsResourceTypeGatewayDestinationIP, ResourceListParamsResourceTypeGatewayBlockPageSettings, ResourceListParamsResourceTypeGatewayExtendedEmailMatching, ResourceListParamsResourceTypeIdPFederationGrant:
+	case ResourceListParamsResourceTypeCustomRuleset, ResourceListParamsResourceTypeGatewayPolicy, ResourceListParamsResourceTypeGatewayDestinationIP, ResourceListParamsResourceTypeGatewayBlockPageSettings, ResourceListParamsResourceTypeGatewayExtendedEmailMatching, ResourceListParamsResourceTypeIdPFederationGrant, ResourceListParamsResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -379,4 +749,66 @@ func (r ResourceListParamsStatus) IsKnown() bool {
 		return true
 	}
 	return false
+}
+
+type ResourceDeleteParams struct {
+	// Account identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+}
+
+type ResourceDeleteResponseEnvelope struct {
+	Errors []shared.ResponseInfo `json:"errors" api:"required"`
+	// Whether the API call was successful.
+	Success bool                               `json:"success" api:"required"`
+	Result  ResourceDeleteResponse             `json:"result"`
+	JSON    resourceDeleteResponseEnvelopeJSON `json:"-"`
+}
+
+// resourceDeleteResponseEnvelopeJSON contains the JSON metadata for the struct
+// [ResourceDeleteResponseEnvelope]
+type resourceDeleteResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Success     apijson.Field
+	Result      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ResourceDeleteResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceDeleteResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+type ResourceGetParams struct {
+	// Account identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+}
+
+type ResourceGetResponseEnvelope struct {
+	Errors []shared.ResponseInfo `json:"errors" api:"required"`
+	// Whether the API call was successful.
+	Success bool                            `json:"success" api:"required"`
+	Result  ResourceGetResponse             `json:"result"`
+	JSON    resourceGetResponseEnvelopeJSON `json:"-"`
+}
+
+// resourceGetResponseEnvelopeJSON contains the JSON metadata for the struct
+// [ResourceGetResponseEnvelope]
+type resourceGetResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Success     apijson.Field
+	Result      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ResourceGetResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r resourceGetResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
 }

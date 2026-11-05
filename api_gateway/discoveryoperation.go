@@ -37,7 +37,7 @@ func NewDiscoveryOperationService(opts ...option.RequestOption) (r *DiscoveryOpe
 	return
 }
 
-// Retrieve the most up to date view of discovered operations
+// Returns the latest web and API operations discovered from zone traffic.
 func (r *DiscoveryOperationService) List(ctx context.Context, params DiscoveryOperationListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[DiscoveryOperation], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -59,12 +59,12 @@ func (r *DiscoveryOperationService) List(ctx context.Context, params DiscoveryOp
 	return res, nil
 }
 
-// Retrieve the most up to date view of discovered operations
+// Returns the latest web and API operations discovered from zone traffic.
 func (r *DiscoveryOperationService) ListAutoPaging(ctx context.Context, params DiscoveryOperationListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[DiscoveryOperation] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, params, opts...))
 }
 
-// Update the `state` on one or more discovered operations
+// Updates the state of one or more discovered web and API operations.
 func (r *DiscoveryOperationService) BulkEdit(ctx context.Context, params DiscoveryOperationBulkEditParams, opts ...option.RequestOption) (res *DiscoveryOperationBulkEditResponse, err error) {
 	var env DiscoveryOperationBulkEditResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -73,6 +73,27 @@ func (r *DiscoveryOperationService) BulkEdit(ctx context.Context, params Discove
 		return nil, err
 	}
 	path := fmt.Sprintf("zones/%s/api_gateway/discovery/operations", params.ZoneID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	res = &env.Result
+	return res, nil
+}
+
+// Updates the state of a discovered web or API operation.
+func (r *DiscoveryOperationService) Edit(ctx context.Context, discoveryID string, params DiscoveryOperationEditParams, opts ...option.RequestOption) (res *DiscoveryOperationEditResponse, err error) {
+	var env DiscoveryOperationEditResponseEnvelope
+	opts = slices.Concat(r.Options, opts)
+	if params.ZoneID.Value == "" {
+		err = errors.New("missing required zone_id parameter")
+		return nil, err
+	}
+	if discoveryID == "" {
+		err = errors.New("missing required discovery_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("zones/%s/api_gateway/discovery/operations/%s", params.ZoneID, discoveryID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &env, opts...)
 	if err != nil {
 		return nil, err
@@ -123,6 +144,53 @@ const (
 func (r DiscoveryOperationBulkEditResponseItemState) IsKnown() bool {
 	switch r {
 	case DiscoveryOperationBulkEditResponseItemStateReview, DiscoveryOperationBulkEditResponseItemStateIgnored:
+		return true
+	}
+	return false
+}
+
+type DiscoveryOperationEditResponse struct {
+	// State of operation in API Discovery
+	//
+	// - `review` - Operation is not saved into API Shield Endpoint Management
+	// - `saved` - Operation is saved into API Shield Endpoint Management
+	// - `ignored` - Operation is marked as ignored
+	State DiscoveryOperationEditResponseState `json:"state"`
+	JSON  discoveryOperationEditResponseJSON  `json:"-"`
+}
+
+// discoveryOperationEditResponseJSON contains the JSON metadata for the struct
+// [DiscoveryOperationEditResponse]
+type discoveryOperationEditResponseJSON struct {
+	State       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *DiscoveryOperationEditResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r discoveryOperationEditResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// State of operation in API Discovery
+//
+// - `review` - Operation is not saved into API Shield Endpoint Management
+// - `saved` - Operation is saved into API Shield Endpoint Management
+// - `ignored` - Operation is marked as ignored
+type DiscoveryOperationEditResponseState string
+
+const (
+	DiscoveryOperationEditResponseStateReview  DiscoveryOperationEditResponseState = "review"
+	DiscoveryOperationEditResponseStateSaved   DiscoveryOperationEditResponseState = "saved"
+	DiscoveryOperationEditResponseStateIgnored DiscoveryOperationEditResponseState = "ignored"
+)
+
+func (r DiscoveryOperationEditResponseState) IsKnown() bool {
+	switch r {
+	case DiscoveryOperationEditResponseStateReview, DiscoveryOperationEditResponseStateSaved, DiscoveryOperationEditResponseStateIgnored:
 		return true
 	}
 	return false
@@ -336,6 +404,82 @@ const (
 func (r DiscoveryOperationBulkEditResponseEnvelopeSuccess) IsKnown() bool {
 	switch r {
 	case DiscoveryOperationBulkEditResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
+}
+
+type DiscoveryOperationEditParams struct {
+	// Identifier.
+	ZoneID param.Field[string] `path:"zone_id" api:"required"`
+	// Mark state of operation in API Discovery
+	//
+	// - `review` - Mark operation as for review
+	// - `ignored` - Mark operation as ignored
+	State param.Field[DiscoveryOperationEditParamsState] `json:"state"`
+}
+
+func (r DiscoveryOperationEditParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// Mark state of operation in API Discovery
+//
+// - `review` - Mark operation as for review
+// - `ignored` - Mark operation as ignored
+type DiscoveryOperationEditParamsState string
+
+const (
+	DiscoveryOperationEditParamsStateReview  DiscoveryOperationEditParamsState = "review"
+	DiscoveryOperationEditParamsStateIgnored DiscoveryOperationEditParamsState = "ignored"
+)
+
+func (r DiscoveryOperationEditParamsState) IsKnown() bool {
+	switch r {
+	case DiscoveryOperationEditParamsStateReview, DiscoveryOperationEditParamsStateIgnored:
+		return true
+	}
+	return false
+}
+
+type DiscoveryOperationEditResponseEnvelope struct {
+	Errors   Message                        `json:"errors" api:"required"`
+	Messages Message                        `json:"messages" api:"required"`
+	Result   DiscoveryOperationEditResponse `json:"result" api:"required"`
+	// Whether the API call was successful.
+	Success DiscoveryOperationEditResponseEnvelopeSuccess `json:"success" api:"required"`
+	JSON    discoveryOperationEditResponseEnvelopeJSON    `json:"-"`
+}
+
+// discoveryOperationEditResponseEnvelopeJSON contains the JSON metadata for the
+// struct [DiscoveryOperationEditResponseEnvelope]
+type discoveryOperationEditResponseEnvelopeJSON struct {
+	Errors      apijson.Field
+	Messages    apijson.Field
+	Result      apijson.Field
+	Success     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *DiscoveryOperationEditResponseEnvelope) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r discoveryOperationEditResponseEnvelopeJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the API call was successful.
+type DiscoveryOperationEditResponseEnvelopeSuccess bool
+
+const (
+	DiscoveryOperationEditResponseEnvelopeSuccessTrue DiscoveryOperationEditResponseEnvelopeSuccess = true
+)
+
+func (r DiscoveryOperationEditResponseEnvelopeSuccess) IsKnown() bool {
+	switch r {
+	case DiscoveryOperationEditResponseEnvelopeSuccessTrue:
 		return true
 	}
 	return false

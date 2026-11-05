@@ -58,6 +58,8 @@ type ContentNewParams struct {
 	// Account ID.
 	AccountID param.Field[string]       `path:"account_id" api:"required"`
 	Body      ContentNewParamsBodyUnion `json:"body" api:"required"`
+	// Rendering backend. Set to `kitesurf` to use Kitesurf (beta).
+	Browser param.Field[ContentNewParamsBrowser] `query:"browser"`
 	// Cache TTL default is 5s. Set to 0 to disable.
 	CacheTTL param.Field[float64] `query:"cacheTTL"`
 }
@@ -85,22 +87,19 @@ type ContentNewParamsBody struct {
 	AllowResourceTypes  param.Field[interface{}] `json:"allowResourceTypes"`
 	Authenticate        param.Field[interface{}] `json:"authenticate"`
 	// Attempt to proceed when 'awaited' events fail or timeout.
-	BestAttempt      param.Field[bool]        `json:"bestAttempt"`
-	Cookies          param.Field[interface{}] `json:"cookies"`
-	EmulateMediaType param.Field[string]      `json:"emulateMediaType"`
-	GotoOptions      param.Field[interface{}] `json:"gotoOptions"`
-	// Set the content of the page, eg: `<h1>Hello World!!</h1>`. Either `html` or
-	// `url` must be set.
+	BestAttempt          param.Field[bool]        `json:"bestAttempt"`
+	Cookies              param.Field[interface{}] `json:"cookies"`
+	EmulateMediaType     param.Field[string]      `json:"emulateMediaType"`
+	GotoOptions          param.Field[interface{}] `json:"gotoOptions"`
 	HTML                 param.Field[string]      `json:"html"`
 	RejectRequestPattern param.Field[interface{}] `json:"rejectRequestPattern"`
 	RejectResourceTypes  param.Field[interface{}] `json:"rejectResourceTypes"`
 	SetExtraHTTPHeaders  param.Field[interface{}] `json:"setExtraHTTPHeaders"`
 	SetJavaScriptEnabled param.Field[bool]        `json:"setJavaScriptEnabled"`
-	// URL to navigate to, eg. `https://example.com`.
-	URL             param.Field[string]      `json:"url" format:"uri"`
-	UserAgent       param.Field[string]      `json:"userAgent"`
-	Viewport        param.Field[interface{}] `json:"viewport"`
-	WaitForSelector param.Field[interface{}] `json:"waitForSelector"`
+	URL                  param.Field[string]      `json:"url"`
+	UserAgent            param.Field[string]      `json:"userAgent"`
+	Viewport             param.Field[interface{}] `json:"viewport"`
+	WaitForSelector      param.Field[interface{}] `json:"waitForSelector"`
 	// Waits for a specified timeout before continuing.
 	WaitForTimeout param.Field[float64] `json:"waitForTimeout"`
 }
@@ -118,21 +117,21 @@ type ContentNewParamsBodyUnion interface {
 }
 
 type ContentNewParamsBodyObject struct {
-	// URL to navigate to, eg. `https://example.com`.
-	URL param.Field[string] `json:"url" api:"required" format:"uri"`
+	URL param.Field[string] `json:"url" api:"required"`
 	// The maximum duration allowed for the browser action to complete after the page
 	// has loaded (such as taking screenshots, extracting content, or generating PDFs).
 	// If this time limit is exceeded, the action stops and returns a timeout error.
 	ActionTimeout param.Field[float64] `json:"actionTimeout"`
-	// Adds a `<script>` tag into the page with the desired URL or content.
+	// Adds a script element into the page with the desired URL or content.
 	AddScriptTag param.Field[[]ContentNewParamsBodyObjectAddScriptTag] `json:"addScriptTag"`
 	// Adds a `<link rel="stylesheet">` tag into the page with the desired URL or a
 	// `<style type="text/css">` tag with the content.
 	AddStyleTag param.Field[[]ContentNewParamsBodyObjectAddStyleTag] `json:"addStyleTag"`
 	// Only allow requests that match the provided regex patterns, eg. '/^.\*\.(css)'.
+	// Reject rules are applied first.
 	AllowRequestPattern param.Field[[]string] `json:"allowRequestPattern"`
 	// Only allow requests that match the provided resource types, eg. 'image' or
-	// 'script'.
+	// 'script'. Reject rules are applied first.
 	AllowResourceTypes param.Field[[]ContentNewParamsBodyObjectAllowResourceType] `json:"allowResourceTypes"`
 	// Provide credentials for HTTP authentication.
 	Authenticate param.Field[ContentNewParamsBodyObjectAuthenticate] `json:"authenticate"`
@@ -143,6 +142,7 @@ type ContentNewParamsBodyObject struct {
 	EmulateMediaType param.Field[string]                             `json:"emulateMediaType"`
 	// Check [options](https://pptr.dev/api/puppeteer.gotooptions).
 	GotoOptions param.Field[ContentNewParamsBodyObjectGotoOptions] `json:"gotoOptions"`
+	HTML        param.Field[string]                                `json:"html"`
 	// Block undesired requests that match the provided regex patterns, eg.
 	// '/^.\*\.(css)'.
 	RejectRequestPattern param.Field[[]string] `json:"rejectRequestPattern"`
@@ -171,7 +171,7 @@ type ContentNewParamsBodyObjectAddScriptTag struct {
 	ID      param.Field[string] `json:"id"`
 	Content param.Field[string] `json:"content"`
 	Type    param.Field[string] `json:"type"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r ContentNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err error) {
@@ -180,7 +180,7 @@ func (r ContentNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err 
 
 type ContentNewParamsBodyObjectAddStyleTag struct {
 	Content param.Field[string] `json:"content"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r ContentNewParamsBodyObjectAddStyleTag) MarshalJSON() (data []byte, err error) {
@@ -445,6 +445,21 @@ func (r ContentNewParamsBodyObjectWaitForSelectorVisible) IsKnown() bool {
 	return false
 }
 
+// Rendering backend. Set to `kitesurf` to use Kitesurf (beta).
+type ContentNewParamsBrowser string
+
+const (
+	ContentNewParamsBrowserKitesurf ContentNewParamsBrowser = "kitesurf"
+)
+
+func (r ContentNewParamsBrowser) IsKnown() bool {
+	switch r {
+	case ContentNewParamsBrowserKitesurf:
+		return true
+	}
+	return false
+}
+
 type ContentNewResponseEnvelope struct {
 	Meta ContentNewResponseEnvelopeMeta `json:"meta" api:"required"`
 	// Response status.
@@ -475,18 +490,32 @@ func (r contentNewResponseEnvelopeJSON) RawJSON() string {
 }
 
 type ContentNewResponseEnvelopeMeta struct {
-	Status float64                            `json:"status"`
-	Title  string                             `json:"title"`
-	JSON   contentNewResponseEnvelopeMetaJSON `json:"-"`
+	// URL that served the response, after any redirects the browser followed.
+	FinalURL string `json:"finalUrl"`
+	// Origin response headers, lowercased. Repeated headers are joined with a newline.
+	// Credential and transport-only headers that do not survive rendering are omitted.
+	Headers map[string]string `json:"headers"`
+	// HTTP redirects followed to reach `finalUrl`, oldest first. Omitted for direct
+	// navigation and for client-side redirects such as meta refresh. An empty array
+	// means redirects occurred but their intermediate responses could not be read.
+	RedirectChain []ContentNewResponseEnvelopeMetaRedirectChain `json:"redirectChain"`
+	// HTTP status returned by the origin.
+	Status float64 `json:"status"`
+	// Page title.
+	Title string                             `json:"title"`
+	JSON  contentNewResponseEnvelopeMetaJSON `json:"-"`
 }
 
 // contentNewResponseEnvelopeMetaJSON contains the JSON metadata for the struct
 // [ContentNewResponseEnvelopeMeta]
 type contentNewResponseEnvelopeMetaJSON struct {
-	Status      apijson.Field
-	Title       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	FinalURL      apijson.Field
+	Headers       apijson.Field
+	RedirectChain apijson.Field
+	Status        apijson.Field
+	Title         apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *ContentNewResponseEnvelopeMeta) UnmarshalJSON(data []byte) (err error) {
@@ -494,6 +523,34 @@ func (r *ContentNewResponseEnvelopeMeta) UnmarshalJSON(data []byte) (err error) 
 }
 
 func (r contentNewResponseEnvelopeMetaJSON) RawJSON() string {
+	return r.raw
+}
+
+type ContentNewResponseEnvelopeMetaRedirectChain struct {
+	// Redirect response headers, including `location`.
+	Headers map[string]string `json:"headers" api:"required"`
+	// HTTP status of the redirect.
+	Status float64 `json:"status" api:"required"`
+	// URL that returned the redirect.
+	URL  string                                          `json:"url" api:"required"`
+	JSON contentNewResponseEnvelopeMetaRedirectChainJSON `json:"-"`
+}
+
+// contentNewResponseEnvelopeMetaRedirectChainJSON contains the JSON metadata for
+// the struct [ContentNewResponseEnvelopeMetaRedirectChain]
+type contentNewResponseEnvelopeMetaRedirectChainJSON struct {
+	Headers     apijson.Field
+	Status      apijson.Field
+	URL         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ContentNewResponseEnvelopeMetaRedirectChain) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r contentNewResponseEnvelopeMetaRedirectChainJSON) RawJSON() string {
 	return r.raw
 }
 

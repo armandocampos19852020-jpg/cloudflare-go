@@ -71,9 +71,10 @@ func (r *InvestigateMoveService) NewAutoPaging(ctx context.Context, investigateI
 	return pagination.NewSinglePageAutoPager(r.New(ctx, investigateID, params, opts...))
 }
 
-// Moves multiple messages to a specified mailbox folder (Inbox, JunkEmail,
+// Moves one or more messages to a specified mailbox folder (Inbox, JunkEmail,
 // DeletedItems, RecoverableItemsDeletions, or RecoverableItemsPurges). Requires
-// active integration.
+// active integration. Operates on an explicit list of messages; to move all
+// messages matching a search, create a bulk action job instead.
 func (r *InvestigateMoveService) Bulk(ctx context.Context, params InvestigateMoveBulkParams, opts ...option.RequestOption) (res *pagination.SinglePage[InvestigateMoveBulkResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -95,35 +96,36 @@ func (r *InvestigateMoveService) Bulk(ctx context.Context, params InvestigateMov
 	return res, nil
 }
 
-// Moves multiple messages to a specified mailbox folder (Inbox, JunkEmail,
+// Moves one or more messages to a specified mailbox folder (Inbox, JunkEmail,
 // DeletedItems, RecoverableItemsDeletions, or RecoverableItemsPurges). Requires
-// active integration.
+// active integration. Operates on an explicit list of messages; to move all
+// messages matching a search, create a bulk action job instead.
 func (r *InvestigateMoveService) BulkAutoPaging(ctx context.Context, params InvestigateMoveBulkParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[InvestigateMoveBulkResponse] {
 	return pagination.NewSinglePageAutoPager(r.Bulk(ctx, params, opts...))
 }
 
 type InvestigateMoveNewResponse struct {
-	// Whether the operation succeeded
+	// Whether the operation succeeded.
 	Success bool `json:"success" api:"required"`
-	// When the move operation completed (UTC)
+	// When the move operation completed (UTC).
 	CompletedAt time.Time `json:"completed_at" api:"nullable" format:"date-time"`
 	// Deprecated, use `completed_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `completed_at` instead.
 	CompletedTimestamp time.Time `json:"completed_timestamp" format:"date-time"`
-	// Destination folder for the message
+	// Destination folder for the message.
 	Destination string `json:"destination" api:"nullable"`
 	// Number of items moved. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: This field is deprecated.
 	ItemCount int64 `json:"item_count"`
-	// Message identifier
+	// Message identifier.
 	MessageID string `json:"message_id" api:"nullable"`
-	// Type of operation performed
+	// Type of operation performed.
 	Operation string `json:"operation" api:"nullable"`
-	// Recipient email address
+	// Recipient email address.
 	Recipient string `json:"recipient" api:"nullable"`
-	// Operation status
+	// Operation status.
 	Status string                         `json:"status" api:"nullable"`
 	JSON   investigateMoveNewResponseJSON `json:"-"`
 }
@@ -153,27 +155,27 @@ func (r investigateMoveNewResponseJSON) RawJSON() string {
 }
 
 type InvestigateMoveBulkResponse struct {
-	// Whether the operation succeeded
+	// Whether the operation succeeded.
 	Success bool `json:"success" api:"required"`
-	// When the move operation completed (UTC)
+	// When the move operation completed (UTC).
 	CompletedAt time.Time `json:"completed_at" api:"nullable" format:"date-time"`
 	// Deprecated, use `completed_at` instead. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `completed_at` instead.
 	CompletedTimestamp time.Time `json:"completed_timestamp" format:"date-time"`
-	// Destination folder for the message
+	// Destination folder for the message.
 	Destination string `json:"destination" api:"nullable"`
 	// Number of items moved. End of life: November 1, 2026.
 	//
-	// Deprecated: deprecated
+	// Deprecated: This field is deprecated.
 	ItemCount int64 `json:"item_count"`
-	// Message identifier
+	// Message identifier.
 	MessageID string `json:"message_id" api:"nullable"`
-	// Type of operation performed
+	// Type of operation performed.
 	Operation string `json:"operation" api:"nullable"`
-	// Recipient email address
+	// Recipient email address.
 	Recipient string `json:"recipient" api:"nullable"`
-	// Operation status
+	// Operation status.
 	Status string                          `json:"status" api:"nullable"`
 	JSON   investigateMoveBulkResponseJSON `json:"-"`
 }
@@ -204,14 +206,18 @@ func (r investigateMoveBulkResponseJSON) RawJSON() string {
 
 type InvestigateMoveNewParams struct {
 	// Identifier.
-	AccountID   param.Field[string]                              `path:"account_id" api:"required"`
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// The mailbox folder to move messages to.
 	Destination param.Field[InvestigateMoveNewParamsDestination] `json:"destination" api:"required"`
+	// Nonfunctional field. End of life: December 1, 2026.
+	ExpectedDisposition param.Field[InvestigateMoveNewParamsExpectedDisposition] `json:"expected_disposition"`
 }
 
 func (r InvestigateMoveNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
+// The mailbox folder to move messages to.
 type InvestigateMoveNewParamsDestination string
 
 const (
@@ -230,14 +236,40 @@ func (r InvestigateMoveNewParamsDestination) IsKnown() bool {
 	return false
 }
 
+// Nonfunctional field. End of life: December 1, 2026.
+type InvestigateMoveNewParamsExpectedDisposition string
+
+const (
+	InvestigateMoveNewParamsExpectedDispositionMalicious    InvestigateMoveNewParamsExpectedDisposition = "MALICIOUS"
+	InvestigateMoveNewParamsExpectedDispositionMaliciousBec InvestigateMoveNewParamsExpectedDisposition = "MALICIOUS-BEC"
+	InvestigateMoveNewParamsExpectedDispositionSuspicious   InvestigateMoveNewParamsExpectedDisposition = "SUSPICIOUS"
+	InvestigateMoveNewParamsExpectedDispositionSpoof        InvestigateMoveNewParamsExpectedDisposition = "SPOOF"
+	InvestigateMoveNewParamsExpectedDispositionSpam         InvestigateMoveNewParamsExpectedDisposition = "SPAM"
+	InvestigateMoveNewParamsExpectedDispositionBulk         InvestigateMoveNewParamsExpectedDisposition = "BULK"
+	InvestigateMoveNewParamsExpectedDispositionEncrypted    InvestigateMoveNewParamsExpectedDisposition = "ENCRYPTED"
+	InvestigateMoveNewParamsExpectedDispositionExternal     InvestigateMoveNewParamsExpectedDisposition = "EXTERNAL"
+	InvestigateMoveNewParamsExpectedDispositionUnknown      InvestigateMoveNewParamsExpectedDisposition = "UNKNOWN"
+	InvestigateMoveNewParamsExpectedDispositionNone         InvestigateMoveNewParamsExpectedDisposition = "NONE"
+)
+
+func (r InvestigateMoveNewParamsExpectedDisposition) IsKnown() bool {
+	switch r {
+	case InvestigateMoveNewParamsExpectedDispositionMalicious, InvestigateMoveNewParamsExpectedDispositionMaliciousBec, InvestigateMoveNewParamsExpectedDispositionSuspicious, InvestigateMoveNewParamsExpectedDispositionSpoof, InvestigateMoveNewParamsExpectedDispositionSpam, InvestigateMoveNewParamsExpectedDispositionBulk, InvestigateMoveNewParamsExpectedDispositionEncrypted, InvestigateMoveNewParamsExpectedDispositionExternal, InvestigateMoveNewParamsExpectedDispositionUnknown, InvestigateMoveNewParamsExpectedDispositionNone:
+		return true
+	}
+	return false
+}
+
 type InvestigateMoveBulkParams struct {
 	// Identifier.
-	AccountID   param.Field[string]                               `path:"account_id" api:"required"`
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// The mailbox folder to move messages to.
 	Destination param.Field[InvestigateMoveBulkParamsDestination] `json:"destination" api:"required"`
-	// List of message IDs to move
-	IDs param.Field[[]string] `json:"ids"`
-	// Deprecated, use `ids` instead. End of life: November 1, 2026. List of message
-	// IDs to move.
+	// List of message IDs to move.
+	IDs param.Field[[]string] `json:"ids" api:"required"`
+	// Nonfunctional field. End of life: December 1, 2026.
+	ExpectedDisposition param.Field[InvestigateMoveBulkParamsExpectedDisposition] `json:"expected_disposition"`
+	// Deprecated, use `ids` instead. End of life: November 1, 2026.
 	PostfixIDs param.Field[[]string] `json:"postfix_ids"`
 }
 
@@ -245,6 +277,7 @@ func (r InvestigateMoveBulkParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
+// The mailbox folder to move messages to.
 type InvestigateMoveBulkParamsDestination string
 
 const (
@@ -258,6 +291,30 @@ const (
 func (r InvestigateMoveBulkParamsDestination) IsKnown() bool {
 	switch r {
 	case InvestigateMoveBulkParamsDestinationInbox, InvestigateMoveBulkParamsDestinationJunkEmail, InvestigateMoveBulkParamsDestinationDeletedItems, InvestigateMoveBulkParamsDestinationRecoverableItemsDeletions, InvestigateMoveBulkParamsDestinationRecoverableItemsPurges:
+		return true
+	}
+	return false
+}
+
+// Nonfunctional field. End of life: December 1, 2026.
+type InvestigateMoveBulkParamsExpectedDisposition string
+
+const (
+	InvestigateMoveBulkParamsExpectedDispositionMalicious    InvestigateMoveBulkParamsExpectedDisposition = "MALICIOUS"
+	InvestigateMoveBulkParamsExpectedDispositionMaliciousBec InvestigateMoveBulkParamsExpectedDisposition = "MALICIOUS-BEC"
+	InvestigateMoveBulkParamsExpectedDispositionSuspicious   InvestigateMoveBulkParamsExpectedDisposition = "SUSPICIOUS"
+	InvestigateMoveBulkParamsExpectedDispositionSpoof        InvestigateMoveBulkParamsExpectedDisposition = "SPOOF"
+	InvestigateMoveBulkParamsExpectedDispositionSpam         InvestigateMoveBulkParamsExpectedDisposition = "SPAM"
+	InvestigateMoveBulkParamsExpectedDispositionBulk         InvestigateMoveBulkParamsExpectedDisposition = "BULK"
+	InvestigateMoveBulkParamsExpectedDispositionEncrypted    InvestigateMoveBulkParamsExpectedDisposition = "ENCRYPTED"
+	InvestigateMoveBulkParamsExpectedDispositionExternal     InvestigateMoveBulkParamsExpectedDisposition = "EXTERNAL"
+	InvestigateMoveBulkParamsExpectedDispositionUnknown      InvestigateMoveBulkParamsExpectedDisposition = "UNKNOWN"
+	InvestigateMoveBulkParamsExpectedDispositionNone         InvestigateMoveBulkParamsExpectedDisposition = "NONE"
+)
+
+func (r InvestigateMoveBulkParamsExpectedDisposition) IsKnown() bool {
+	switch r {
+	case InvestigateMoveBulkParamsExpectedDispositionMalicious, InvestigateMoveBulkParamsExpectedDispositionMaliciousBec, InvestigateMoveBulkParamsExpectedDispositionSuspicious, InvestigateMoveBulkParamsExpectedDispositionSpoof, InvestigateMoveBulkParamsExpectedDispositionSpam, InvestigateMoveBulkParamsExpectedDispositionBulk, InvestigateMoveBulkParamsExpectedDispositionEncrypted, InvestigateMoveBulkParamsExpectedDispositionExternal, InvestigateMoveBulkParamsExpectedDispositionUnknown, InvestigateMoveBulkParamsExpectedDispositionNone:
 		return true
 	}
 	return false

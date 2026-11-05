@@ -38,8 +38,8 @@ func NewBucketDomainCustomService(opts ...option.RequestOption) (r *BucketDomain
 // Register a new custom domain for an existing R2 bucket.
 func (r *BucketDomainCustomService) New(ctx context.Context, bucketName string, params BucketDomainCustomNewParams, opts ...option.RequestOption) (res *BucketDomainCustomNewResponse, err error) {
 	var env BucketDomainCustomNewResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -62,8 +62,8 @@ func (r *BucketDomainCustomService) New(ctx context.Context, bucketName string, 
 // Edit the configuration for a custom domain on an existing R2 bucket.
 func (r *BucketDomainCustomService) Update(ctx context.Context, bucketName string, domain string, params BucketDomainCustomUpdateParams, opts ...option.RequestOption) (res *BucketDomainCustomUpdateResponse, err error) {
 	var env BucketDomainCustomUpdateResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -90,8 +90,8 @@ func (r *BucketDomainCustomService) Update(ctx context.Context, bucketName strin
 // Gets a list of all custom domains registered with an existing R2 bucket.
 func (r *BucketDomainCustomService) List(ctx context.Context, bucketName string, params BucketDomainCustomListParams, opts ...option.RequestOption) (res *BucketDomainCustomListResponse, err error) {
 	var env BucketDomainCustomListResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -111,11 +111,13 @@ func (r *BucketDomainCustomService) List(ctx context.Context, bucketName string,
 	return res, nil
 }
 
-// Remove custom domain registration from an existing R2 bucket.
+// Disconnects a custom domain from an R2 bucket and removes its configuration.
+// Access through other enabled custom domains or the bucket's r2.dev domain is
+// unaffected.
 func (r *BucketDomainCustomService) Delete(ctx context.Context, bucketName string, domain string, params BucketDomainCustomDeleteParams, opts ...option.RequestOption) (res *BucketDomainCustomDeleteResponse, err error) {
 	var env BucketDomainCustomDeleteResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -142,8 +144,8 @@ func (r *BucketDomainCustomService) Delete(ctx context.Context, bucketName strin
 // Get the configuration for a custom domain on an existing R2 bucket.
 func (r *BucketDomainCustomService) Get(ctx context.Context, bucketName string, domain string, params BucketDomainCustomGetParams, opts ...option.RequestOption) (res *BucketDomainCustomGetResponse, err error) {
 	var env BucketDomainCustomGetResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -568,7 +570,7 @@ func (r BucketDomainCustomGetResponseMinTLS) IsKnown() bool {
 }
 
 type BucketDomainCustomNewParams struct {
-	// Account ID.
+	// Cloudflare account ID that owns the R2 resource.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Name of the custom domain to be added.
 	Domain param.Field[string] `json:"domain" api:"required"`
@@ -582,9 +584,8 @@ type BucketDomainCustomNewParams struct {
 	Ciphers param.Field[[]string] `json:"ciphers"`
 	// Minimum TLS Version the custom domain will accept for incoming connections. If
 	// not set, defaults to 1.0.
-	MinTLS param.Field[BucketDomainCustomNewParamsMinTLS] `json:"minTLS"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDomainCustomNewParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	MinTLS           param.Field[BucketDomainCustomNewParamsMinTLS]           `json:"minTLS"`
+	CfR2Jurisdiction param.Field[BucketDomainCustomNewParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 func (r BucketDomainCustomNewParams) MarshalJSON() (data []byte, err error) {
@@ -610,18 +611,19 @@ func (r BucketDomainCustomNewParamsMinTLS) IsKnown() bool {
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDomainCustomNewParamsCfR2Jurisdiction string
 
 const (
-	BucketDomainCustomNewParamsCfR2JurisdictionDefault BucketDomainCustomNewParamsCfR2Jurisdiction = "default"
-	BucketDomainCustomNewParamsCfR2JurisdictionEu      BucketDomainCustomNewParamsCfR2Jurisdiction = "eu"
-	BucketDomainCustomNewParamsCfR2JurisdictionFedramp BucketDomainCustomNewParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomNewParamsCfR2JurisdictionDefault     BucketDomainCustomNewParamsCfR2Jurisdiction = "default"
+	BucketDomainCustomNewParamsCfR2JurisdictionEu          BucketDomainCustomNewParamsCfR2Jurisdiction = "eu"
+	BucketDomainCustomNewParamsCfR2JurisdictionUs          BucketDomainCustomNewParamsCfR2Jurisdiction = "us"
+	BucketDomainCustomNewParamsCfR2JurisdictionFedramp     BucketDomainCustomNewParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomNewParamsCfR2JurisdictionFedrampHigh BucketDomainCustomNewParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDomainCustomNewParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDomainCustomNewParamsCfR2JurisdictionDefault, BucketDomainCustomNewParamsCfR2JurisdictionEu, BucketDomainCustomNewParamsCfR2JurisdictionFedramp:
+	case BucketDomainCustomNewParamsCfR2JurisdictionDefault, BucketDomainCustomNewParamsCfR2JurisdictionEu, BucketDomainCustomNewParamsCfR2JurisdictionUs, BucketDomainCustomNewParamsCfR2JurisdictionFedramp, BucketDomainCustomNewParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -671,7 +673,7 @@ func (r BucketDomainCustomNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketDomainCustomUpdateParams struct {
-	// Account ID.
+	// Cloudflare account ID that owns the R2 resource.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// An allowlist of ciphers for TLS termination. These ciphers must be in the
 	// BoringSSL format.
@@ -680,9 +682,8 @@ type BucketDomainCustomUpdateParams struct {
 	Enabled param.Field[bool] `json:"enabled"`
 	// Minimum TLS Version the custom domain will accept for incoming connections. If
 	// not set, defaults to previous value.
-	MinTLS param.Field[BucketDomainCustomUpdateParamsMinTLS] `json:"minTLS"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDomainCustomUpdateParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	MinTLS           param.Field[BucketDomainCustomUpdateParamsMinTLS]           `json:"minTLS"`
+	CfR2Jurisdiction param.Field[BucketDomainCustomUpdateParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 func (r BucketDomainCustomUpdateParams) MarshalJSON() (data []byte, err error) {
@@ -708,18 +709,19 @@ func (r BucketDomainCustomUpdateParamsMinTLS) IsKnown() bool {
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDomainCustomUpdateParamsCfR2Jurisdiction string
 
 const (
-	BucketDomainCustomUpdateParamsCfR2JurisdictionDefault BucketDomainCustomUpdateParamsCfR2Jurisdiction = "default"
-	BucketDomainCustomUpdateParamsCfR2JurisdictionEu      BucketDomainCustomUpdateParamsCfR2Jurisdiction = "eu"
-	BucketDomainCustomUpdateParamsCfR2JurisdictionFedramp BucketDomainCustomUpdateParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomUpdateParamsCfR2JurisdictionDefault     BucketDomainCustomUpdateParamsCfR2Jurisdiction = "default"
+	BucketDomainCustomUpdateParamsCfR2JurisdictionEu          BucketDomainCustomUpdateParamsCfR2Jurisdiction = "eu"
+	BucketDomainCustomUpdateParamsCfR2JurisdictionUs          BucketDomainCustomUpdateParamsCfR2Jurisdiction = "us"
+	BucketDomainCustomUpdateParamsCfR2JurisdictionFedramp     BucketDomainCustomUpdateParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomUpdateParamsCfR2JurisdictionFedrampHigh BucketDomainCustomUpdateParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDomainCustomUpdateParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDomainCustomUpdateParamsCfR2JurisdictionDefault, BucketDomainCustomUpdateParamsCfR2JurisdictionEu, BucketDomainCustomUpdateParamsCfR2JurisdictionFedramp:
+	case BucketDomainCustomUpdateParamsCfR2JurisdictionDefault, BucketDomainCustomUpdateParamsCfR2JurisdictionEu, BucketDomainCustomUpdateParamsCfR2JurisdictionUs, BucketDomainCustomUpdateParamsCfR2JurisdictionFedramp, BucketDomainCustomUpdateParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -769,24 +771,24 @@ func (r BucketDomainCustomUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketDomainCustomListParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDomainCustomListParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                                       `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketDomainCustomListParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDomainCustomListParamsCfR2Jurisdiction string
 
 const (
-	BucketDomainCustomListParamsCfR2JurisdictionDefault BucketDomainCustomListParamsCfR2Jurisdiction = "default"
-	BucketDomainCustomListParamsCfR2JurisdictionEu      BucketDomainCustomListParamsCfR2Jurisdiction = "eu"
-	BucketDomainCustomListParamsCfR2JurisdictionFedramp BucketDomainCustomListParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomListParamsCfR2JurisdictionDefault     BucketDomainCustomListParamsCfR2Jurisdiction = "default"
+	BucketDomainCustomListParamsCfR2JurisdictionEu          BucketDomainCustomListParamsCfR2Jurisdiction = "eu"
+	BucketDomainCustomListParamsCfR2JurisdictionUs          BucketDomainCustomListParamsCfR2Jurisdiction = "us"
+	BucketDomainCustomListParamsCfR2JurisdictionFedramp     BucketDomainCustomListParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomListParamsCfR2JurisdictionFedrampHigh BucketDomainCustomListParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDomainCustomListParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDomainCustomListParamsCfR2JurisdictionDefault, BucketDomainCustomListParamsCfR2JurisdictionEu, BucketDomainCustomListParamsCfR2JurisdictionFedramp:
+	case BucketDomainCustomListParamsCfR2JurisdictionDefault, BucketDomainCustomListParamsCfR2JurisdictionEu, BucketDomainCustomListParamsCfR2JurisdictionUs, BucketDomainCustomListParamsCfR2JurisdictionFedramp, BucketDomainCustomListParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -836,24 +838,24 @@ func (r BucketDomainCustomListResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketDomainCustomDeleteParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDomainCustomDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                                         `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketDomainCustomDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDomainCustomDeleteParamsCfR2Jurisdiction string
 
 const (
-	BucketDomainCustomDeleteParamsCfR2JurisdictionDefault BucketDomainCustomDeleteParamsCfR2Jurisdiction = "default"
-	BucketDomainCustomDeleteParamsCfR2JurisdictionEu      BucketDomainCustomDeleteParamsCfR2Jurisdiction = "eu"
-	BucketDomainCustomDeleteParamsCfR2JurisdictionFedramp BucketDomainCustomDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomDeleteParamsCfR2JurisdictionDefault     BucketDomainCustomDeleteParamsCfR2Jurisdiction = "default"
+	BucketDomainCustomDeleteParamsCfR2JurisdictionEu          BucketDomainCustomDeleteParamsCfR2Jurisdiction = "eu"
+	BucketDomainCustomDeleteParamsCfR2JurisdictionUs          BucketDomainCustomDeleteParamsCfR2Jurisdiction = "us"
+	BucketDomainCustomDeleteParamsCfR2JurisdictionFedramp     BucketDomainCustomDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomDeleteParamsCfR2JurisdictionFedrampHigh BucketDomainCustomDeleteParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDomainCustomDeleteParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDomainCustomDeleteParamsCfR2JurisdictionDefault, BucketDomainCustomDeleteParamsCfR2JurisdictionEu, BucketDomainCustomDeleteParamsCfR2JurisdictionFedramp:
+	case BucketDomainCustomDeleteParamsCfR2JurisdictionDefault, BucketDomainCustomDeleteParamsCfR2JurisdictionEu, BucketDomainCustomDeleteParamsCfR2JurisdictionUs, BucketDomainCustomDeleteParamsCfR2JurisdictionFedramp, BucketDomainCustomDeleteParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -903,24 +905,24 @@ func (r BucketDomainCustomDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketDomainCustomGetParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDomainCustomGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                                      `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketDomainCustomGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDomainCustomGetParamsCfR2Jurisdiction string
 
 const (
-	BucketDomainCustomGetParamsCfR2JurisdictionDefault BucketDomainCustomGetParamsCfR2Jurisdiction = "default"
-	BucketDomainCustomGetParamsCfR2JurisdictionEu      BucketDomainCustomGetParamsCfR2Jurisdiction = "eu"
-	BucketDomainCustomGetParamsCfR2JurisdictionFedramp BucketDomainCustomGetParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomGetParamsCfR2JurisdictionDefault     BucketDomainCustomGetParamsCfR2Jurisdiction = "default"
+	BucketDomainCustomGetParamsCfR2JurisdictionEu          BucketDomainCustomGetParamsCfR2Jurisdiction = "eu"
+	BucketDomainCustomGetParamsCfR2JurisdictionUs          BucketDomainCustomGetParamsCfR2Jurisdiction = "us"
+	BucketDomainCustomGetParamsCfR2JurisdictionFedramp     BucketDomainCustomGetParamsCfR2Jurisdiction = "fedramp"
+	BucketDomainCustomGetParamsCfR2JurisdictionFedrampHigh BucketDomainCustomGetParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDomainCustomGetParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDomainCustomGetParamsCfR2JurisdictionDefault, BucketDomainCustomGetParamsCfR2JurisdictionEu, BucketDomainCustomGetParamsCfR2JurisdictionFedramp:
+	case BucketDomainCustomGetParamsCfR2JurisdictionDefault, BucketDomainCustomGetParamsCfR2JurisdictionEu, BucketDomainCustomGetParamsCfR2JurisdictionUs, BucketDomainCustomGetParamsCfR2JurisdictionFedramp, BucketDomainCustomGetParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false

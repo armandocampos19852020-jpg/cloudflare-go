@@ -24,6 +24,7 @@ func TestRuleCatchAllUpdateWithOptionalParams(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
@@ -36,8 +37,10 @@ func TestRuleCatchAllUpdateWithOptionalParams(t *testing.T) {
 		Matchers: cloudflare.F([]email_routing.CatchAllMatcherParam{{
 			Type: cloudflare.F(email_routing.CatchAllMatcherTypeAll),
 		}}),
-		Enabled: cloudflare.F(email_routing.RuleCatchAllUpdateParamsEnabledTrue),
-		Name:    cloudflare.F("Send to user@example.net rule."),
+		Enabled:        cloudflare.F(email_routing.RuleCatchAllUpdateParamsEnabledTrue),
+		Name:           cloudflare.F("Send to user@example.net rule."),
+		OwnerWorkerTag: cloudflare.F("a7e6fb77503c41d8a7f3113c6918f10c"),
+		Source:         cloudflare.F(email_routing.RuleCatchAllUpdateParamsSourceAPI),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error
@@ -58,6 +61,7 @@ func TestRuleCatchAllGet(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)

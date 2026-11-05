@@ -24,9 +24,10 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewNetworkSubnetService] method instead.
 type NetworkSubnetService struct {
-	Options          []option.RequestOption
-	WARP             *NetworkSubnetWARPService
-	CloudflareSource *NetworkSubnetCloudflareSourceService
+	Options           []option.RequestOption
+	WARP              *NetworkSubnetWARPService
+	CloudflareSource  *NetworkSubnetCloudflareSourceService
+	InitialResolvedIP *NetworkSubnetInitialResolvedIPService
 }
 
 // NewNetworkSubnetService generates a new service that applies the given options
@@ -37,6 +38,7 @@ func NewNetworkSubnetService(opts ...option.RequestOption) (r *NetworkSubnetServ
 	r.Options = opts
 	r.WARP = NewNetworkSubnetWARPService(opts...)
 	r.CloudflareSource = NewNetworkSubnetCloudflareSourceService(opts...)
+	r.InitialResolvedIP = NewNetworkSubnetInitialResolvedIPService(opts...)
 	return
 }
 
@@ -144,13 +146,14 @@ func (r NetworkSubnetListParamsSortOrder) IsKnown() bool {
 type NetworkSubnetListParamsSubnetTypes string
 
 const (
-	NetworkSubnetListParamsSubnetTypesCloudflareSource NetworkSubnetListParamsSubnetTypes = "cloudflare_source"
-	NetworkSubnetListParamsSubnetTypesWARP             NetworkSubnetListParamsSubnetTypes = "warp"
+	NetworkSubnetListParamsSubnetTypesCloudflareSource  NetworkSubnetListParamsSubnetTypes = "cloudflare_source"
+	NetworkSubnetListParamsSubnetTypesInitialResolvedIP NetworkSubnetListParamsSubnetTypes = "initial_resolved_ip"
+	NetworkSubnetListParamsSubnetTypesWARP              NetworkSubnetListParamsSubnetTypes = "warp"
 )
 
 func (r NetworkSubnetListParamsSubnetTypes) IsKnown() bool {
 	switch r {
-	case NetworkSubnetListParamsSubnetTypesCloudflareSource, NetworkSubnetListParamsSubnetTypesWARP:
+	case NetworkSubnetListParamsSubnetTypesCloudflareSource, NetworkSubnetListParamsSubnetTypesInitialResolvedIP, NetworkSubnetListParamsSubnetTypesWARP:
 		return true
 	}
 	return false

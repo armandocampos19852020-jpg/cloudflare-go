@@ -164,6 +164,7 @@ type BGPTimeseriesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                              `json:"tags"`
 	JSON            bgpTimeseriesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -177,6 +178,7 @@ type bgpTimeseriesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -232,7 +234,6 @@ func (r BGPTimeseriesResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() 
 type BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -242,7 +243,7 @@ const (
 
 func (r BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BGPTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -300,19 +301,38 @@ type BGPTimeseriesParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[BGPTimeseriesParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
 	// results. For example, `-174, 3356` excludes results from AS174, but includes
 	// results from AS3356.
 	ASN param.Field[[]string] `query:"asn"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[BGPTimeseriesParamsFormat] `query:"format"`
@@ -335,6 +355,9 @@ func (r BGPTimeseriesParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type BGPTimeseriesParamsAggInterval string
 
 const (

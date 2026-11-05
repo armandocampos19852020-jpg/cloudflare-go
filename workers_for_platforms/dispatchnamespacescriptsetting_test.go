@@ -42,8 +42,39 @@ func TestDispatchNamespaceScriptSettingEditWithOptionalParams(t *testing.T) {
 					Text: cloudflare.F("my_data"),
 					Type: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsBindingsWorkersBindingKindPlainTextTypePlainText),
 				}}),
-				CompatibilityDate:  cloudflare.F("2021-01-01"),
+				CacheOptions: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsCacheOptions{
+					Enabled:           cloudflare.F(true),
+					CrossVersionCache: cloudflare.F(true),
+				}),
+				CompatibilityDate:  cloudflare.F("2021-01-01T00:00:00Z"),
 				CompatibilityFlags: cloudflare.F([]string{"nodejs_compat"}),
+				Exports: cloudflare.F(map[string]workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsUnion{
+					"Admin": workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExport{
+						Type: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportCache{
+							Enabled: cloudflare.F(true),
+						}),
+						State: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportStateCreated),
+					},
+					"Counter": workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectExport{
+						Storage:   cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectExportStorageSqlite),
+						Type:      cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectExportTypeDurableObject),
+						Container: cloudflare.F("my-container"),
+						State:     cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectExportStateCreated),
+					},
+					"OldCounter": workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectRenamedExport{
+						RenamedTo: cloudflare.F("Counter"),
+						State:     cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectRenamedExportStateRenamed),
+						Type:      cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersDurableObjectRenamedExportTypeDurableObject),
+					},
+					"default": workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExport{
+						Type: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportCache{
+							Enabled: cloudflare.F(false),
+						}),
+						State: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsExportsWorkersWorkerExportStateCreated),
+					},
+				}),
 				Limits: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsLimits{
 					CPUMs:       cloudflare.F(int64(50)),
 					Subrequests: cloudflare.F(int64(1000)),
@@ -68,6 +99,9 @@ func TestDispatchNamespaceScriptSettingEditWithOptionalParams(t *testing.T) {
 				Observability: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsObservability{
 					Enabled:          cloudflare.F(true),
 					HeadSamplingRate: cloudflare.F(0.100000),
+					Issues: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsObservabilityIssues{
+						Enabled: cloudflare.F(true),
+					}),
 					Logs: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsObservabilityLogs{
 						Enabled:          cloudflare.F(true),
 						InvocationLogs:   cloudflare.F(true),
@@ -75,6 +109,7 @@ func TestDispatchNamespaceScriptSettingEditWithOptionalParams(t *testing.T) {
 						HeadSamplingRate: cloudflare.F(0.100000),
 						Persist:          cloudflare.F(true),
 					}),
+					RedactQueryString: cloudflare.F(false),
 					Traces: cloudflare.F(workers_for_platforms.DispatchNamespaceScriptSettingEditParamsSettingsObservabilityTraces{
 						Destinations:      cloudflare.F([]string{"cloudflare"}),
 						Enabled:           cloudflare.F(true),

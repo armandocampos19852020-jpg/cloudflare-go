@@ -136,6 +136,8 @@ type BotListResponseBot struct {
 	// A summary for the bot (e.g., purpose).
 	Description string `json:"description" api:"required"`
 	// The kind of the bot.
+	//
+	// Deprecated: deprecated
 	Kind string `json:"kind" api:"required"`
 	// The name of the bot.
 	Name string `json:"name" api:"required"`
@@ -195,6 +197,8 @@ type BotGetResponseBot struct {
 	// A summary for the bot (e.g., purpose).
 	Description string `json:"description" api:"required"`
 	// The kind of the bot.
+	//
+	// Deprecated: deprecated
 	Kind string `json:"kind" api:"required"`
 	// The name of the bot.
 	Name string `json:"name" api:"required"`
@@ -331,6 +335,7 @@ type BotSummaryResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                           `json:"tags"`
 	JSON            botSummaryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -344,6 +349,7 @@ type botSummaryResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -399,7 +405,6 @@ func (r BotSummaryResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() boo
 type BotSummaryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             BotSummaryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           BotSummaryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            BotSummaryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection BotSummaryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -409,7 +414,7 @@ const (
 
 func (r BotSummaryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -605,6 +610,7 @@ type BotTimeseriesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                              `json:"tags"`
 	JSON            botTimeseriesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -618,6 +624,7 @@ type botTimeseriesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -673,7 +680,6 @@ func (r BotTimeseriesResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() 
 type BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -683,7 +689,7 @@ const (
 
 func (r BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -880,6 +886,7 @@ type BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            botTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -894,6 +901,7 @@ type botTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -949,7 +957,6 @@ func (r BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -959,7 +966,7 @@ const (
 
 func (r BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, BotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1067,7 +1074,8 @@ type BotListParams struct {
 	BotVerificationStatus param.Field[BotListParamsBotVerificationStatus] `query:"botVerificationStatus"`
 	// Format in which results will be returned.
 	Format param.Field[BotListParamsFormat] `query:"format"`
-	// Filters results by bot kind.
+	// Filters results by bot kind. Deprecated: the Verified Bot / Signed Agent
+	// distinction is being removed.
 	Kind param.Field[BotListParamsKind] `query:"kind"`
 	// Limits the number of objects returned in the response.
 	Limit param.Field[int64] `query:"limit"`
@@ -1144,7 +1152,8 @@ func (r BotListParamsFormat) IsKnown() bool {
 	return false
 }
 
-// Filters results by bot kind.
+// Filters results by bot kind. Deprecated: the Verified Bot / Signed Agent
+// distinction is being removed.
 type BotListParamsKind string
 
 const (
@@ -1245,7 +1254,8 @@ type BotSummaryParams struct {
 	Bot param.Field[[]string] `query:"bot"`
 	// Filters results by bot category.
 	BotCategory param.Field[[]BotSummaryParamsBotCategory] `query:"botCategory"`
-	// Filters results by bot kind.
+	// Filters results by bot kind. Deprecated: the Verified Bot / Signed Agent
+	// distinction is being removed.
 	BotKind param.Field[[]BotSummaryParamsBotKind] `query:"botKind"`
 	// Filters results by bot operator.
 	BotOperator param.Field[[]string] `query:"botOperator"`
@@ -1255,19 +1265,36 @@ type BotSummaryParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[BotSummaryParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -1406,6 +1433,9 @@ type BotTimeseriesParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[BotTimeseriesParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
@@ -1416,7 +1446,8 @@ type BotTimeseriesParams struct {
 	Bot param.Field[[]string] `query:"bot"`
 	// Filters results by bot category.
 	BotCategory param.Field[[]BotTimeseriesParamsBotCategory] `query:"botCategory"`
-	// Filters results by bot kind.
+	// Filters results by bot kind. Deprecated: the Verified Bot / Signed Agent
+	// distinction is being removed.
 	BotKind param.Field[[]BotTimeseriesParamsBotKind] `query:"botKind"`
 	// Filters results by bot operator.
 	BotOperator param.Field[[]string] `query:"botOperator"`
@@ -1426,13 +1457,29 @@ type BotTimeseriesParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[BotTimeseriesParamsFormat] `query:"format"`
@@ -1455,6 +1502,9 @@ func (r BotTimeseriesParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type BotTimeseriesParamsAggInterval string
 
 const (
@@ -1575,6 +1625,9 @@ type BotTimeseriesGroupsParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[BotTimeseriesGroupsParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
@@ -1585,7 +1638,8 @@ type BotTimeseriesGroupsParams struct {
 	Bot param.Field[[]string] `query:"bot"`
 	// Filters results by bot category.
 	BotCategory param.Field[[]BotTimeseriesGroupsParamsBotCategory] `query:"botCategory"`
-	// Filters results by bot kind.
+	// Filters results by bot kind. Deprecated: the Verified Bot / Signed Agent
+	// distinction is being removed.
 	BotKind param.Field[[]BotTimeseriesGroupsParamsBotKind] `query:"botKind"`
 	// Filters results by bot operator.
 	BotOperator param.Field[[]string] `query:"botOperator"`
@@ -1595,19 +1649,36 @@ type BotTimeseriesGroupsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[BotTimeseriesGroupsParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -1647,6 +1718,9 @@ func (r BotTimeseriesGroupsParamsDimension) IsKnown() bool {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type BotTimeseriesGroupsParamsAggInterval string
 
 const (

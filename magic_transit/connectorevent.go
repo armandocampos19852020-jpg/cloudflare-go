@@ -61,7 +61,7 @@ func (r *ConnectorEventService) List(ctx context.Context, connectorID string, pa
 	return res, nil
 }
 
-// Get Event
+// Gets Magic WAN Connector Telemetry Event
 func (r *ConnectorEventService) Get(ctx context.Context, connectorID string, eventT float64, eventN float64, query ConnectorEventGetParams, opts ...option.RequestOption) (res *ConnectorEventGetResponse, err error) {
 	var env ConnectorEventGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -140,6 +140,39 @@ func (r connectorEventListResponseItemJSON) RawJSON() string {
 
 // Recorded Event
 type ConnectorEventGetResponse struct {
+	// Event kind plus event-specific payload fields.
+	//
+	// Event kinds:
+	//
+	// - `Init`: Initialized process
+	// - `Leave`: Stopped process
+	// - `StartAttestation`: Started attestation
+	// - `FinishAttestationSuccess`: Finished attestation
+	// - `FinishAttestationFailure`: Failed attestation
+	// - `StartRotateCryptKey`: Started crypt key rotation
+	// - `FinishRotateCryptKeySuccess`: Finished crypt key rotation
+	// - `FinishRotateCryptKeyFailure`: Failed crypt key rotation
+	// - `StartRotatePki`: Started PKI rotation
+	// - `FinishRotatePkiSuccess`: Finished PKI rotation
+	// - `FinishRotatePkiFailure`: Failed PKI rotation
+	// - `StartUpgrade`: Started upgrade
+	// - `FinishUpgradeSuccess`: Finished upgrade
+	// - `FinishUpgradeFailure`: Failed upgrade
+	// - `BlessSlotSuccess`: Blessed boot entry slot
+	// - `BlessSlotPending`: Boot entry slot is not yet blessed
+	// - `BlessSlotFailure`: Failed to bless boot entry slot
+	// - `Reconcile`: Reconciled
+	// - `ConfigureCloudflaredTunnel`: Configured Cloudflared tunnel
+	// - `RekeyInstallBoth`: Installed initial inbound and outbound keys
+	// - `RekeyStart`: Installed new inbound key, kept old outbound
+	// - `RekeyRestart`: Restarted in-progress rekey with newer key material
+	// - `RekeyAdvance`: Confirmed traffic on new inbound key, swapped outbound to new
+	// - `RekeyComplete`: Deleted old keys
+	// - `RekeyReset`: Deleted all keys after receiving an unexpected key
+	// - `HaTransition`: Completed HA state transition
+	// - `HaError`: Received unexpected HA error
+	// - `HaInit`: Initialized HA subsystem
+	// - `HaLeave`: Stopped HA subsystem
 	E ConnectorEventGetResponseE `json:"e" api:"required"`
 	// Sequence number, used to order events with the same timestamp
 	N float64 `json:"n" api:"required"`
@@ -169,9 +202,44 @@ func (r connectorEventGetResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+// Event kind plus event-specific payload fields.
+//
+// Event kinds:
+//
+// - `Init`: Initialized process
+// - `Leave`: Stopped process
+// - `StartAttestation`: Started attestation
+// - `FinishAttestationSuccess`: Finished attestation
+// - `FinishAttestationFailure`: Failed attestation
+// - `StartRotateCryptKey`: Started crypt key rotation
+// - `FinishRotateCryptKeySuccess`: Finished crypt key rotation
+// - `FinishRotateCryptKeyFailure`: Failed crypt key rotation
+// - `StartRotatePki`: Started PKI rotation
+// - `FinishRotatePkiSuccess`: Finished PKI rotation
+// - `FinishRotatePkiFailure`: Failed PKI rotation
+// - `StartUpgrade`: Started upgrade
+// - `FinishUpgradeSuccess`: Finished upgrade
+// - `FinishUpgradeFailure`: Failed upgrade
+// - `BlessSlotSuccess`: Blessed boot entry slot
+// - `BlessSlotPending`: Boot entry slot is not yet blessed
+// - `BlessSlotFailure`: Failed to bless boot entry slot
+// - `Reconcile`: Reconciled
+// - `ConfigureCloudflaredTunnel`: Configured Cloudflared tunnel
+// - `RekeyInstallBoth`: Installed initial inbound and outbound keys
+// - `RekeyStart`: Installed new inbound key, kept old outbound
+// - `RekeyRestart`: Restarted in-progress rekey with newer key material
+// - `RekeyAdvance`: Confirmed traffic on new inbound key, swapped outbound to new
+// - `RekeyComplete`: Deleted old keys
+// - `RekeyReset`: Deleted all keys after receiving an unexpected key
+// - `HaTransition`: Completed HA state transition
+// - `HaError`: Received unexpected HA error
+// - `HaInit`: Initialized HA subsystem
+// - `HaLeave`: Stopped HA subsystem
 type ConnectorEventGetResponseE struct {
 	// Initialized process
 	K ConnectorEventGetResponseEK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string `json:"tunnel_id"`
 	// Location of upgrade bundle
 	URL   string                         `json:"url"`
 	JSON  connectorEventGetResponseEJSON `json:"-"`
@@ -182,6 +250,7 @@ type ConnectorEventGetResponseE struct {
 // [ConnectorEventGetResponseE]
 type connectorEventGetResponseEJSON struct {
 	K           apijson.Field
+	TunnelID    apijson.Field
 	URL         apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
@@ -217,7 +286,12 @@ func (r *ConnectorEventGetResponseE) UnmarshalJSON(data []byte) (err error) {
 // [ConnectorEventGetResponseEFinishUpgradeSuccess],
 // [ConnectorEventGetResponseEFinishUpgradeFailure],
 // [ConnectorEventGetResponseEReconcile],
-// [ConnectorEventGetResponseEConfigureCloudflaredTunnel].
+// [ConnectorEventGetResponseEConfigureCloudflaredTunnel],
+// [ConnectorEventGetResponseERekeyInstallBoth],
+// [ConnectorEventGetResponseERekeyStart],
+// [ConnectorEventGetResponseERekeyAdvance],
+// [ConnectorEventGetResponseERekeyComplete],
+// [ConnectorEventGetResponseERekeyReset].
 func (r ConnectorEventGetResponseE) AsUnion() ConnectorEventGetResponseEUnion {
 	return r.union
 }
@@ -235,8 +309,13 @@ func (r ConnectorEventGetResponseE) AsUnion() ConnectorEventGetResponseEUnion {
 // [ConnectorEventGetResponseEStartUpgrade],
 // [ConnectorEventGetResponseEFinishUpgradeSuccess],
 // [ConnectorEventGetResponseEFinishUpgradeFailure],
-// [ConnectorEventGetResponseEReconcile] or
-// [ConnectorEventGetResponseEConfigureCloudflaredTunnel].
+// [ConnectorEventGetResponseEReconcile],
+// [ConnectorEventGetResponseEConfigureCloudflaredTunnel],
+// [ConnectorEventGetResponseERekeyInstallBoth],
+// [ConnectorEventGetResponseERekeyStart],
+// [ConnectorEventGetResponseERekeyAdvance],
+// [ConnectorEventGetResponseERekeyComplete] or
+// [ConnectorEventGetResponseERekeyReset].
 type ConnectorEventGetResponseEUnion interface {
 	implementsConnectorEventGetResponseE()
 }
@@ -324,6 +403,31 @@ func init() {
 			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(ConnectorEventGetResponseEConfigureCloudflaredTunnel{}),
 			DiscriminatorValue: "ConfigureCloudflaredTunnel",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectorEventGetResponseERekeyInstallBoth{}),
+			DiscriminatorValue: "RekeyInstallBoth",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectorEventGetResponseERekeyStart{}),
+			DiscriminatorValue: "RekeyStart",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectorEventGetResponseERekeyAdvance{}),
+			DiscriminatorValue: "RekeyAdvance",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectorEventGetResponseERekeyComplete{}),
+			DiscriminatorValue: "RekeyComplete",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectorEventGetResponseERekeyReset{}),
+			DiscriminatorValue: "RekeyReset",
 		},
 	)
 }
@@ -958,6 +1062,216 @@ func (r ConnectorEventGetResponseEConfigureCloudflaredTunnelK) IsKnown() bool {
 	return false
 }
 
+type ConnectorEventGetResponseERekeyInstallBoth struct {
+	// Installed initial inbound and outbound keys
+	K ConnectorEventGetResponseERekeyInstallBothK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string                                         `json:"tunnel_id" api:"required"`
+	JSON     connectorEventGetResponseERekeyInstallBothJSON `json:"-"`
+}
+
+// connectorEventGetResponseERekeyInstallBothJSON contains the JSON metadata for
+// the struct [ConnectorEventGetResponseERekeyInstallBoth]
+type connectorEventGetResponseERekeyInstallBothJSON struct {
+	K           apijson.Field
+	TunnelID    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectorEventGetResponseERekeyInstallBoth) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorEventGetResponseERekeyInstallBothJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectorEventGetResponseERekeyInstallBoth) implementsConnectorEventGetResponseE() {}
+
+// Installed initial inbound and outbound keys
+type ConnectorEventGetResponseERekeyInstallBothK string
+
+const (
+	ConnectorEventGetResponseERekeyInstallBothKRekeyInstallBoth ConnectorEventGetResponseERekeyInstallBothK = "RekeyInstallBoth"
+)
+
+func (r ConnectorEventGetResponseERekeyInstallBothK) IsKnown() bool {
+	switch r {
+	case ConnectorEventGetResponseERekeyInstallBothKRekeyInstallBoth:
+		return true
+	}
+	return false
+}
+
+type ConnectorEventGetResponseERekeyStart struct {
+	// Installed new inbound key, kept old outbound
+	K ConnectorEventGetResponseERekeyStartK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string                                   `json:"tunnel_id" api:"required"`
+	JSON     connectorEventGetResponseERekeyStartJSON `json:"-"`
+}
+
+// connectorEventGetResponseERekeyStartJSON contains the JSON metadata for the
+// struct [ConnectorEventGetResponseERekeyStart]
+type connectorEventGetResponseERekeyStartJSON struct {
+	K           apijson.Field
+	TunnelID    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectorEventGetResponseERekeyStart) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorEventGetResponseERekeyStartJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectorEventGetResponseERekeyStart) implementsConnectorEventGetResponseE() {}
+
+// Installed new inbound key, kept old outbound
+type ConnectorEventGetResponseERekeyStartK string
+
+const (
+	ConnectorEventGetResponseERekeyStartKRekeyStart ConnectorEventGetResponseERekeyStartK = "RekeyStart"
+)
+
+func (r ConnectorEventGetResponseERekeyStartK) IsKnown() bool {
+	switch r {
+	case ConnectorEventGetResponseERekeyStartKRekeyStart:
+		return true
+	}
+	return false
+}
+
+type ConnectorEventGetResponseERekeyAdvance struct {
+	// Confirmed traffic on new inbound key, swapped outbound to new
+	K ConnectorEventGetResponseERekeyAdvanceK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string                                     `json:"tunnel_id" api:"required"`
+	JSON     connectorEventGetResponseERekeyAdvanceJSON `json:"-"`
+}
+
+// connectorEventGetResponseERekeyAdvanceJSON contains the JSON metadata for the
+// struct [ConnectorEventGetResponseERekeyAdvance]
+type connectorEventGetResponseERekeyAdvanceJSON struct {
+	K           apijson.Field
+	TunnelID    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectorEventGetResponseERekeyAdvance) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorEventGetResponseERekeyAdvanceJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectorEventGetResponseERekeyAdvance) implementsConnectorEventGetResponseE() {}
+
+// Confirmed traffic on new inbound key, swapped outbound to new
+type ConnectorEventGetResponseERekeyAdvanceK string
+
+const (
+	ConnectorEventGetResponseERekeyAdvanceKRekeyAdvance ConnectorEventGetResponseERekeyAdvanceK = "RekeyAdvance"
+)
+
+func (r ConnectorEventGetResponseERekeyAdvanceK) IsKnown() bool {
+	switch r {
+	case ConnectorEventGetResponseERekeyAdvanceKRekeyAdvance:
+		return true
+	}
+	return false
+}
+
+type ConnectorEventGetResponseERekeyComplete struct {
+	// Deleted old keys
+	K ConnectorEventGetResponseERekeyCompleteK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string                                      `json:"tunnel_id" api:"required"`
+	JSON     connectorEventGetResponseERekeyCompleteJSON `json:"-"`
+}
+
+// connectorEventGetResponseERekeyCompleteJSON contains the JSON metadata for the
+// struct [ConnectorEventGetResponseERekeyComplete]
+type connectorEventGetResponseERekeyCompleteJSON struct {
+	K           apijson.Field
+	TunnelID    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectorEventGetResponseERekeyComplete) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorEventGetResponseERekeyCompleteJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectorEventGetResponseERekeyComplete) implementsConnectorEventGetResponseE() {}
+
+// Deleted old keys
+type ConnectorEventGetResponseERekeyCompleteK string
+
+const (
+	ConnectorEventGetResponseERekeyCompleteKRekeyComplete ConnectorEventGetResponseERekeyCompleteK = "RekeyComplete"
+)
+
+func (r ConnectorEventGetResponseERekeyCompleteK) IsKnown() bool {
+	switch r {
+	case ConnectorEventGetResponseERekeyCompleteKRekeyComplete:
+		return true
+	}
+	return false
+}
+
+type ConnectorEventGetResponseERekeyReset struct {
+	// Deleted all keys after receiving an unexpected key
+	K ConnectorEventGetResponseERekeyResetK `json:"k" api:"required"`
+	// Tunnel identifier
+	TunnelID string                                   `json:"tunnel_id" api:"required"`
+	JSON     connectorEventGetResponseERekeyResetJSON `json:"-"`
+}
+
+// connectorEventGetResponseERekeyResetJSON contains the JSON metadata for the
+// struct [ConnectorEventGetResponseERekeyReset]
+type connectorEventGetResponseERekeyResetJSON struct {
+	K           apijson.Field
+	TunnelID    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectorEventGetResponseERekeyReset) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectorEventGetResponseERekeyResetJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectorEventGetResponseERekeyReset) implementsConnectorEventGetResponseE() {}
+
+// Deleted all keys after receiving an unexpected key
+type ConnectorEventGetResponseERekeyResetK string
+
+const (
+	ConnectorEventGetResponseERekeyResetKRekeyReset ConnectorEventGetResponseERekeyResetK = "RekeyReset"
+)
+
+func (r ConnectorEventGetResponseERekeyResetK) IsKnown() bool {
+	switch r {
+	case ConnectorEventGetResponseERekeyResetKRekeyReset:
+		return true
+	}
+	return false
+}
+
 // Initialized process
 type ConnectorEventGetResponseEK string
 
@@ -976,13 +1290,26 @@ const (
 	ConnectorEventGetResponseEKStartUpgrade                ConnectorEventGetResponseEK = "StartUpgrade"
 	ConnectorEventGetResponseEKFinishUpgradeSuccess        ConnectorEventGetResponseEK = "FinishUpgradeSuccess"
 	ConnectorEventGetResponseEKFinishUpgradeFailure        ConnectorEventGetResponseEK = "FinishUpgradeFailure"
+	ConnectorEventGetResponseEKBlessSlotSuccess            ConnectorEventGetResponseEK = "BlessSlotSuccess"
+	ConnectorEventGetResponseEKBlessSlotPending            ConnectorEventGetResponseEK = "BlessSlotPending"
+	ConnectorEventGetResponseEKBlessSlotFailure            ConnectorEventGetResponseEK = "BlessSlotFailure"
 	ConnectorEventGetResponseEKReconcile                   ConnectorEventGetResponseEK = "Reconcile"
 	ConnectorEventGetResponseEKConfigureCloudflaredTunnel  ConnectorEventGetResponseEK = "ConfigureCloudflaredTunnel"
+	ConnectorEventGetResponseEKRekeyInstallBoth            ConnectorEventGetResponseEK = "RekeyInstallBoth"
+	ConnectorEventGetResponseEKRekeyStart                  ConnectorEventGetResponseEK = "RekeyStart"
+	ConnectorEventGetResponseEKRekeyRestart                ConnectorEventGetResponseEK = "RekeyRestart"
+	ConnectorEventGetResponseEKRekeyAdvance                ConnectorEventGetResponseEK = "RekeyAdvance"
+	ConnectorEventGetResponseEKRekeyComplete               ConnectorEventGetResponseEK = "RekeyComplete"
+	ConnectorEventGetResponseEKRekeyReset                  ConnectorEventGetResponseEK = "RekeyReset"
+	ConnectorEventGetResponseEKHaTransition                ConnectorEventGetResponseEK = "HaTransition"
+	ConnectorEventGetResponseEKHaError                     ConnectorEventGetResponseEK = "HaError"
+	ConnectorEventGetResponseEKHaInit                      ConnectorEventGetResponseEK = "HaInit"
+	ConnectorEventGetResponseEKHaLeave                     ConnectorEventGetResponseEK = "HaLeave"
 )
 
 func (r ConnectorEventGetResponseEK) IsKnown() bool {
 	switch r {
-	case ConnectorEventGetResponseEKInit, ConnectorEventGetResponseEKLeave, ConnectorEventGetResponseEKStartAttestation, ConnectorEventGetResponseEKFinishAttestationSuccess, ConnectorEventGetResponseEKFinishAttestationFailure, ConnectorEventGetResponseEKStartRotateCryptKey, ConnectorEventGetResponseEKFinishRotateCryptKeySuccess, ConnectorEventGetResponseEKFinishRotateCryptKeyFailure, ConnectorEventGetResponseEKStartRotatePki, ConnectorEventGetResponseEKFinishRotatePkiSuccess, ConnectorEventGetResponseEKFinishRotatePkiFailure, ConnectorEventGetResponseEKStartUpgrade, ConnectorEventGetResponseEKFinishUpgradeSuccess, ConnectorEventGetResponseEKFinishUpgradeFailure, ConnectorEventGetResponseEKReconcile, ConnectorEventGetResponseEKConfigureCloudflaredTunnel:
+	case ConnectorEventGetResponseEKInit, ConnectorEventGetResponseEKLeave, ConnectorEventGetResponseEKStartAttestation, ConnectorEventGetResponseEKFinishAttestationSuccess, ConnectorEventGetResponseEKFinishAttestationFailure, ConnectorEventGetResponseEKStartRotateCryptKey, ConnectorEventGetResponseEKFinishRotateCryptKeySuccess, ConnectorEventGetResponseEKFinishRotateCryptKeyFailure, ConnectorEventGetResponseEKStartRotatePki, ConnectorEventGetResponseEKFinishRotatePkiSuccess, ConnectorEventGetResponseEKFinishRotatePkiFailure, ConnectorEventGetResponseEKStartUpgrade, ConnectorEventGetResponseEKFinishUpgradeSuccess, ConnectorEventGetResponseEKFinishUpgradeFailure, ConnectorEventGetResponseEKBlessSlotSuccess, ConnectorEventGetResponseEKBlessSlotPending, ConnectorEventGetResponseEKBlessSlotFailure, ConnectorEventGetResponseEKReconcile, ConnectorEventGetResponseEKConfigureCloudflaredTunnel, ConnectorEventGetResponseEKRekeyInstallBoth, ConnectorEventGetResponseEKRekeyStart, ConnectorEventGetResponseEKRekeyRestart, ConnectorEventGetResponseEKRekeyAdvance, ConnectorEventGetResponseEKRekeyComplete, ConnectorEventGetResponseEKRekeyReset, ConnectorEventGetResponseEKHaTransition, ConnectorEventGetResponseEKHaError, ConnectorEventGetResponseEKHaInit, ConnectorEventGetResponseEKHaLeave:
 		return true
 	}
 	return false

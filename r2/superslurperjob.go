@@ -271,7 +271,7 @@ func (r superSlurperJobListResponseJSON) RawJSON() string {
 
 type SuperSlurperJobListResponseSource struct {
 	Bucket       string                                        `json:"bucket"`
-	Endpoint     string                                        `json:"endpoint" api:"nullable"`
+	Endpoint     string                                        `json:"endpoint" api:"nullable" format:"uri"`
 	Jurisdiction SuperSlurperJobListResponseSourceJurisdiction `json:"jurisdiction"`
 	// This field can have the runtime type of [[]string].
 	Keys       interface{}                             `json:"keys"`
@@ -346,7 +346,7 @@ func init() {
 
 type SuperSlurperJobListResponseSourceS3SourceResponseSchema struct {
 	Bucket     string                                                        `json:"bucket"`
-	Endpoint   string                                                        `json:"endpoint" api:"nullable"`
+	Endpoint   string                                                        `json:"endpoint" api:"nullable" format:"uri"`
 	Keys       []string                                                      `json:"keys" api:"nullable"`
 	PathPrefix string                                                        `json:"pathPrefix" api:"nullable"`
 	Vendor     SuperSlurperJobListResponseSourceS3SourceResponseSchemaVendor `json:"vendor"`
@@ -474,12 +474,13 @@ type SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction string
 const (
 	SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionDefault SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction = "default"
 	SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionEu      SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction = "eu"
+	SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionUs      SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction = "us"
 	SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionFedramp SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionDefault, SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionEu, SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionFedramp:
+	case SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionDefault, SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionEu, SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionUs, SuperSlurperJobListResponseSourceR2SourceResponseSchemaJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -490,12 +491,13 @@ type SuperSlurperJobListResponseSourceJurisdiction string
 const (
 	SuperSlurperJobListResponseSourceJurisdictionDefault SuperSlurperJobListResponseSourceJurisdiction = "default"
 	SuperSlurperJobListResponseSourceJurisdictionEu      SuperSlurperJobListResponseSourceJurisdiction = "eu"
+	SuperSlurperJobListResponseSourceJurisdictionUs      SuperSlurperJobListResponseSourceJurisdiction = "us"
 	SuperSlurperJobListResponseSourceJurisdictionFedramp SuperSlurperJobListResponseSourceJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobListResponseSourceJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobListResponseSourceJurisdictionDefault, SuperSlurperJobListResponseSourceJurisdictionEu, SuperSlurperJobListResponseSourceJurisdictionFedramp:
+	case SuperSlurperJobListResponseSourceJurisdictionDefault, SuperSlurperJobListResponseSourceJurisdictionEu, SuperSlurperJobListResponseSourceJurisdictionUs, SuperSlurperJobListResponseSourceJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -564,12 +566,13 @@ type SuperSlurperJobListResponseTargetJurisdiction string
 const (
 	SuperSlurperJobListResponseTargetJurisdictionDefault SuperSlurperJobListResponseTargetJurisdiction = "default"
 	SuperSlurperJobListResponseTargetJurisdictionEu      SuperSlurperJobListResponseTargetJurisdiction = "eu"
+	SuperSlurperJobListResponseTargetJurisdictionUs      SuperSlurperJobListResponseTargetJurisdiction = "us"
 	SuperSlurperJobListResponseTargetJurisdictionFedramp SuperSlurperJobListResponseTargetJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobListResponseTargetJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobListResponseTargetJurisdictionDefault, SuperSlurperJobListResponseTargetJurisdictionEu, SuperSlurperJobListResponseTargetJurisdictionFedramp:
+	case SuperSlurperJobListResponseTargetJurisdictionDefault, SuperSlurperJobListResponseTargetJurisdictionEu, SuperSlurperJobListResponseTargetJurisdictionUs, SuperSlurperJobListResponseTargetJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -610,7 +613,7 @@ func (r superSlurperJobGetResponseJSON) RawJSON() string {
 
 type SuperSlurperJobGetResponseSource struct {
 	Bucket       string                                       `json:"bucket"`
-	Endpoint     string                                       `json:"endpoint" api:"nullable"`
+	Endpoint     string                                       `json:"endpoint" api:"nullable" format:"uri"`
 	Jurisdiction SuperSlurperJobGetResponseSourceJurisdiction `json:"jurisdiction"`
 	// This field can have the runtime type of [[]string].
 	Keys       interface{}                            `json:"keys"`
@@ -685,7 +688,7 @@ func init() {
 
 type SuperSlurperJobGetResponseSourceS3SourceResponseSchema struct {
 	Bucket     string                                                       `json:"bucket"`
-	Endpoint   string                                                       `json:"endpoint" api:"nullable"`
+	Endpoint   string                                                       `json:"endpoint" api:"nullable" format:"uri"`
 	Keys       []string                                                     `json:"keys" api:"nullable"`
 	PathPrefix string                                                       `json:"pathPrefix" api:"nullable"`
 	Vendor     SuperSlurperJobGetResponseSourceS3SourceResponseSchemaVendor `json:"vendor"`
@@ -811,12 +814,13 @@ type SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction string
 const (
 	SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionDefault SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction = "default"
 	SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionEu      SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction = "eu"
+	SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionUs      SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction = "us"
 	SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionFedramp SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionDefault, SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionEu, SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionFedramp:
+	case SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionDefault, SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionEu, SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionUs, SuperSlurperJobGetResponseSourceR2SourceResponseSchemaJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -827,12 +831,13 @@ type SuperSlurperJobGetResponseSourceJurisdiction string
 const (
 	SuperSlurperJobGetResponseSourceJurisdictionDefault SuperSlurperJobGetResponseSourceJurisdiction = "default"
 	SuperSlurperJobGetResponseSourceJurisdictionEu      SuperSlurperJobGetResponseSourceJurisdiction = "eu"
+	SuperSlurperJobGetResponseSourceJurisdictionUs      SuperSlurperJobGetResponseSourceJurisdiction = "us"
 	SuperSlurperJobGetResponseSourceJurisdictionFedramp SuperSlurperJobGetResponseSourceJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobGetResponseSourceJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobGetResponseSourceJurisdictionDefault, SuperSlurperJobGetResponseSourceJurisdictionEu, SuperSlurperJobGetResponseSourceJurisdictionFedramp:
+	case SuperSlurperJobGetResponseSourceJurisdictionDefault, SuperSlurperJobGetResponseSourceJurisdictionEu, SuperSlurperJobGetResponseSourceJurisdictionUs, SuperSlurperJobGetResponseSourceJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -901,12 +906,13 @@ type SuperSlurperJobGetResponseTargetJurisdiction string
 const (
 	SuperSlurperJobGetResponseTargetJurisdictionDefault SuperSlurperJobGetResponseTargetJurisdiction = "default"
 	SuperSlurperJobGetResponseTargetJurisdictionEu      SuperSlurperJobGetResponseTargetJurisdiction = "eu"
+	SuperSlurperJobGetResponseTargetJurisdictionUs      SuperSlurperJobGetResponseTargetJurisdiction = "us"
 	SuperSlurperJobGetResponseTargetJurisdictionFedramp SuperSlurperJobGetResponseTargetJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobGetResponseTargetJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobGetResponseTargetJurisdictionDefault, SuperSlurperJobGetResponseTargetJurisdictionEu, SuperSlurperJobGetResponseTargetJurisdictionFedramp:
+	case SuperSlurperJobGetResponseTargetJurisdictionDefault, SuperSlurperJobGetResponseTargetJurisdictionEu, SuperSlurperJobGetResponseTargetJurisdictionUs, SuperSlurperJobGetResponseTargetJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -974,10 +980,11 @@ func (r SuperSlurperJobNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type SuperSlurperJobNewParamsSource struct {
-	Bucket       param.Field[string]                                     `json:"bucket" api:"required"`
-	Secret       param.Field[interface{}]                                `json:"secret" api:"required"`
-	Vendor       param.Field[SuperSlurperJobNewParamsSourceVendor]       `json:"vendor" api:"required"`
-	Endpoint     param.Field[string]                                     `json:"endpoint"`
+	Bucket param.Field[string]                               `json:"bucket" api:"required"`
+	Secret param.Field[interface{}]                          `json:"secret" api:"required"`
+	Vendor param.Field[SuperSlurperJobNewParamsSourceVendor] `json:"vendor" api:"required"`
+	// Custom S3-compatible endpoint that must use https://.
+	Endpoint     param.Field[string]                                     `json:"endpoint" format:"uri"`
 	Jurisdiction param.Field[SuperSlurperJobNewParamsSourceJurisdiction] `json:"jurisdiction"`
 	Keys         param.Field[interface{}]                                `json:"keys"`
 	PathPrefix   param.Field[string]                                     `json:"pathPrefix"`
@@ -999,13 +1006,14 @@ type SuperSlurperJobNewParamsSourceUnion interface {
 }
 
 type SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchema struct {
-	Bucket     param.Field[string]                                                      `json:"bucket" api:"required"`
-	Secret     param.Field[SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchemaSecret] `json:"secret" api:"required"`
-	Vendor     param.Field[SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchemaVendor] `json:"vendor" api:"required"`
-	Endpoint   param.Field[string]                                                      `json:"endpoint"`
-	Keys       param.Field[[]string]                                                    `json:"keys"`
-	PathPrefix param.Field[string]                                                      `json:"pathPrefix"`
-	Region     param.Field[string]                                                      `json:"region"`
+	Bucket param.Field[string]                                                      `json:"bucket" api:"required"`
+	Secret param.Field[SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchemaSecret] `json:"secret" api:"required"`
+	Vendor param.Field[SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchemaVendor] `json:"vendor" api:"required"`
+	// Custom S3-compatible endpoint that must use https://.
+	Endpoint   param.Field[string]   `json:"endpoint" format:"uri"`
+	Keys       param.Field[[]string] `json:"keys"`
+	PathPrefix param.Field[string]   `json:"pathPrefix"`
+	Region     param.Field[string]   `json:"region"`
 }
 
 func (r SuperSlurperJobNewParamsSourceR2SlurperS3SourceSchema) MarshalJSON() (data []byte, err error) {
@@ -1106,12 +1114,13 @@ type SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction string
 const (
 	SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionDefault SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction = "default"
 	SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionEu      SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction = "eu"
+	SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionUs      SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction = "us"
 	SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionFedramp SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionDefault, SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionEu, SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionFedramp:
+	case SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionDefault, SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionEu, SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionUs, SuperSlurperJobNewParamsSourceR2SlurperR2SourceSchemaJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -1138,12 +1147,13 @@ type SuperSlurperJobNewParamsSourceJurisdiction string
 const (
 	SuperSlurperJobNewParamsSourceJurisdictionDefault SuperSlurperJobNewParamsSourceJurisdiction = "default"
 	SuperSlurperJobNewParamsSourceJurisdictionEu      SuperSlurperJobNewParamsSourceJurisdiction = "eu"
+	SuperSlurperJobNewParamsSourceJurisdictionUs      SuperSlurperJobNewParamsSourceJurisdiction = "us"
 	SuperSlurperJobNewParamsSourceJurisdictionFedramp SuperSlurperJobNewParamsSourceJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobNewParamsSourceJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobNewParamsSourceJurisdictionDefault, SuperSlurperJobNewParamsSourceJurisdictionEu, SuperSlurperJobNewParamsSourceJurisdictionFedramp:
+	case SuperSlurperJobNewParamsSourceJurisdictionDefault, SuperSlurperJobNewParamsSourceJurisdictionEu, SuperSlurperJobNewParamsSourceJurisdictionUs, SuperSlurperJobNewParamsSourceJurisdictionFedramp:
 		return true
 	}
 	return false
@@ -1174,12 +1184,13 @@ type SuperSlurperJobNewParamsTargetJurisdiction string
 const (
 	SuperSlurperJobNewParamsTargetJurisdictionDefault SuperSlurperJobNewParamsTargetJurisdiction = "default"
 	SuperSlurperJobNewParamsTargetJurisdictionEu      SuperSlurperJobNewParamsTargetJurisdiction = "eu"
+	SuperSlurperJobNewParamsTargetJurisdictionUs      SuperSlurperJobNewParamsTargetJurisdiction = "us"
 	SuperSlurperJobNewParamsTargetJurisdictionFedramp SuperSlurperJobNewParamsTargetJurisdiction = "fedramp"
 )
 
 func (r SuperSlurperJobNewParamsTargetJurisdiction) IsKnown() bool {
 	switch r {
-	case SuperSlurperJobNewParamsTargetJurisdictionDefault, SuperSlurperJobNewParamsTargetJurisdictionEu, SuperSlurperJobNewParamsTargetJurisdictionFedramp:
+	case SuperSlurperJobNewParamsTargetJurisdictionDefault, SuperSlurperJobNewParamsTargetJurisdictionEu, SuperSlurperJobNewParamsTargetJurisdictionUs, SuperSlurperJobNewParamsTargetJurisdictionFedramp:
 		return true
 	}
 	return false

@@ -39,19 +39,60 @@ func TestScriptVersionNewWithOptionalParams(t *testing.T) {
 			Metadata: cloudflare.F(workers.ScriptVersionNewParamsMetadata{
 				MainModule: cloudflare.F("worker.js"),
 				Annotations: cloudflare.F(workers.ScriptVersionNewParamsMetadataAnnotations{
-					WorkersAlias:   cloudflare.F("staging"),
-					WorkersMessage: cloudflare.F("Fixed worker code."),
-					WorkersTag:     cloudflare.F("any-identifier-from-external-system"),
+					WorkersAlias:             cloudflare.F("staging"),
+					WorkersCommitSha:         cloudflare.F("8b6aeb38455e2f92e170deb46313b90166ccc1e5"),
+					WorkersMessage:           cloudflare.F("Fixed worker code."),
+					WorkersPullRequestNumber: cloudflare.F("14966"),
+					WorkersPullRequestTitle:  cloudflare.F("Add a cool new feature"),
+					WorkersPullRequestURL:    cloudflare.F("https://github.com/cloudflare/workers-sdk/pull/14966"),
+					WorkersRepositoryURL:     cloudflare.F("https://github.com/cloudflare/workers-sdk"),
+					WorkersTag:               cloudflare.F("any-identifier-from-external-system"),
 				}),
 				Bindings: cloudflare.F([]workers.ScriptVersionNewParamsMetadataBindingUnion{workers.ScriptVersionNewParamsMetadataBindingsWorkersBindingKindPlainText{
 					Name: cloudflare.F("MY_ENV_VAR"),
 					Text: cloudflare.F("my_data"),
 					Type: cloudflare.F(workers.ScriptVersionNewParamsMetadataBindingsWorkersBindingKindPlainTextTypePlainText),
 				}}),
-				CompatibilityDate:  cloudflare.F("2021-01-01"),
+				CacheOptions: cloudflare.F(workers.ScriptVersionNewParamsMetadataCacheOptions{
+					Enabled:           cloudflare.F(true),
+					CrossVersionCache: cloudflare.F(true),
+				}),
+				CompatibilityDate:  cloudflare.F("2021-01-01T00:00:00Z"),
 				CompatibilityFlags: cloudflare.F([]string{"nodejs_compat"}),
-				KeepBindings:       cloudflare.F([]string{"string"}),
-				UsageModel:         cloudflare.F(workers.ScriptVersionNewParamsMetadataUsageModelStandard),
+				Exports: cloudflare.F(map[string]workers.ScriptVersionNewParamsMetadataExportsUnion{
+					"Admin": workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExport{
+						Type: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportCache{
+							Enabled: cloudflare.F(true),
+						}),
+						State: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportStateCreated),
+					},
+					"Counter": workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectExport{
+						Storage:   cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectExportStorageSqlite),
+						Type:      cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectExportTypeDurableObject),
+						Container: cloudflare.F("my-container"),
+						State:     cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectExportStateCreated),
+					},
+					"OldCounter": workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectRenamedExport{
+						RenamedTo: cloudflare.F("Counter"),
+						State:     cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectRenamedExportStateRenamed),
+						Type:      cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersDurableObjectRenamedExportTypeDurableObject),
+					},
+					"default": workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExport{
+						Type: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportTypeWorker),
+						Cache: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportCache{
+							Enabled: cloudflare.F(false),
+						}),
+						State: cloudflare.F(workers.ScriptVersionNewParamsMetadataExportsWorkersWorkerExportStateCreated),
+					},
+				}),
+				KeepBindings: cloudflare.F([]string{"string"}),
+				PackageDependencies: cloudflare.F([]workers.ScriptVersionNewParamsMetadataPackageDependency{{
+					InstalledVersion:   cloudflare.F("4.17.22"),
+					Name:               cloudflare.F("lodash"),
+					PackageJsonVersion: cloudflare.F("^4.17.21"),
+				}}),
+				UsageModel: cloudflare.F(workers.ScriptVersionNewParamsMetadataUsageModelStandard),
 			}),
 			BindingsInherit: cloudflare.F(workers.ScriptVersionNewParamsBindingsInheritStrict),
 			Files:           cloudflare.F([]io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))}),

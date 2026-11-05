@@ -315,6 +315,7 @@ type EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotation struct 
 	IsInstantaneous bool                                                                    `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                  `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                               `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -329,6 +330,7 @@ type emailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationJSON str
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -384,7 +386,6 @@ func (r EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsData
 type EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -394,7 +395,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupARCResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -592,6 +593,7 @@ type EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotation struct
 	IsInstantaneous bool                                                                     `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                   `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                 `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -606,6 +608,7 @@ type emailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationJSON st
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -661,7 +664,6 @@ func (r EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsDat
 type EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -671,7 +673,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupDKIMResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -869,6 +871,7 @@ type EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotation struc
 	IsInstantaneous bool                                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                  `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -883,6 +886,7 @@ type emailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationJSON s
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -938,7 +942,6 @@ func (r EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsDa
 type EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -948,7 +951,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupDMARCResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1146,6 +1149,7 @@ type EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotation s
 	IsInstantaneous bool                                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                      `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1160,6 +1164,7 @@ type emailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationJS
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1215,7 +1220,6 @@ func (r EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotatio
 type EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1225,7 +1229,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupMaliciousResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1447,6 +1451,7 @@ type EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotation struct
 	IsInstantaneous bool                                                                     `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                   `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                 `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1461,6 +1466,7 @@ type emailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationJSON st
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1516,7 +1522,6 @@ func (r EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsDat
 type EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1526,7 +1531,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSpamResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1747,6 +1752,7 @@ type EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotation struct 
 	IsInstantaneous bool                                                                    `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                  `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                               `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1761,6 +1767,7 @@ type emailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationJSON str
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1816,7 +1823,6 @@ func (r EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsData
 type EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1826,7 +1832,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSPFResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2024,6 +2030,7 @@ type EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotation struc
 	IsInstantaneous bool                                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                  `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2038,6 +2045,7 @@ type emailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationJSON s
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2093,7 +2101,6 @@ func (r EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsDa
 type EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2103,7 +2110,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupSpoofResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2324,6 +2331,7 @@ type EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotat
 	IsInstantaneous bool                                                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                           `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2338,6 +2346,7 @@ type emailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotat
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2393,7 +2402,6 @@ func (r EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnno
 type EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2403,7 +2411,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupThreatCategoryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2631,6 +2639,7 @@ type EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotation 
 	IsInstantaneous bool                                                                           `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                         `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                      `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                       `json:"tags"`
 	JSON            emailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2645,6 +2654,7 @@ type emailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationJ
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2700,7 +2710,6 @@ func (r EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotati
 type EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2710,7 +2719,7 @@ const (
 
 func (r EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, EmailSecurityTimeseriesGroupTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2819,14 +2828,33 @@ type EmailSecurityTimeseriesGroupARCParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupARCParamsAggInterval] `query:"aggInterval"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupARCParamsDKIM] `query:"dkim"`
@@ -2855,6 +2883,9 @@ func (r EmailSecurityTimeseriesGroupARCParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupARCParamsAggInterval string
 
 const (
@@ -2980,16 +3011,35 @@ type EmailSecurityTimeseriesGroupDKIMParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupDKIMParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupDKIMParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DMARC (Domain-based Message Authentication, Reporting and
 	// Conformance) validation status.
@@ -3016,6 +3066,9 @@ func (r EmailSecurityTimeseriesGroupDKIMParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupDKIMParamsAggInterval string
 
 const (
@@ -3141,16 +3194,35 @@ type EmailSecurityTimeseriesGroupDMARCParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupDMARCParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupDMARCParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupDMARCParamsDKIM] `query:"dkim"`
@@ -3176,6 +3248,9 @@ func (r EmailSecurityTimeseriesGroupDMARCParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupDMARCParamsAggInterval string
 
 const (
@@ -3301,16 +3376,35 @@ type EmailSecurityTimeseriesGroupMaliciousParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupMaliciousParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupMaliciousParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupMaliciousParamsDKIM] `query:"dkim"`
@@ -3339,6 +3433,9 @@ func (r EmailSecurityTimeseriesGroupMaliciousParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupMaliciousParamsAggInterval string
 
 const (
@@ -3480,16 +3577,35 @@ type EmailSecurityTimeseriesGroupSpamParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupSpamParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupSpamParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupSpamParamsDKIM] `query:"dkim"`
@@ -3518,6 +3634,9 @@ func (r EmailSecurityTimeseriesGroupSpamParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupSpamParamsAggInterval string
 
 const (
@@ -3659,16 +3778,35 @@ type EmailSecurityTimeseriesGroupSPFParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupSPFParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupSPFParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupSPFParamsDKIM] `query:"dkim"`
@@ -3695,6 +3833,9 @@ func (r EmailSecurityTimeseriesGroupSPFParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupSPFParamsAggInterval string
 
 const (
@@ -3820,16 +3961,35 @@ type EmailSecurityTimeseriesGroupSpoofParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupSpoofParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupSpoofParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupSpoofParamsDKIM] `query:"dkim"`
@@ -3858,6 +4018,9 @@ func (r EmailSecurityTimeseriesGroupSpoofParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupSpoofParamsAggInterval string
 
 const (
@@ -3999,16 +4162,35 @@ type EmailSecurityTimeseriesGroupThreatCategoryParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupThreatCategoryParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupThreatCategoryParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupThreatCategoryParamsDKIM] `query:"dkim"`
@@ -4037,6 +4219,9 @@ func (r EmailSecurityTimeseriesGroupThreatCategoryParams) URLQuery() (v url.Valu
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupThreatCategoryParamsAggInterval string
 
 const (
@@ -4179,16 +4364,35 @@ type EmailSecurityTimeseriesGroupTLSVersionParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[EmailSecurityTimeseriesGroupTLSVersionParamsAggInterval] `query:"aggInterval"`
 	// Filters results by ARC (Authenticated Received Chain) validation.
 	ARC param.Field[[]EmailSecurityTimeseriesGroupTLSVersionParamsARC] `query:"arc"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by DKIM (DomainKeys Identified Mail) validation status.
 	DKIM param.Field[[]EmailSecurityTimeseriesGroupTLSVersionParamsDKIM] `query:"dkim"`
@@ -4215,6 +4419,9 @@ func (r EmailSecurityTimeseriesGroupTLSVersionParams) URLQuery() (v url.Values) 
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type EmailSecurityTimeseriesGroupTLSVersionParamsAggInterval string
 
 const (

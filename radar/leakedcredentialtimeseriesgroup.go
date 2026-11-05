@@ -192,6 +192,7 @@ type LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotation
 	IsInstantaneous bool                                                                            `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                          `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                       `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                        `json:"tags"`
 	JSON            leakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -206,6 +207,7 @@ type leakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotation
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -261,7 +263,6 @@ func (r LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotat
 type LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeEvent             LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage            LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -271,7 +272,7 @@ const (
 
 func (r LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeEvent, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypePipeline, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypePipeline, LeakedCredentialTimeseriesGroupBotClassResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -496,6 +497,7 @@ type LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotat
 	IsInstantaneous bool                                                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                                           `json:"tags"`
 	JSON            leakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -510,6 +512,7 @@ type leakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotat
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -565,7 +568,6 @@ func (r LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnno
 type LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeEvent             LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeOutage            LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -575,7 +577,7 @@ const (
 
 func (r LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeEvent, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeOutage, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypePipeline, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeOutage, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypePipeline, LeakedCredentialTimeseriesGroupCompromisedResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -684,16 +686,35 @@ type LeakedCredentialTimeseriesGroupBotClassParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[LeakedCredentialTimeseriesGroupBotClassParamsAggInterval] `query:"aggInterval"`
 	// Filters results by compromised credential status (clean vs. compromised).
 	Compromised param.Field[[]LeakedCredentialTimeseriesGroupBotClassParamsCompromised] `query:"compromised"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[LeakedCredentialTimeseriesGroupBotClassParamsFormat] `query:"format"`
@@ -713,6 +734,9 @@ func (r LeakedCredentialTimeseriesGroupBotClassParams) URLQuery() (v url.Values)
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type LeakedCredentialTimeseriesGroupBotClassParamsAggInterval string
 
 const (
@@ -789,17 +813,36 @@ type LeakedCredentialTimeseriesGroupCompromisedParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[LeakedCredentialTimeseriesGroupCompromisedParamsAggInterval] `query:"aggInterval"`
 	// Filters results by bot class. Refer to
 	// [Bot classes](https://developers.cloudflare.com/radar/concepts/bot-classes/).
 	BotClass param.Field[[]LeakedCredentialTimeseriesGroupCompromisedParamsBotClass] `query:"botClass"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[LeakedCredentialTimeseriesGroupCompromisedParamsFormat] `query:"format"`
@@ -819,6 +862,9 @@ func (r LeakedCredentialTimeseriesGroupCompromisedParams) URLQuery() (v url.Valu
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type LeakedCredentialTimeseriesGroupCompromisedParamsAggInterval string
 
 const (

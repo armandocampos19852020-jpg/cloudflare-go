@@ -57,7 +57,7 @@ func (r *DLPEmailRuleService) New(ctx context.Context, params DLPEmailRuleNewPar
 	return res, nil
 }
 
-// Update email scanner rule
+// Updates a DLP email scanning rule.
 func (r *DLPEmailRuleService) Update(ctx context.Context, ruleID string, params DLPEmailRuleUpdateParams, opts ...option.RequestOption) (res *DLPEmailRuleUpdateResponse, err error) {
 	var env DLPEmailRuleUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)

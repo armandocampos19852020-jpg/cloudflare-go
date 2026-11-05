@@ -24,18 +24,17 @@ func TestPolicyNew(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
 	_, err := client.PageShield.Policies.New(context.TODO(), page_shield.PolicyNewParams{
-		ZoneID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
-		Policy: page_shield.PolicyParam{
-			Action:      cloudflare.F(page_shield.PolicyActionAllow),
-			Description: cloudflare.F("Checkout page CSP policy"),
-			Enabled:     cloudflare.F(true),
-			Expression:  cloudflare.F(`ends_with(http.request.uri.path, "/checkout")`),
-			Value:       cloudflare.F("script-src 'none';"),
-		},
+		ZoneID:      cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+		Action:      cloudflare.F(page_shield.PolicyNewParamsActionAllow),
+		Description: cloudflare.F("Checkout page CSP policy"),
+		Enabled:     cloudflare.F(true),
+		Expression:  cloudflare.F(`ends_with(http.request.uri.path, "/checkout")`),
+		Value:       cloudflare.F("script-src 'none';"),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error
@@ -56,6 +55,7 @@ func TestPolicyUpdateWithOptionalParams(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
@@ -90,6 +90,7 @@ func TestPolicyList(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
@@ -115,6 +116,7 @@ func TestPolicyDelete(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
@@ -144,6 +146,7 @@ func TestPolicyGet(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)

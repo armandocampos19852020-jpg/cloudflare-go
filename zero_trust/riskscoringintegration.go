@@ -127,7 +127,7 @@ func (r *RiskScoringIntegrationService) Delete(ctx context.Context, integrationI
 	return res, nil
 }
 
-// Get risk score integration by id.
+// Gets a Zero Trust risk score integration by ID.
 func (r *RiskScoringIntegrationService) Get(ctx context.Context, integrationID string, query RiskScoringIntegrationGetParams, opts ...option.RequestOption) (res *RiskScoringIntegrationGetResponse, err error) {
 	var env RiskScoringIntegrationGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)

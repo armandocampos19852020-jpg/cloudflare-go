@@ -35,7 +35,7 @@ func NewInvestigateDetectionService(opts ...option.RequestOption) (r *Investigat
 }
 
 // Returns detection details such as threat categories and sender information for
-// non-benign messages.
+// messages with a detection.
 func (r *InvestigateDetectionService) Get(ctx context.Context, investigateID string, query InvestigateDetectionGetParams, opts ...option.RequestOption) (res *InvestigateDetectionGetResponse, err error) {
 	var env InvestigateDetectionGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -65,7 +65,8 @@ type InvestigateDetectionGetResponse struct {
 	SenderInfo       InvestigateDetectionGetResponseSenderInfo       `json:"sender_info" api:"required"`
 	ThreatCategories []InvestigateDetectionGetResponseThreatCategory `json:"threat_categories" api:"required"`
 	Validation       InvestigateDetectionGetResponseValidation       `json:"validation" api:"required"`
-	FinalDisposition InvestigateDetectionGetResponseFinalDisposition `json:"final_disposition"`
+	// The verdict Email Security assigns to a message.
+	FinalDisposition InvestigateDetectionGetResponseFinalDisposition `json:"final_disposition" api:"nullable"`
 	JSON             investigateDetectionGetResponseJSON             `json:"-"`
 }
 
@@ -94,23 +95,23 @@ func (r investigateDetectionGetResponseJSON) RawJSON() string {
 }
 
 type InvestigateDetectionGetResponseAttachment struct {
-	// Size of the attachment in bytes
+	// Size of the attachment in bytes.
 	Size int64 `json:"size" api:"required"`
-	// MIME type of the attachment
+	// MIME type of the attachment.
 	ContentType string `json:"content_type" api:"nullable"`
-	// Detection result for this attachment
+	// Detection result for this attachment.
 	Detection InvestigateDetectionGetResponseAttachmentsDetection `json:"detection" api:"nullable"`
-	// Whether the attachment is encrypted
+	// Whether the attachment is encrypted.
 	Encrypted bool `json:"encrypted" api:"nullable"`
-	// Name of the attached file
+	// Name of the attached file.
 	Filename string `json:"filename" api:"nullable"`
-	// MD5 hash of the attachment
+	// MD5 hash of the attachment.
 	Md5 string `json:"md5" api:"nullable"`
-	// Attachment name (alternative to filename)
+	// Attachment name (alternative to filename).
 	Name string `json:"name" api:"nullable"`
-	// SHA1 hash of the attachment
+	// SHA1 hash of the attachment.
 	Sha1 string `json:"sha1" api:"nullable"`
-	// SHA256 hash of the attachment
+	// SHA256 hash of the attachment.
 	Sha256 string                                        `json:"sha256" api:"nullable"`
 	JSON   investigateDetectionGetResponseAttachmentJSON `json:"-"`
 }
@@ -139,7 +140,7 @@ func (r investigateDetectionGetResponseAttachmentJSON) RawJSON() string {
 	return r.raw
 }
 
-// Detection result for this attachment
+// Detection result for this attachment.
 type InvestigateDetectionGetResponseAttachmentsDetection string
 
 const (
@@ -163,17 +164,19 @@ func (r InvestigateDetectionGetResponseAttachmentsDetection) IsKnown() bool {
 	return false
 }
 
+// A single detection finding for a message.
 type InvestigateDetectionGetResponseFinding struct {
-	Attachment string                                           `json:"attachment" api:"nullable"`
-	Detail     string                                           `json:"detail" api:"nullable"`
-	Detection  InvestigateDetectionGetResponseFindingsDetection `json:"detection"`
-	Field      string                                           `json:"field" api:"nullable"`
-	Name       string                                           `json:"name" api:"nullable"`
-	Portion    string                                           `json:"portion" api:"nullable"`
-	Reason     string                                           `json:"reason" api:"nullable"`
-	Score      float64                                          `json:"score" api:"nullable"`
-	Value      string                                           `json:"value" api:"nullable"`
-	JSON       investigateDetectionGetResponseFindingJSON       `json:"-"`
+	Attachment string `json:"attachment" api:"nullable"`
+	Detail     string `json:"detail" api:"nullable"`
+	// Detection result associated with this finding.
+	Detection InvestigateDetectionGetResponseFindingsDetection `json:"detection" api:"nullable"`
+	Field     string                                           `json:"field" api:"nullable"`
+	Name      string                                           `json:"name" api:"nullable"`
+	Portion   string                                           `json:"portion" api:"nullable"`
+	Reason    string                                           `json:"reason" api:"nullable"`
+	Score     float64                                          `json:"score" api:"nullable"`
+	Value     string                                           `json:"value" api:"nullable"`
+	JSON      investigateDetectionGetResponseFindingJSON       `json:"-"`
 }
 
 // investigateDetectionGetResponseFindingJSON contains the JSON metadata for the
@@ -200,6 +203,7 @@ func (r investigateDetectionGetResponseFindingJSON) RawJSON() string {
 	return r.raw
 }
 
+// Detection result associated with this finding.
 type InvestigateDetectionGetResponseFindingsDetection string
 
 const (
@@ -327,9 +331,9 @@ func (r investigateDetectionGetResponseThreatCategoryJSON) RawJSON() string {
 
 type InvestigateDetectionGetResponseValidation struct {
 	Comment string                                         `json:"comment" api:"nullable"`
-	DKIM    InvestigateDetectionGetResponseValidationDKIM  `json:"dkim"`
-	DMARC   InvestigateDetectionGetResponseValidationDMARC `json:"dmarc"`
-	SPF     InvestigateDetectionGetResponseValidationSPF   `json:"spf"`
+	DKIM    InvestigateDetectionGetResponseValidationDKIM  `json:"dkim" api:"nullable"`
+	DMARC   InvestigateDetectionGetResponseValidationDMARC `json:"dmarc" api:"nullable"`
+	SPF     InvestigateDetectionGetResponseValidationSPF   `json:"spf" api:"nullable"`
 	JSON    investigateDetectionGetResponseValidationJSON  `json:"-"`
 }
 
@@ -406,6 +410,7 @@ func (r InvestigateDetectionGetResponseValidationSPF) IsKnown() bool {
 	return false
 }
 
+// The verdict Email Security assigns to a message.
 type InvestigateDetectionGetResponseFinalDisposition string
 
 const (

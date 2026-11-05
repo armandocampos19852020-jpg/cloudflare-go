@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"time"
 
 	"github.com/cloudflare/cloudflare-go/v7/internal/apijson"
+	"github.com/cloudflare/cloudflare-go/v7/internal/apiquery"
 	"github.com/cloudflare/cloudflare-go/v7/internal/param"
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
@@ -76,16 +78,16 @@ func (r *GatewayLocationService) Update(ctx context.Context, locationID string, 
 }
 
 // List Zero Trust Gateway locations for an account.
-func (r *GatewayLocationService) List(ctx context.Context, query GatewayLocationListParams, opts ...option.RequestOption) (res *pagination.SinglePage[Location], err error) {
+func (r *GatewayLocationService) List(ctx context.Context, params GatewayLocationListParams, opts ...option.RequestOption) (res *pagination.SinglePage[Location], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	if query.AccountID.Value == "" {
+	if params.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("accounts/%s/gateway/locations", query.AccountID)
-	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
+	path := fmt.Sprintf("accounts/%s/gateway/locations", params.AccountID)
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, params, &res, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +100,8 @@ func (r *GatewayLocationService) List(ctx context.Context, query GatewayLocation
 }
 
 // List Zero Trust Gateway locations for an account.
-func (r *GatewayLocationService) ListAutoPaging(ctx context.Context, query GatewayLocationListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[Location] {
-	return pagination.NewSinglePageAutoPager(r.List(ctx, query, opts...))
+func (r *GatewayLocationService) ListAutoPaging(ctx context.Context, params GatewayLocationListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[Location] {
+	return pagination.NewSinglePageAutoPager(r.List(ctx, params, opts...))
 }
 
 // Delete a configured Zero Trust Gateway location.
@@ -423,10 +425,10 @@ type Location struct {
 	// Show the backup destination IPv4 address from the pair identified
 	// dns_destination_ips_id. This field read-only.
 	IPV4DestinationBackup string `json:"ipv4_destination_backup"`
-	// Specify the maximum TTL, in seconds, applied to DNS response records. Records
-	// whose upstream TTL exceeds this value are served with the capped value. When
-	// null or absent, no cap is applied at this tier.
-	MaxTTLSecs int64 `json:"max_ttl_secs" api:"nullable"`
+	// Controls how DNS response TTLs are capped for this location relative to the
+	// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+	// `inherit`.
+	MaxTTL LocationMaxTTL `json:"max_ttl" api:"nullable"`
 	// Specify the location name.
 	Name string `json:"name"`
 	// Specify the list of network ranges from which requests at this location
@@ -450,7 +452,7 @@ type locationJSON struct {
 	IP                        apijson.Field
 	IPV4Destination           apijson.Field
 	IPV4DestinationBackup     apijson.Field
-	MaxTTLSecs                apijson.Field
+	MaxTTL                    apijson.Field
 	Name                      apijson.Field
 	Networks                  apijson.Field
 	UpdatedAt                 apijson.Field
@@ -464,6 +466,53 @@ func (r *Location) UnmarshalJSON(data []byte) (err error) {
 
 func (r locationJSON) RawJSON() string {
 	return r.raw
+}
+
+// Controls how DNS response TTLs are capped for this location relative to the
+// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+// `inherit`.
+type LocationMaxTTL struct {
+	// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+	// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+	Mode LocationMaxTTLMode `json:"mode" api:"required"`
+	// Location-specific cap on DNS response TTLs, in seconds. Required when `mode` is
+	// `override`. Must be omitted when `mode` is `inherit` or `disabled`.
+	TTLSecs int64              `json:"ttl_secs" api:"nullable"`
+	JSON    locationMaxTTLJSON `json:"-"`
+}
+
+// locationMaxTTLJSON contains the JSON metadata for the struct [LocationMaxTTL]
+type locationMaxTTLJSON struct {
+	Mode        apijson.Field
+	TTLSecs     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *LocationMaxTTL) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r locationMaxTTLJSON) RawJSON() string {
+	return r.raw
+}
+
+// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+type LocationMaxTTLMode string
+
+const (
+	LocationMaxTTLModeInherit  LocationMaxTTLMode = "inherit"
+	LocationMaxTTLModeOverride LocationMaxTTLMode = "override"
+	LocationMaxTTLModeDisabled LocationMaxTTLMode = "disabled"
+)
+
+func (r LocationMaxTTLMode) IsKnown() bool {
+	switch r {
+	case LocationMaxTTLModeInherit, LocationMaxTTLModeOverride, LocationMaxTTLModeDisabled:
+		return true
+	}
+	return false
 }
 
 type LocationNetwork struct {
@@ -490,6 +539,7 @@ func (r locationNetworkJSON) RawJSON() string {
 type GatewayLocationDeleteResponse = interface{}
 
 type GatewayLocationNewParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify the location name.
 	Name param.Field[string] `json:"name" api:"required"`
@@ -505,10 +555,10 @@ type GatewayLocationNewParams struct {
 	ECSSupport param.Field[bool] `json:"ecs_support"`
 	// Configure the destination endpoints for this location.
 	Endpoints param.Field[EndpointParam] `json:"endpoints"`
-	// Specify the maximum TTL, in seconds, applied to DNS response records. Records
-	// whose upstream TTL exceeds this value are served with the capped value. When
-	// null or absent, no cap is applied at this tier.
-	MaxTTLSecs param.Field[int64] `json:"max_ttl_secs"`
+	// Controls how DNS response TTLs are capped for this location relative to the
+	// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+	// `inherit`.
+	MaxTTL param.Field[GatewayLocationNewParamsMaxTTL] `json:"max_ttl"`
 	// Specify the list of network ranges from which requests at this location
 	// originate. The list takes effect only if it is non-empty and the IPv4 endpoint
 	// is enabled for this location.
@@ -517,6 +567,40 @@ type GatewayLocationNewParams struct {
 
 func (r GatewayLocationNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Controls how DNS response TTLs are capped for this location relative to the
+// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+// `inherit`.
+type GatewayLocationNewParamsMaxTTL struct {
+	// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+	// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+	Mode param.Field[GatewayLocationNewParamsMaxTTLMode] `json:"mode" api:"required"`
+	// Location-specific cap on DNS response TTLs, in seconds. Required when `mode` is
+	// `override`. Must be omitted when `mode` is `inherit` or `disabled`.
+	TTLSecs param.Field[int64] `json:"ttl_secs"`
+}
+
+func (r GatewayLocationNewParamsMaxTTL) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+type GatewayLocationNewParamsMaxTTLMode string
+
+const (
+	GatewayLocationNewParamsMaxTTLModeInherit  GatewayLocationNewParamsMaxTTLMode = "inherit"
+	GatewayLocationNewParamsMaxTTLModeOverride GatewayLocationNewParamsMaxTTLMode = "override"
+	GatewayLocationNewParamsMaxTTLModeDisabled GatewayLocationNewParamsMaxTTLMode = "disabled"
+)
+
+func (r GatewayLocationNewParamsMaxTTLMode) IsKnown() bool {
+	switch r {
+	case GatewayLocationNewParamsMaxTTLModeInherit, GatewayLocationNewParamsMaxTTLModeOverride, GatewayLocationNewParamsMaxTTLModeDisabled:
+		return true
+	}
+	return false
 }
 
 type GatewayLocationNewParamsNetwork struct {
@@ -572,6 +656,7 @@ func (r GatewayLocationNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayLocationUpdateParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Specify the location name.
 	Name param.Field[string] `json:"name" api:"required"`
@@ -587,10 +672,10 @@ type GatewayLocationUpdateParams struct {
 	ECSSupport param.Field[bool] `json:"ecs_support"`
 	// Configure the destination endpoints for this location.
 	Endpoints param.Field[EndpointParam] `json:"endpoints"`
-	// Specify the maximum TTL, in seconds, applied to DNS response records. Records
-	// whose upstream TTL exceeds this value are served with the capped value. When
-	// null or absent, no cap is applied at this tier.
-	MaxTTLSecs param.Field[int64] `json:"max_ttl_secs"`
+	// Controls how DNS response TTLs are capped for this location relative to the
+	// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+	// `inherit`.
+	MaxTTL param.Field[GatewayLocationUpdateParamsMaxTTL] `json:"max_ttl"`
 	// Specify the list of network ranges from which requests at this location
 	// originate. The list takes effect only if it is non-empty and the IPv4 endpoint
 	// is enabled for this location.
@@ -599,6 +684,40 @@ type GatewayLocationUpdateParams struct {
 
 func (r GatewayLocationUpdateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Controls how DNS response TTLs are capped for this location relative to the
+// account `max_ttl_secs` setting. Omitting `max_ttl` on update resets it to
+// `inherit`.
+type GatewayLocationUpdateParamsMaxTTL struct {
+	// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+	// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+	Mode param.Field[GatewayLocationUpdateParamsMaxTTLMode] `json:"mode" api:"required"`
+	// Location-specific cap on DNS response TTLs, in seconds. Required when `mode` is
+	// `override`. Must be omitted when `mode` is `inherit` or `disabled`.
+	TTLSecs param.Field[int64] `json:"ttl_secs"`
+}
+
+func (r GatewayLocationUpdateParamsMaxTTL) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// `inherit` uses the account `max_ttl_secs`. `override` uses this location's
+// `ttl_secs`. `disabled` leaves returned TTLs unchanged.
+type GatewayLocationUpdateParamsMaxTTLMode string
+
+const (
+	GatewayLocationUpdateParamsMaxTTLModeInherit  GatewayLocationUpdateParamsMaxTTLMode = "inherit"
+	GatewayLocationUpdateParamsMaxTTLModeOverride GatewayLocationUpdateParamsMaxTTLMode = "override"
+	GatewayLocationUpdateParamsMaxTTLModeDisabled GatewayLocationUpdateParamsMaxTTLMode = "disabled"
+)
+
+func (r GatewayLocationUpdateParamsMaxTTLMode) IsKnown() bool {
+	switch r {
+	case GatewayLocationUpdateParamsMaxTTLModeInherit, GatewayLocationUpdateParamsMaxTTLModeOverride, GatewayLocationUpdateParamsMaxTTLModeDisabled:
+		return true
+	}
+	return false
 }
 
 type GatewayLocationUpdateParamsNetwork struct {
@@ -654,10 +773,103 @@ func (r GatewayLocationUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayLocationListParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// Sort direction. Only takes effect when `order_by` is also provided; it is
+	// ignored otherwise. When `direction` is omitted the effective direction is
+	// field-specific: `created_at` and `updated_at` default to descending (newest
+	// first); `name` defaults to ascending.
+	//
+	// - `asc` — ascending.
+	// - `desc` — descending.
+	Direction param.Field[GatewayLocationListParamsDirection] `query:"direction"`
+	// Filter the returned locations by one or more `field:value` pairs. Repeat the
+	// parameter to apply multiple filters; they are combined with logical AND (a
+	// location must satisfy every filter to be returned).
+	//
+	// Supported fields and their matching behaviour:
+	//
+	// - `name` — case-insensitive substring match on the location name.
+	// - `id` — substring match on the location ID (UUID), with or without dashes.
+	// - `is_default` — whether it is the default for the account.
+	//
+	// Each entry must match one of the per-field patterns below:
+	//
+	// - the field must be one of `name`, `id`, or `is_default`;
+	// - `name`/`id` accept any value;
+	// - `is_default` only accepts `true` or `false`; any other value returns `400`
+	Filter param.Field[[]string] `query:"filter"`
+	// Field to sort the returned locations by. When omitted, the order of results is
+	// unspecified. Supported values:
+	//
+	//   - `name` — sort alphabetically by location name.
+	//   - `created_at` — sort by creation time; defaults to descending unless
+	//     `direction` is set.
+	//   - `updated_at` — sort by last-modified time; defaults to descending unless
+	//     `direction` is set.
+	OrderBy param.Field[GatewayLocationListParamsOrderBy] `query:"order_by"`
+	// Case-insensitive substring match on the location name. When combined with
+	// `filter`, both must match (logical AND).
+	Search param.Field[string] `query:"search"`
+}
+
+// URLQuery serializes [GatewayLocationListParams]'s query parameters as
+// `url.Values`.
+func (r GatewayLocationListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatRepeat,
+		NestedFormat: apiquery.NestedQueryFormatDots,
+	})
+}
+
+// Sort direction. Only takes effect when `order_by` is also provided; it is
+// ignored otherwise. When `direction` is omitted the effective direction is
+// field-specific: `created_at` and `updated_at` default to descending (newest
+// first); `name` defaults to ascending.
+//
+// - `asc` — ascending.
+// - `desc` — descending.
+type GatewayLocationListParamsDirection string
+
+const (
+	GatewayLocationListParamsDirectionAsc  GatewayLocationListParamsDirection = "asc"
+	GatewayLocationListParamsDirectionDesc GatewayLocationListParamsDirection = "desc"
+)
+
+func (r GatewayLocationListParamsDirection) IsKnown() bool {
+	switch r {
+	case GatewayLocationListParamsDirectionAsc, GatewayLocationListParamsDirectionDesc:
+		return true
+	}
+	return false
+}
+
+// Field to sort the returned locations by. When omitted, the order of results is
+// unspecified. Supported values:
+//
+//   - `name` — sort alphabetically by location name.
+//   - `created_at` — sort by creation time; defaults to descending unless
+//     `direction` is set.
+//   - `updated_at` — sort by last-modified time; defaults to descending unless
+//     `direction` is set.
+type GatewayLocationListParamsOrderBy string
+
+const (
+	GatewayLocationListParamsOrderByName      GatewayLocationListParamsOrderBy = "name"
+	GatewayLocationListParamsOrderByCreatedAt GatewayLocationListParamsOrderBy = "created_at"
+	GatewayLocationListParamsOrderByUpdatedAt GatewayLocationListParamsOrderBy = "updated_at"
+)
+
+func (r GatewayLocationListParamsOrderBy) IsKnown() bool {
+	switch r {
+	case GatewayLocationListParamsOrderByName, GatewayLocationListParamsOrderByCreatedAt, GatewayLocationListParamsOrderByUpdatedAt:
+		return true
+	}
+	return false
 }
 
 type GatewayLocationDeleteParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
@@ -705,6 +917,7 @@ func (r GatewayLocationDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type GatewayLocationGetParams struct {
+	// Specify the Cloudflare account identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 

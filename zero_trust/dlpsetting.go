@@ -52,7 +52,7 @@ func (r *DLPSettingService) Update(ctx context.Context, params DLPSettingUpdateP
 	return res, nil
 }
 
-// Delete (reset) DLP account-level settings to initial values.
+// Deletes account-level DLP settings and returns the initial values.
 func (r *DLPSettingService) Delete(ctx context.Context, body DLPSettingDeleteParams, opts ...option.RequestOption) (res *DLPSettings, err error) {
 	var env DLPSettingDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -86,7 +86,7 @@ func (r *DLPSettingService) Edit(ctx context.Context, params DLPSettingEditParam
 	return res, nil
 }
 
-// Get DLP account-level settings.
+// Gets the account-level DLP settings.
 func (r *DLPSettingService) Get(ctx context.Context, query DLPSettingGetParams, opts ...option.RequestOption) (res *DLPSettings, err error) {
 	var env DLPSettingGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)

@@ -35,9 +35,11 @@ func TestIPSECTunnelNewWithOptionalParams(t *testing.T) {
 		Name:                   cloudflare.F("IPsec_1"),
 		AutomaticReturnRouting: cloudflare.F(true),
 		BGP: cloudflare.F(magic_transit.IPSECTunnelNewParamsBGP{
-			CustomerASN:   cloudflare.F(int64(0)),
-			ExtraPrefixes: cloudflare.F([]string{"string"}),
-			Md5Key:        cloudflare.F("md5_key"),
+			CustomerASN:    cloudflare.F(int64(0)),
+			ExportFilterID: cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+			ExtraPrefixes:  cloudflare.F([]string{"string"}),
+			ImportFilterID: cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+			Md5Key:         cloudflare.F("md5_key"),
 		}),
 		CustomRemoteIdentities: cloudflare.F(magic_transit.IPSECTunnelNewParamsCustomRemoteIdentities{
 			FqdnID: cloudflare.F("fqdn_id"),
@@ -92,9 +94,11 @@ func TestIPSECTunnelUpdateWithOptionalParams(t *testing.T) {
 			Name:                   cloudflare.F("IPsec_1"),
 			AutomaticReturnRouting: cloudflare.F(true),
 			BGP: cloudflare.F(magic_transit.IPSECTunnelUpdateParamsBGP{
-				CustomerASN:   cloudflare.F(int64(0)),
-				ExtraPrefixes: cloudflare.F([]string{"string"}),
-				Md5Key:        cloudflare.F("md5_key"),
+				CustomerASN:    cloudflare.F(int64(0)),
+				ExportFilterID: cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+				ExtraPrefixes:  cloudflare.F([]string{"string"}),
+				ImportFilterID: cloudflare.F("a1b2c3d4e5f647890a1b2c3d4e5f6789"),
+				Md5Key:         cloudflare.F("md5_key"),
 			}),
 			CustomRemoteIdentities: cloudflare.F(magic_transit.IPSECTunnelUpdateParamsCustomRemoteIdentities{
 				FqdnID: cloudflare.F("fqdn_id"),
@@ -262,9 +266,39 @@ func TestIPSECTunnelPSKGenerate(t *testing.T) {
 		"023e105f4ecef8ad9ca31a8372d0c353",
 		magic_transit.IPSECTunnelPSKGenerateParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
-			Body:      map[string]interface{}{},
 		},
 	)
+	if err != nil {
+		var apierr *cloudflare.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestIPSECTunnelPSKSetWithOptionalParams(t *testing.T) {
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := cloudflare.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
+		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
+		option.WithAPIEmail("user@example.com"),
+	)
+	_, err := client.MagicTransit.IPSECTunnels.PSKSet(context.TODO(), magic_transit.IPSECTunnelPSKSetParams{
+		AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+		PSKs: cloudflare.F([]magic_transit.IPSECTunnelPSKSetParamsPSK{{
+			ID:  cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			PSK: cloudflare.F("O3bwKSjnaoCxDoUxjcq4Rk8ZKkezQUiy"),
+		}}),
+		ValidateOnly: cloudflare.F(true),
+	})
 	if err != nil {
 		var apierr *cloudflare.Error
 		if errors.As(err, &apierr) {

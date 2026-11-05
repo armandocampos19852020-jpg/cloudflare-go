@@ -11,6 +11,7 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/internal/testutil"
 	"github.com/cloudflare/cloudflare-go/v7/option"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
 	"github.com/cloudflare/cloudflare-go/v7/workflows"
 )
 
@@ -35,9 +36,19 @@ func TestWorkflowUpdateWithOptionalParams(t *testing.T) {
 			AccountID:  cloudflare.F("account_id"),
 			ClassName:  cloudflare.F("x"),
 			ScriptName: cloudflare.F("x"),
+			Concurrency: cloudflare.F(workflows.WorkflowUpdateParamsConcurrency{
+				Limit: cloudflare.F(int64(1)),
+			}),
+			DefaultRetention: cloudflare.F(workflows.WorkflowUpdateParamsDefaultRetention{
+				ErrorRetention:   cloudflare.F[workflows.WorkflowUpdateParamsDefaultRetentionErrorRetentionUnion](shared.UnionString("5 minutes")),
+				SuccessRetention: cloudflare.F[workflows.WorkflowUpdateParamsDefaultRetentionSuccessRetentionUnion](shared.UnionString("5 minutes")),
+			}),
 			Limits: cloudflare.F(workflows.WorkflowUpdateParamsLimits{
 				Steps: cloudflare.F(int64(1)),
 			}),
+			Schedules: cloudflare.F([]workflows.WorkflowUpdateParamsSchedule{{
+				Cron: cloudflare.F("x"),
+			}}),
 		},
 	)
 	if err != nil {

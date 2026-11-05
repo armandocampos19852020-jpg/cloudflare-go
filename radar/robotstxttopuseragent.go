@@ -143,6 +143,7 @@ type RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                                   `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                                 `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                              `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                               `json:"tags"`
 	JSON            robotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -157,6 +158,7 @@ type robotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationJSON stru
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -212,7 +214,6 @@ func (r RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsDataS
 type RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeEvent             RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeOutage            RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -222,7 +223,7 @@ const (
 
 func (r RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeEvent, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RobotsTXTTopUserAgentDirectiveResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false

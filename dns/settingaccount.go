@@ -22,8 +22,9 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewSettingAccountService] method instead.
 type SettingAccountService struct {
-	Options []option.RequestOption
-	Views   *SettingAccountViewService
+	Options        []option.RequestOption
+	NameserverSets *SettingAccountNameserverSetService
+	Views          *SettingAccountViewService
 }
 
 // NewSettingAccountService generates a new service that applies the given options
@@ -32,6 +33,7 @@ type SettingAccountService struct {
 func NewSettingAccountService(opts ...option.RequestOption) (r *SettingAccountService) {
 	r = &SettingAccountService{}
 	r.Options = opts
+	r.NameserverSets = NewSettingAccountNameserverSetService(opts...)
 	r.Views = NewSettingAccountViewService(opts...)
 	return
 }
@@ -71,6 +73,7 @@ func (r *SettingAccountService) Get(ctx context.Context, query SettingAccountGet
 }
 
 type SettingAccountEditResponse struct {
+	// Default settings for new zones created in this account.
 	ZoneDefaults SettingAccountEditResponseZoneDefaults `json:"zone_defaults" api:"required"`
 	// When enabled, forces all proxied DNS records in the account to behave as
 	// DNS-only at the edge, regardless of each record's individual proxy setting. Note
@@ -98,11 +101,16 @@ func (r settingAccountEditResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+// Default settings for new zones created in this account.
 type SettingAccountEditResponseZoneDefaults struct {
 	// Whether to flatten all CNAME records in the zone. Note that, due to DNS
 	// limitations, a CNAME record at the zone apex will always be flattened.
 	FlattenAllCNAMEs bool `json:"flatten_all_cnames" api:"required"`
-	// Whether to enable Foundation DNS Advanced Nameservers on the zone.
+	// Deprecated. Use nameservers.type to configure Advanced Nameservers.
+	//
+	// Deprecated: foundation_dns is deprecated. Use nameservers.type:
+	// cloudflare.advanced to turn on Advanced Nameservers and cloudflare.standard to
+	// turn it off. This field will be removed in a future API version.
 	FoundationDNS bool `json:"foundation_dns" api:"required"`
 	// Settings for this internal zone.
 	InternalDNS SettingAccountEditResponseZoneDefaultsInternalDNS `json:"internal_dns" api:"required"`
@@ -199,6 +207,7 @@ type SettingAccountEditResponseZoneDefaultsNameserversType string
 
 const (
 	SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandard       SettingAccountEditResponseZoneDefaultsNameserversType = "cloudflare.standard"
+	SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareAdvanced       SettingAccountEditResponseZoneDefaultsNameserversType = "cloudflare.advanced"
 	SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandardRandom SettingAccountEditResponseZoneDefaultsNameserversType = "cloudflare.standard.random"
 	SettingAccountEditResponseZoneDefaultsNameserversTypeCustomAccount            SettingAccountEditResponseZoneDefaultsNameserversType = "custom.account"
 	SettingAccountEditResponseZoneDefaultsNameserversTypeCustomTenant             SettingAccountEditResponseZoneDefaultsNameserversType = "custom.tenant"
@@ -206,7 +215,7 @@ const (
 
 func (r SettingAccountEditResponseZoneDefaultsNameserversType) IsKnown() bool {
 	switch r {
-	case SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountEditResponseZoneDefaultsNameserversTypeCustomAccount, SettingAccountEditResponseZoneDefaultsNameserversTypeCustomTenant:
+	case SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareAdvanced, SettingAccountEditResponseZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountEditResponseZoneDefaultsNameserversTypeCustomAccount, SettingAccountEditResponseZoneDefaultsNameserversTypeCustomTenant:
 		return true
 	}
 	return false
@@ -276,6 +285,7 @@ func (r SettingAccountEditResponseZoneDefaultsZoneMode) IsKnown() bool {
 }
 
 type SettingAccountGetResponse struct {
+	// Default settings for new zones created in this account.
 	ZoneDefaults SettingAccountGetResponseZoneDefaults `json:"zone_defaults" api:"required"`
 	// When enabled, forces all proxied DNS records in the account to behave as
 	// DNS-only at the edge, regardless of each record's individual proxy setting. Note
@@ -303,11 +313,16 @@ func (r settingAccountGetResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+// Default settings for new zones created in this account.
 type SettingAccountGetResponseZoneDefaults struct {
 	// Whether to flatten all CNAME records in the zone. Note that, due to DNS
 	// limitations, a CNAME record at the zone apex will always be flattened.
 	FlattenAllCNAMEs bool `json:"flatten_all_cnames" api:"required"`
-	// Whether to enable Foundation DNS Advanced Nameservers on the zone.
+	// Deprecated. Use nameservers.type to configure Advanced Nameservers.
+	//
+	// Deprecated: foundation_dns is deprecated. Use nameservers.type:
+	// cloudflare.advanced to turn on Advanced Nameservers and cloudflare.standard to
+	// turn it off. This field will be removed in a future API version.
 	FoundationDNS bool `json:"foundation_dns" api:"required"`
 	// Settings for this internal zone.
 	InternalDNS SettingAccountGetResponseZoneDefaultsInternalDNS `json:"internal_dns" api:"required"`
@@ -404,6 +419,7 @@ type SettingAccountGetResponseZoneDefaultsNameserversType string
 
 const (
 	SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandard       SettingAccountGetResponseZoneDefaultsNameserversType = "cloudflare.standard"
+	SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareAdvanced       SettingAccountGetResponseZoneDefaultsNameserversType = "cloudflare.advanced"
 	SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandardRandom SettingAccountGetResponseZoneDefaultsNameserversType = "cloudflare.standard.random"
 	SettingAccountGetResponseZoneDefaultsNameserversTypeCustomAccount            SettingAccountGetResponseZoneDefaultsNameserversType = "custom.account"
 	SettingAccountGetResponseZoneDefaultsNameserversTypeCustomTenant             SettingAccountGetResponseZoneDefaultsNameserversType = "custom.tenant"
@@ -411,7 +427,7 @@ const (
 
 func (r SettingAccountGetResponseZoneDefaultsNameserversType) IsKnown() bool {
 	switch r {
-	case SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountGetResponseZoneDefaultsNameserversTypeCustomAccount, SettingAccountGetResponseZoneDefaultsNameserversTypeCustomTenant:
+	case SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareAdvanced, SettingAccountGetResponseZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountGetResponseZoneDefaultsNameserversTypeCustomAccount, SettingAccountGetResponseZoneDefaultsNameserversTypeCustomTenant:
 		return true
 	}
 	return false
@@ -488,19 +504,25 @@ type SettingAccountEditParams struct {
 	// that this account-level override does not modify the records themselves; it only
 	// affects how they are served at the edge. See more on
 	// [Enforce DNS-only](https://developers.cloudflare.com/dns/proxy-status/enforce-dns-only).
-	EnforceDNSOnly param.Field[bool]                                 `json:"enforce_dns_only"`
-	ZoneDefaults   param.Field[SettingAccountEditParamsZoneDefaults] `json:"zone_defaults"`
+	EnforceDNSOnly param.Field[bool] `json:"enforce_dns_only"`
+	// Default settings for new zones created in this account.
+	ZoneDefaults param.Field[SettingAccountEditParamsZoneDefaults] `json:"zone_defaults"`
 }
 
 func (r SettingAccountEditParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
+// Default settings for new zones created in this account.
 type SettingAccountEditParamsZoneDefaults struct {
 	// Whether to flatten all CNAME records in the zone. Note that, due to DNS
 	// limitations, a CNAME record at the zone apex will always be flattened.
 	FlattenAllCNAMEs param.Field[bool] `json:"flatten_all_cnames"`
-	// Whether to enable Foundation DNS Advanced Nameservers on the zone.
+	// Deprecated. Use nameservers.type to configure Advanced Nameservers.
+	//
+	// Deprecated: foundation_dns is deprecated. Use nameservers.type:
+	// cloudflare.advanced to turn on Advanced Nameservers and cloudflare.standard to
+	// turn it off. This field will be removed in a future API version.
 	FoundationDNS param.Field[bool] `json:"foundation_dns"`
 	// Settings for this internal zone.
 	InternalDNS param.Field[SettingAccountEditParamsZoneDefaultsInternalDNS] `json:"internal_dns"`
@@ -550,6 +572,7 @@ type SettingAccountEditParamsZoneDefaultsNameserversType string
 
 const (
 	SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandard       SettingAccountEditParamsZoneDefaultsNameserversType = "cloudflare.standard"
+	SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareAdvanced       SettingAccountEditParamsZoneDefaultsNameserversType = "cloudflare.advanced"
 	SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandardRandom SettingAccountEditParamsZoneDefaultsNameserversType = "cloudflare.standard.random"
 	SettingAccountEditParamsZoneDefaultsNameserversTypeCustomAccount            SettingAccountEditParamsZoneDefaultsNameserversType = "custom.account"
 	SettingAccountEditParamsZoneDefaultsNameserversTypeCustomTenant             SettingAccountEditParamsZoneDefaultsNameserversType = "custom.tenant"
@@ -557,7 +580,7 @@ const (
 
 func (r SettingAccountEditParamsZoneDefaultsNameserversType) IsKnown() bool {
 	switch r {
-	case SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountEditParamsZoneDefaultsNameserversTypeCustomAccount, SettingAccountEditParamsZoneDefaultsNameserversTypeCustomTenant:
+	case SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandard, SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareAdvanced, SettingAccountEditParamsZoneDefaultsNameserversTypeCloudflareStandardRandom, SettingAccountEditParamsZoneDefaultsNameserversTypeCustomAccount, SettingAccountEditParamsZoneDefaultsNameserversTypeCustomTenant:
 		return true
 	}
 	return false

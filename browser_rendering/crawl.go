@@ -167,7 +167,6 @@ func (r crawlGetResponseJSON) RawJSON() string {
 }
 
 type CrawlGetResponseRecord struct {
-	Metadata CrawlGetResponseRecordsMetadata `json:"metadata" api:"required"`
 	// Current status of the crawled URL.
 	Status CrawlGetResponseRecordsStatus `json:"status" api:"required"`
 	// Crawled URL.
@@ -177,19 +176,21 @@ type CrawlGetResponseRecord struct {
 	// JSON of the content of the crawled URL.
 	Json map[string]interface{} `json:"json"`
 	// Markdown of the content of the crawled URL.
-	Markdown string                     `json:"markdown"`
-	JSON     crawlGetResponseRecordJSON `json:"-"`
+	Markdown string `json:"markdown"`
+	// Absent for urls that never reached a fetch.
+	Metadata CrawlGetResponseRecordsMetadata `json:"metadata"`
+	JSON     crawlGetResponseRecordJSON      `json:"-"`
 }
 
 // crawlGetResponseRecordJSON contains the JSON metadata for the struct
 // [CrawlGetResponseRecord]
 type crawlGetResponseRecordJSON struct {
-	Metadata    apijson.Field
 	Status      apijson.Field
 	URL         apijson.Field
 	HTML        apijson.Field
 	Json        apijson.Field
 	Markdown    apijson.Field
+	Metadata    apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -202,6 +203,27 @@ func (r crawlGetResponseRecordJSON) RawJSON() string {
 	return r.raw
 }
 
+// Current status of the crawled URL.
+type CrawlGetResponseRecordsStatus string
+
+const (
+	CrawlGetResponseRecordsStatusQueued     CrawlGetResponseRecordsStatus = "queued"
+	CrawlGetResponseRecordsStatusErrored    CrawlGetResponseRecordsStatus = "errored"
+	CrawlGetResponseRecordsStatusCompleted  CrawlGetResponseRecordsStatus = "completed"
+	CrawlGetResponseRecordsStatusDisallowed CrawlGetResponseRecordsStatus = "disallowed"
+	CrawlGetResponseRecordsStatusSkipped    CrawlGetResponseRecordsStatus = "skipped"
+	CrawlGetResponseRecordsStatusCancelled  CrawlGetResponseRecordsStatus = "cancelled"
+)
+
+func (r CrawlGetResponseRecordsStatus) IsKnown() bool {
+	switch r {
+	case CrawlGetResponseRecordsStatusQueued, CrawlGetResponseRecordsStatusErrored, CrawlGetResponseRecordsStatusCompleted, CrawlGetResponseRecordsStatusDisallowed, CrawlGetResponseRecordsStatusSkipped, CrawlGetResponseRecordsStatusCancelled:
+		return true
+	}
+	return false
+}
+
+// Absent for urls that never reached a fetch.
 type CrawlGetResponseRecordsMetadata struct {
 	// HTTP status code of the crawled page.
 	Status float64 `json:"status" api:"required"`
@@ -228,26 +250,6 @@ func (r *CrawlGetResponseRecordsMetadata) UnmarshalJSON(data []byte) (err error)
 
 func (r crawlGetResponseRecordsMetadataJSON) RawJSON() string {
 	return r.raw
-}
-
-// Current status of the crawled URL.
-type CrawlGetResponseRecordsStatus string
-
-const (
-	CrawlGetResponseRecordsStatusQueued     CrawlGetResponseRecordsStatus = "queued"
-	CrawlGetResponseRecordsStatusErrored    CrawlGetResponseRecordsStatus = "errored"
-	CrawlGetResponseRecordsStatusCompleted  CrawlGetResponseRecordsStatus = "completed"
-	CrawlGetResponseRecordsStatusDisallowed CrawlGetResponseRecordsStatus = "disallowed"
-	CrawlGetResponseRecordsStatusSkipped    CrawlGetResponseRecordsStatus = "skipped"
-	CrawlGetResponseRecordsStatusCancelled  CrawlGetResponseRecordsStatus = "cancelled"
-)
-
-func (r CrawlGetResponseRecordsStatus) IsKnown() bool {
-	switch r {
-	case CrawlGetResponseRecordsStatusQueued, CrawlGetResponseRecordsStatusErrored, CrawlGetResponseRecordsStatusCompleted, CrawlGetResponseRecordsStatusDisallowed, CrawlGetResponseRecordsStatusSkipped, CrawlGetResponseRecordsStatusCancelled:
-		return true
-	}
-	return false
 }
 
 type CrawlNewParams struct {
@@ -283,9 +285,17 @@ type CrawlNewParamsBody struct {
 	AllowResourceTypes  param.Field[interface{}] `json:"allowResourceTypes"`
 	Authenticate        param.Field[interface{}] `json:"authenticate"`
 	// Attempt to proceed when 'awaited' events fail or timeout.
-	BestAttempt   param.Field[bool]        `json:"bestAttempt"`
-	Cookies       param.Field[interface{}] `json:"cookies"`
-	CrawlPurposes param.Field[interface{}] `json:"crawlPurposes"`
+	BestAttempt param.Field[bool] `json:"bestAttempt"`
+	// Rendering backend for this crawl. Set to `kitesurf` to render pages with
+	// Kitesurf (beta). Only valid when `render` is `true`.
+	Browser param.Field[CrawlNewParamsBodyBrowser] `json:"browser"`
+	// Intended content use level to respect the `use` Content-Signal directive in
+	// robots.txt. Levels (least to most permissive): 'reference', 'full'. A URL is
+	// disallowed when the publisher's declared `use` level is lower than this intent.
+	// Learn more: https://contentsignals.org/. Default: 'full'.
+	ContentUse    param.Field[CrawlNewParamsBodyContentUse] `json:"contentUse"`
+	Cookies       param.Field[interface{}]                  `json:"cookies"`
+	CrawlPurposes param.Field[interface{}]                  `json:"crawlPurposes"`
 	// Maximum number of levels deep the crawler will traverse from the starting URL.
 	Depth            param.Field[float64]     `json:"depth"`
 	EmulateMediaType param.Field[string]      `json:"emulateMediaType"`
@@ -341,20 +351,29 @@ type CrawlNewParamsBodyObject struct {
 	// has loaded (such as taking screenshots, extracting content, or generating PDFs).
 	// If this time limit is exceeded, the action stops and returns a timeout error.
 	ActionTimeout param.Field[float64] `json:"actionTimeout"`
-	// Adds a `<script>` tag into the page with the desired URL or content.
+	// Adds a script element into the page with the desired URL or content.
 	AddScriptTag param.Field[[]CrawlNewParamsBodyObjectAddScriptTag] `json:"addScriptTag"`
 	// Adds a `<link rel="stylesheet">` tag into the page with the desired URL or a
 	// `<style type="text/css">` tag with the content.
 	AddStyleTag param.Field[[]CrawlNewParamsBodyObjectAddStyleTag] `json:"addStyleTag"`
 	// Only allow requests that match the provided regex patterns, eg. '/^.\*\.(css)'.
+	// Reject rules are applied first.
 	AllowRequestPattern param.Field[[]string] `json:"allowRequestPattern"`
 	// Only allow requests that match the provided resource types, eg. 'image' or
-	// 'script'.
+	// 'script'. Reject rules are applied first.
 	AllowResourceTypes param.Field[[]CrawlNewParamsBodyObjectAllowResourceType] `json:"allowResourceTypes"`
 	// Provide credentials for HTTP authentication.
 	Authenticate param.Field[CrawlNewParamsBodyObjectAuthenticate] `json:"authenticate"`
 	// Attempt to proceed when 'awaited' events fail or timeout.
 	BestAttempt param.Field[bool] `json:"bestAttempt"`
+	// Rendering backend for this crawl. Set to `kitesurf` to render pages with
+	// Kitesurf (beta). Only valid when `render` is `true`.
+	Browser param.Field[CrawlNewParamsBodyObjectBrowser] `json:"browser"`
+	// Intended content use level to respect the `use` Content-Signal directive in
+	// robots.txt. Levels (least to most permissive): 'reference', 'full'. A URL is
+	// disallowed when the publisher's declared `use` level is lower than this intent.
+	// Learn more: https://contentsignals.org/. Default: 'full'.
+	ContentUse param.Field[CrawlNewParamsBodyObjectContentUse] `json:"contentUse"`
 	// Check [options](https://pptr.dev/api/puppeteer.page.setcookie).
 	Cookies param.Field[[]CrawlNewParamsBodyObjectCookie] `json:"cookies"`
 	// List of crawl purposes to respect Content-Signal directives in robots.txt.
@@ -418,7 +437,7 @@ type CrawlNewParamsBodyObjectAddScriptTag struct {
 	ID      param.Field[string] `json:"id"`
 	Content param.Field[string] `json:"content"`
 	Type    param.Field[string] `json:"type"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r CrawlNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err error) {
@@ -427,7 +446,7 @@ func (r CrawlNewParamsBodyObjectAddScriptTag) MarshalJSON() (data []byte, err er
 
 type CrawlNewParamsBodyObjectAddStyleTag struct {
 	Content param.Field[string] `json:"content"`
-	URL     param.Field[string] `json:"url"`
+	URL     param.Field[string] `json:"url" format:"uri"`
 }
 
 func (r CrawlNewParamsBodyObjectAddStyleTag) MarshalJSON() (data []byte, err error) {
@@ -473,6 +492,41 @@ type CrawlNewParamsBodyObjectAuthenticate struct {
 
 func (r CrawlNewParamsBodyObjectAuthenticate) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Rendering backend for this crawl. Set to `kitesurf` to render pages with
+// Kitesurf (beta). Only valid when `render` is `true`.
+type CrawlNewParamsBodyObjectBrowser string
+
+const (
+	CrawlNewParamsBodyObjectBrowserKitesurf CrawlNewParamsBodyObjectBrowser = "kitesurf"
+)
+
+func (r CrawlNewParamsBodyObjectBrowser) IsKnown() bool {
+	switch r {
+	case CrawlNewParamsBodyObjectBrowserKitesurf:
+		return true
+	}
+	return false
+}
+
+// Intended content use level to respect the `use` Content-Signal directive in
+// robots.txt. Levels (least to most permissive): 'reference', 'full'. A URL is
+// disallowed when the publisher's declared `use` level is lower than this intent.
+// Learn more: https://contentsignals.org/. Default: 'full'.
+type CrawlNewParamsBodyObjectContentUse string
+
+const (
+	CrawlNewParamsBodyObjectContentUseReference CrawlNewParamsBodyObjectContentUse = "reference"
+	CrawlNewParamsBodyObjectContentUseFull      CrawlNewParamsBodyObjectContentUse = "full"
+)
+
+func (r CrawlNewParamsBodyObjectContentUse) IsKnown() bool {
+	switch r {
+	case CrawlNewParamsBodyObjectContentUseReference, CrawlNewParamsBodyObjectContentUseFull:
+		return true
+	}
+	return false
 }
 
 type CrawlNewParamsBodyObjectCookie struct {
@@ -669,24 +723,11 @@ type CrawlNewParamsBodyObjectJsonOptionsResponseFormat struct {
 	Type param.Field[string] `json:"type" api:"required"`
 	// Schema for the response format. More information here:
 	// https://developers.cloudflare.com/workers-ai/json-mode/
-	JsonSchema param.Field[map[string]CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion] `json:"json_schema"`
+	JsonSchema param.Field[map[string]interface{}] `json:"json_schema"`
 }
 
 func (r CrawlNewParamsBodyObjectJsonOptionsResponseFormat) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool],
-// [browser_rendering.CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaArray].
-//
-// Use [Raw()] to specify an arbitrary value for this param
-type CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion interface {
-	ImplementsCrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion()
-}
-
-type CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaArray []string
-
-func (r CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaArray) ImplementsCrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion() {
 }
 
 // Additional options for the crawler.
@@ -826,6 +867,41 @@ const (
 func (r CrawlNewParamsBodyObjectWaitForSelectorVisible) IsKnown() bool {
 	switch r {
 	case CrawlNewParamsBodyObjectWaitForSelectorVisibleTrue:
+		return true
+	}
+	return false
+}
+
+// Rendering backend for this crawl. Set to `kitesurf` to render pages with
+// Kitesurf (beta). Only valid when `render` is `true`.
+type CrawlNewParamsBodyBrowser string
+
+const (
+	CrawlNewParamsBodyBrowserKitesurf CrawlNewParamsBodyBrowser = "kitesurf"
+)
+
+func (r CrawlNewParamsBodyBrowser) IsKnown() bool {
+	switch r {
+	case CrawlNewParamsBodyBrowserKitesurf:
+		return true
+	}
+	return false
+}
+
+// Intended content use level to respect the `use` Content-Signal directive in
+// robots.txt. Levels (least to most permissive): 'reference', 'full'. A URL is
+// disallowed when the publisher's declared `use` level is lower than this intent.
+// Learn more: https://contentsignals.org/. Default: 'full'.
+type CrawlNewParamsBodyContentUse string
+
+const (
+	CrawlNewParamsBodyContentUseReference CrawlNewParamsBodyContentUse = "reference"
+	CrawlNewParamsBodyContentUseFull      CrawlNewParamsBodyContentUse = "full"
+)
+
+func (r CrawlNewParamsBodyContentUse) IsKnown() bool {
+	switch r {
+	case CrawlNewParamsBodyContentUseReference, CrawlNewParamsBodyContentUseFull:
 		return true
 	}
 	return false

@@ -37,7 +37,7 @@ func NewDEXRuleService(opts ...option.RequestOption) (r *DEXRuleService) {
 	return
 }
 
-// Create a DEX Rule
+// Create a DEX Rule.
 func (r *DEXRuleService) New(ctx context.Context, params DEXRuleNewParams, opts ...option.RequestOption) (res *DEXRuleNewResponse, err error) {
 	var env DEXRuleNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -54,7 +54,7 @@ func (r *DEXRuleService) New(ctx context.Context, params DEXRuleNewParams, opts 
 	return res, nil
 }
 
-// Update a DEX Rule
+// Update a DEX Rule.
 func (r *DEXRuleService) Update(ctx context.Context, ruleID string, params DEXRuleUpdateParams, opts ...option.RequestOption) (res *DEXRuleUpdateResponse, err error) {
 	var env DEXRuleUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -75,7 +75,7 @@ func (r *DEXRuleService) Update(ctx context.Context, ruleID string, params DEXRu
 	return res, nil
 }
 
-// List DEX Rules
+// List DEX Rules.
 func (r *DEXRuleService) List(ctx context.Context, params DEXRuleListParams, opts ...option.RequestOption) (res *pagination.V4PagePagination[DEXRuleListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -97,12 +97,12 @@ func (r *DEXRuleService) List(ctx context.Context, params DEXRuleListParams, opt
 	return res, nil
 }
 
-// List DEX Rules
+// List DEX Rules.
 func (r *DEXRuleService) ListAutoPaging(ctx context.Context, params DEXRuleListParams, opts ...option.RequestOption) *pagination.V4PagePaginationAutoPager[DEXRuleListResponse] {
 	return pagination.NewV4PagePaginationAutoPager(r.List(ctx, params, opts...))
 }
 
-// Delete a DEX Rule
+// Delete a DEX Rule.
 func (r *DEXRuleService) Delete(ctx context.Context, ruleID string, body DEXRuleDeleteParams, opts ...option.RequestOption) (res *bool, err error) {
 	var env DEXRuleDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -123,7 +123,7 @@ func (r *DEXRuleService) Delete(ctx context.Context, ruleID string, body DEXRule
 	return res, nil
 }
 
-// Get details for a DEX Rule
+// Get details for a DEX Rule.
 func (r *DEXRuleService) Get(ctx context.Context, ruleID string, query DEXRuleGetParams, opts ...option.RequestOption) (res *DEXRuleGetResponse, err error) {
 	var env DEXRuleGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -181,11 +181,11 @@ func (r dexRuleNewResponseJSON) RawJSON() string {
 type DEXRuleNewResponseTargetedTest struct {
 	// The configuration object which contains the details for the WARP client to
 	// conduct the test.
-	Data    DEXRuleNewResponseTargetedTestsData `json:"data" api:"required"`
-	Enabled bool                                `json:"enabled" api:"required"`
-	Name    string                              `json:"name" api:"required"`
-	TestID  string                              `json:"test_id" api:"required"`
-	JSON    dexRuleNewResponseTargetedTestJSON  `json:"-"`
+	Data    SchemaData                         `json:"data" api:"required"`
+	Enabled bool                               `json:"enabled" api:"required"`
+	Name    string                             `json:"name" api:"required"`
+	TestID  string                             `json:"test_id" api:"required"`
+	JSON    dexRuleNewResponseTargetedTestJSON `json:"-"`
 }
 
 // dexRuleNewResponseTargetedTestJSON contains the JSON metadata for the struct
@@ -205,67 +205,6 @@ func (r *DEXRuleNewResponseTargetedTest) UnmarshalJSON(data []byte) (err error) 
 
 func (r dexRuleNewResponseTargetedTestJSON) RawJSON() string {
 	return r.raw
-}
-
-// The configuration object which contains the details for the WARP client to
-// conduct the test.
-type DEXRuleNewResponseTargetedTestsData struct {
-	// The desired endpoint to test.
-	Host string `json:"host" api:"required"`
-	// The type of test.
-	Kind DEXRuleNewResponseTargetedTestsDataKind `json:"kind" api:"required"`
-	// The HTTP request method type.
-	Method DEXRuleNewResponseTargetedTestsDataMethod `json:"method"`
-	JSON   dexRuleNewResponseTargetedTestsDataJSON   `json:"-"`
-}
-
-// dexRuleNewResponseTargetedTestsDataJSON contains the JSON metadata for the
-// struct [DEXRuleNewResponseTargetedTestsData]
-type dexRuleNewResponseTargetedTestsDataJSON struct {
-	Host        apijson.Field
-	Kind        apijson.Field
-	Method      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *DEXRuleNewResponseTargetedTestsData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r dexRuleNewResponseTargetedTestsDataJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of test.
-type DEXRuleNewResponseTargetedTestsDataKind string
-
-const (
-	DEXRuleNewResponseTargetedTestsDataKindHTTP       DEXRuleNewResponseTargetedTestsDataKind = "http"
-	DEXRuleNewResponseTargetedTestsDataKindTraceroute DEXRuleNewResponseTargetedTestsDataKind = "traceroute"
-)
-
-func (r DEXRuleNewResponseTargetedTestsDataKind) IsKnown() bool {
-	switch r {
-	case DEXRuleNewResponseTargetedTestsDataKindHTTP, DEXRuleNewResponseTargetedTestsDataKindTraceroute:
-		return true
-	}
-	return false
-}
-
-// The HTTP request method type.
-type DEXRuleNewResponseTargetedTestsDataMethod string
-
-const (
-	DEXRuleNewResponseTargetedTestsDataMethodGet DEXRuleNewResponseTargetedTestsDataMethod = "GET"
-)
-
-func (r DEXRuleNewResponseTargetedTestsDataMethod) IsKnown() bool {
-	switch r {
-	case DEXRuleNewResponseTargetedTestsDataMethodGet:
-		return true
-	}
-	return false
 }
 
 type DEXRuleUpdateResponse struct {
@@ -305,11 +244,11 @@ func (r dexRuleUpdateResponseJSON) RawJSON() string {
 type DEXRuleUpdateResponseTargetedTest struct {
 	// The configuration object which contains the details for the WARP client to
 	// conduct the test.
-	Data    DEXRuleUpdateResponseTargetedTestsData `json:"data" api:"required"`
-	Enabled bool                                   `json:"enabled" api:"required"`
-	Name    string                                 `json:"name" api:"required"`
-	TestID  string                                 `json:"test_id" api:"required"`
-	JSON    dexRuleUpdateResponseTargetedTestJSON  `json:"-"`
+	Data    SchemaData                            `json:"data" api:"required"`
+	Enabled bool                                  `json:"enabled" api:"required"`
+	Name    string                                `json:"name" api:"required"`
+	TestID  string                                `json:"test_id" api:"required"`
+	JSON    dexRuleUpdateResponseTargetedTestJSON `json:"-"`
 }
 
 // dexRuleUpdateResponseTargetedTestJSON contains the JSON metadata for the struct
@@ -329,67 +268,6 @@ func (r *DEXRuleUpdateResponseTargetedTest) UnmarshalJSON(data []byte) (err erro
 
 func (r dexRuleUpdateResponseTargetedTestJSON) RawJSON() string {
 	return r.raw
-}
-
-// The configuration object which contains the details for the WARP client to
-// conduct the test.
-type DEXRuleUpdateResponseTargetedTestsData struct {
-	// The desired endpoint to test.
-	Host string `json:"host" api:"required"`
-	// The type of test.
-	Kind DEXRuleUpdateResponseTargetedTestsDataKind `json:"kind" api:"required"`
-	// The HTTP request method type.
-	Method DEXRuleUpdateResponseTargetedTestsDataMethod `json:"method"`
-	JSON   dexRuleUpdateResponseTargetedTestsDataJSON   `json:"-"`
-}
-
-// dexRuleUpdateResponseTargetedTestsDataJSON contains the JSON metadata for the
-// struct [DEXRuleUpdateResponseTargetedTestsData]
-type dexRuleUpdateResponseTargetedTestsDataJSON struct {
-	Host        apijson.Field
-	Kind        apijson.Field
-	Method      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *DEXRuleUpdateResponseTargetedTestsData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r dexRuleUpdateResponseTargetedTestsDataJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of test.
-type DEXRuleUpdateResponseTargetedTestsDataKind string
-
-const (
-	DEXRuleUpdateResponseTargetedTestsDataKindHTTP       DEXRuleUpdateResponseTargetedTestsDataKind = "http"
-	DEXRuleUpdateResponseTargetedTestsDataKindTraceroute DEXRuleUpdateResponseTargetedTestsDataKind = "traceroute"
-)
-
-func (r DEXRuleUpdateResponseTargetedTestsDataKind) IsKnown() bool {
-	switch r {
-	case DEXRuleUpdateResponseTargetedTestsDataKindHTTP, DEXRuleUpdateResponseTargetedTestsDataKindTraceroute:
-		return true
-	}
-	return false
-}
-
-// The HTTP request method type.
-type DEXRuleUpdateResponseTargetedTestsDataMethod string
-
-const (
-	DEXRuleUpdateResponseTargetedTestsDataMethodGet DEXRuleUpdateResponseTargetedTestsDataMethod = "GET"
-)
-
-func (r DEXRuleUpdateResponseTargetedTestsDataMethod) IsKnown() bool {
-	switch r {
-	case DEXRuleUpdateResponseTargetedTestsDataMethodGet:
-		return true
-	}
-	return false
 }
 
 type DEXRuleListResponse struct {
@@ -450,11 +328,11 @@ func (r dexRuleListResponseRuleJSON) RawJSON() string {
 type DEXRuleListResponseRulesTargetedTest struct {
 	// The configuration object which contains the details for the WARP client to
 	// conduct the test.
-	Data    DEXRuleListResponseRulesTargetedTestsData `json:"data" api:"required"`
-	Enabled bool                                      `json:"enabled" api:"required"`
-	Name    string                                    `json:"name" api:"required"`
-	TestID  string                                    `json:"test_id" api:"required"`
-	JSON    dexRuleListResponseRulesTargetedTestJSON  `json:"-"`
+	Data    SchemaData                               `json:"data" api:"required"`
+	Enabled bool                                     `json:"enabled" api:"required"`
+	Name    string                                   `json:"name" api:"required"`
+	TestID  string                                   `json:"test_id" api:"required"`
+	JSON    dexRuleListResponseRulesTargetedTestJSON `json:"-"`
 }
 
 // dexRuleListResponseRulesTargetedTestJSON contains the JSON metadata for the
@@ -474,67 +352,6 @@ func (r *DEXRuleListResponseRulesTargetedTest) UnmarshalJSON(data []byte) (err e
 
 func (r dexRuleListResponseRulesTargetedTestJSON) RawJSON() string {
 	return r.raw
-}
-
-// The configuration object which contains the details for the WARP client to
-// conduct the test.
-type DEXRuleListResponseRulesTargetedTestsData struct {
-	// The desired endpoint to test.
-	Host string `json:"host" api:"required"`
-	// The type of test.
-	Kind DEXRuleListResponseRulesTargetedTestsDataKind `json:"kind" api:"required"`
-	// The HTTP request method type.
-	Method DEXRuleListResponseRulesTargetedTestsDataMethod `json:"method"`
-	JSON   dexRuleListResponseRulesTargetedTestsDataJSON   `json:"-"`
-}
-
-// dexRuleListResponseRulesTargetedTestsDataJSON contains the JSON metadata for the
-// struct [DEXRuleListResponseRulesTargetedTestsData]
-type dexRuleListResponseRulesTargetedTestsDataJSON struct {
-	Host        apijson.Field
-	Kind        apijson.Field
-	Method      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *DEXRuleListResponseRulesTargetedTestsData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r dexRuleListResponseRulesTargetedTestsDataJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of test.
-type DEXRuleListResponseRulesTargetedTestsDataKind string
-
-const (
-	DEXRuleListResponseRulesTargetedTestsDataKindHTTP       DEXRuleListResponseRulesTargetedTestsDataKind = "http"
-	DEXRuleListResponseRulesTargetedTestsDataKindTraceroute DEXRuleListResponseRulesTargetedTestsDataKind = "traceroute"
-)
-
-func (r DEXRuleListResponseRulesTargetedTestsDataKind) IsKnown() bool {
-	switch r {
-	case DEXRuleListResponseRulesTargetedTestsDataKindHTTP, DEXRuleListResponseRulesTargetedTestsDataKindTraceroute:
-		return true
-	}
-	return false
-}
-
-// The HTTP request method type.
-type DEXRuleListResponseRulesTargetedTestsDataMethod string
-
-const (
-	DEXRuleListResponseRulesTargetedTestsDataMethodGet DEXRuleListResponseRulesTargetedTestsDataMethod = "GET"
-)
-
-func (r DEXRuleListResponseRulesTargetedTestsDataMethod) IsKnown() bool {
-	switch r {
-	case DEXRuleListResponseRulesTargetedTestsDataMethodGet:
-		return true
-	}
-	return false
 }
 
 type DEXRuleGetResponse struct {
@@ -574,11 +391,11 @@ func (r dexRuleGetResponseJSON) RawJSON() string {
 type DEXRuleGetResponseTargetedTest struct {
 	// The configuration object which contains the details for the WARP client to
 	// conduct the test.
-	Data    DEXRuleGetResponseTargetedTestsData `json:"data" api:"required"`
-	Enabled bool                                `json:"enabled" api:"required"`
-	Name    string                              `json:"name" api:"required"`
-	TestID  string                              `json:"test_id" api:"required"`
-	JSON    dexRuleGetResponseTargetedTestJSON  `json:"-"`
+	Data    SchemaData                         `json:"data" api:"required"`
+	Enabled bool                               `json:"enabled" api:"required"`
+	Name    string                             `json:"name" api:"required"`
+	TestID  string                             `json:"test_id" api:"required"`
+	JSON    dexRuleGetResponseTargetedTestJSON `json:"-"`
 }
 
 // dexRuleGetResponseTargetedTestJSON contains the JSON metadata for the struct
@@ -600,68 +417,8 @@ func (r dexRuleGetResponseTargetedTestJSON) RawJSON() string {
 	return r.raw
 }
 
-// The configuration object which contains the details for the WARP client to
-// conduct the test.
-type DEXRuleGetResponseTargetedTestsData struct {
-	// The desired endpoint to test.
-	Host string `json:"host" api:"required"`
-	// The type of test.
-	Kind DEXRuleGetResponseTargetedTestsDataKind `json:"kind" api:"required"`
-	// The HTTP request method type.
-	Method DEXRuleGetResponseTargetedTestsDataMethod `json:"method"`
-	JSON   dexRuleGetResponseTargetedTestsDataJSON   `json:"-"`
-}
-
-// dexRuleGetResponseTargetedTestsDataJSON contains the JSON metadata for the
-// struct [DEXRuleGetResponseTargetedTestsData]
-type dexRuleGetResponseTargetedTestsDataJSON struct {
-	Host        apijson.Field
-	Kind        apijson.Field
-	Method      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *DEXRuleGetResponseTargetedTestsData) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r dexRuleGetResponseTargetedTestsDataJSON) RawJSON() string {
-	return r.raw
-}
-
-// The type of test.
-type DEXRuleGetResponseTargetedTestsDataKind string
-
-const (
-	DEXRuleGetResponseTargetedTestsDataKindHTTP       DEXRuleGetResponseTargetedTestsDataKind = "http"
-	DEXRuleGetResponseTargetedTestsDataKindTraceroute DEXRuleGetResponseTargetedTestsDataKind = "traceroute"
-)
-
-func (r DEXRuleGetResponseTargetedTestsDataKind) IsKnown() bool {
-	switch r {
-	case DEXRuleGetResponseTargetedTestsDataKindHTTP, DEXRuleGetResponseTargetedTestsDataKindTraceroute:
-		return true
-	}
-	return false
-}
-
-// The HTTP request method type.
-type DEXRuleGetResponseTargetedTestsDataMethod string
-
-const (
-	DEXRuleGetResponseTargetedTestsDataMethodGet DEXRuleGetResponseTargetedTestsDataMethod = "GET"
-)
-
-func (r DEXRuleGetResponseTargetedTestsDataMethod) IsKnown() bool {
-	switch r {
-	case DEXRuleGetResponseTargetedTestsDataMethodGet:
-		return true
-	}
-	return false
-}
-
 type DEXRuleNewParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// The wirefilter expression to match.
 	Match param.Field[string] `json:"match" api:"required"`
@@ -814,6 +571,7 @@ func (r DEXRuleNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type DEXRuleUpdateParams struct {
+	// Unique identifier linked to an account.
 	AccountID   param.Field[string] `path:"account_id" api:"required"`
 	Description param.Field[string] `json:"description"`
 	// The wirefilter expression to match.
@@ -966,16 +724,17 @@ func (r DEXRuleUpdateResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type DEXRuleListParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Page number of paginated results
+	// Page number of paginated results.
 	Page param.Field[float64] `query:"page" api:"required"`
-	// Number of items per page
+	// Number of results per page.
 	PerPage param.Field[float64] `query:"per_page" api:"required"`
-	// Filter results by rule name
+	// Filter results by rule name.
 	Name param.Field[string] `query:"name"`
-	// Which property to sort results by
+	// Which property to sort results by.
 	SortBy param.Field[DEXRuleListParamsSortBy] `query:"sort_by"`
-	// Sort direction for sort_by property
+	// Sort direction for sort_by property.
 	SortOrder param.Field[DEXRuleListParamsSortOrder] `query:"sort_order"`
 }
 
@@ -987,7 +746,7 @@ func (r DEXRuleListParams) URLQuery() (v url.Values) {
 	})
 }
 
-// Which property to sort results by
+// Which property to sort results by.
 type DEXRuleListParamsSortBy string
 
 const (
@@ -1004,7 +763,7 @@ func (r DEXRuleListParamsSortBy) IsKnown() bool {
 	return false
 }
 
-// Sort direction for sort_by property
+// Sort direction for sort_by property.
 type DEXRuleListParamsSortOrder string
 
 const (
@@ -1021,6 +780,7 @@ func (r DEXRuleListParamsSortOrder) IsKnown() bool {
 }
 
 type DEXRuleDeleteParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 
@@ -1164,6 +924,7 @@ func (r DEXRuleDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type DEXRuleGetParams struct {
+	// Unique identifier linked to an account.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 }
 

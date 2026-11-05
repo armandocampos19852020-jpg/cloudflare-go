@@ -117,9 +117,13 @@ type SettingsPolicy struct {
 	AllowedToLeave bool `json:"allowed_to_leave"`
 	// The amount of time in seconds to reconnect after having been disabled.
 	AutoConnect float64 `json:"auto_connect"`
+	// Browser extension proxy settings. Required when profile_type is
+	// browser_extension and invalid for WARP profiles.
+	BrowserExtensionConfig SettingsPolicyBrowserExtensionConfig `json:"browser_extension_config" api:"nullable"`
 	// Turn on the captive portal after the specified amount of time.
 	CaptivePortal float64 `json:"captive_portal"`
-	// Whether the policy is the default policy for an account.
+	// Whether the policy is the account default. WARP group profiles cannot set this
+	// field.
 	Default bool `json:"default"`
 	// A description of the policy.
 	Description string `json:"description"`
@@ -138,6 +142,11 @@ type SettingsPolicy struct {
 	ExcludeOfficeIPs bool             `json:"exclude_office_ips"`
 	FallbackDomains  []FallbackDomain `json:"fallback_domains"`
 	GatewayUniqueID  string           `json:"gateway_unique_id"`
+	// Global Acceleration settings for China. When configured, WARP clients connect to
+	// the Global Accelerator addresses instead of the default ones. Please contact
+	// your account representative to enable this feature on your account. See
+	// https://developers.cloudflare.com/china-network/concepts/global-acceleration/.
+	GlobalAcceleration SettingsPolicyGlobalAcceleration `json:"global_acceleration" api:"nullable"`
 	// List of routes included in the WARP client's tunnel.
 	Include []SplitTunnelInclude `json:"include"`
 	// The amount of time in minutes a user is allowed access to their LAN. A value of
@@ -151,7 +160,7 @@ type SettingsPolicy struct {
 	// The wirefilter expression to match devices. Available values: "identity.email",
 	// "identity.groups.id", "identity.groups.name", "identity.groups.email",
 	// "identity.service_token_uuid", "identity.saml_attributes", "network", "os.name",
-	// "os.version".
+	// "os.version", "device.tags".
 	Match string `json:"match"`
 	// The name of the device settings profile.
 	Name     string `json:"name"`
@@ -159,6 +168,9 @@ type SettingsPolicy struct {
 	// The precedence of the policy. Lower values indicate higher precedence. Policies
 	// will be evaluated in ascending order of this field.
 	Precedence float64 `json:"precedence"`
+	// The client type to which the device settings profile applies. This field is set
+	// when the profile is created and cannot be changed.
+	ProfileType SettingsPolicyProfileType `json:"profile_type"`
 	// Determines if the operating system will register WARP's local interface IP with
 	// your on-premises DNS server.
 	RegisterInterfaceIPWithDNS bool `json:"register_interface_ip_with_dns"`
@@ -169,10 +181,14 @@ type SettingsPolicy struct {
 	// The URL to launch when the Send Feedback button is clicked.
 	SupportURL string `json:"support_url"`
 	// Whether to allow the user to turn off the WARP switch and disconnect the client.
-	SwitchLocked bool                       `json:"switch_locked"`
-	TargetTests  []SettingsPolicyTargetTest `json:"target_tests"`
+	SwitchLocked bool `json:"switch_locked"`
+	// Deprecated: deprecated
+	TargetTests []SettingsPolicyTargetTest `json:"target_tests"`
 	// Determines which tunnel protocol to use.
 	TunnelProtocol string `json:"tunnel_protocol"`
+	// Determines whether uninstalling the WARP client requires an override code.
+	// (Windows only).
+	UninstallProtection bool `json:"uninstall_protection"`
 	// Virtual network access settings for the device.
 	VirtualNetworks SettingsPolicyVirtualNetworks `json:"virtual_networks" api:"nullable"`
 	JSON            settingsPolicyJSON            `json:"-"`
@@ -184,6 +200,7 @@ type settingsPolicyJSON struct {
 	AllowUpdates               apijson.Field
 	AllowedToLeave             apijson.Field
 	AutoConnect                apijson.Field
+	BrowserExtensionConfig     apijson.Field
 	CaptivePortal              apijson.Field
 	Default                    apijson.Field
 	Description                apijson.Field
@@ -194,6 +211,7 @@ type settingsPolicyJSON struct {
 	ExcludeOfficeIPs           apijson.Field
 	FallbackDomains            apijson.Field
 	GatewayUniqueID            apijson.Field
+	GlobalAcceleration         apijson.Field
 	Include                    apijson.Field
 	LANAllowMinutes            apijson.Field
 	LANAllowSubnetSize         apijson.Field
@@ -201,6 +219,7 @@ type settingsPolicyJSON struct {
 	Name                       apijson.Field
 	PolicyID                   apijson.Field
 	Precedence                 apijson.Field
+	ProfileType                apijson.Field
 	RegisterInterfaceIPWithDNS apijson.Field
 	SccmVpnBoundarySupport     apijson.Field
 	ServiceModeV2              apijson.Field
@@ -208,6 +227,7 @@ type settingsPolicyJSON struct {
 	SwitchLocked               apijson.Field
 	TargetTests                apijson.Field
 	TunnelProtocol             apijson.Field
+	UninstallProtection        apijson.Field
 	VirtualNetworks            apijson.Field
 	raw                        string
 	ExtraFields                map[string]apijson.Field
@@ -219,6 +239,49 @@ func (r *SettingsPolicy) UnmarshalJSON(data []byte) (err error) {
 
 func (r settingsPolicyJSON) RawJSON() string {
 	return r.raw
+}
+
+// Browser extension proxy settings. Required when profile_type is
+// browser_extension and invalid for WARP profiles.
+type SettingsPolicyBrowserExtensionConfig struct {
+	// Whether the user may disable the browser extension proxy.
+	ProxyControl SettingsPolicyBrowserExtensionConfigProxyControl `json:"proxy_control" api:"required"`
+	// Whether the browser extension proxy is active.
+	ProxyEnabled bool                                     `json:"proxy_enabled" api:"required"`
+	JSON         settingsPolicyBrowserExtensionConfigJSON `json:"-"`
+}
+
+// settingsPolicyBrowserExtensionConfigJSON contains the JSON metadata for the
+// struct [SettingsPolicyBrowserExtensionConfig]
+type settingsPolicyBrowserExtensionConfigJSON struct {
+	ProxyControl apijson.Field
+	ProxyEnabled apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *SettingsPolicyBrowserExtensionConfig) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingsPolicyBrowserExtensionConfigJSON) RawJSON() string {
+	return r.raw
+}
+
+// Whether the user may disable the browser extension proxy.
+type SettingsPolicyBrowserExtensionConfigProxyControl string
+
+const (
+	SettingsPolicyBrowserExtensionConfigProxyControlUnlocked SettingsPolicyBrowserExtensionConfigProxyControl = "unlocked"
+	SettingsPolicyBrowserExtensionConfigProxyControlLocked   SettingsPolicyBrowserExtensionConfigProxyControl = "locked"
+)
+
+func (r SettingsPolicyBrowserExtensionConfigProxyControl) IsKnown() bool {
+	switch r {
+	case SettingsPolicyBrowserExtensionConfigProxyControlUnlocked, SettingsPolicyBrowserExtensionConfigProxyControlLocked:
+		return true
+	}
+	return false
 }
 
 type SettingsPolicyDNSSearchSuffix struct {
@@ -244,6 +307,64 @@ func (r *SettingsPolicyDNSSearchSuffix) UnmarshalJSON(data []byte) (err error) {
 
 func (r settingsPolicyDNSSearchSuffixJSON) RawJSON() string {
 	return r.raw
+}
+
+// Global Acceleration settings for China. When configured, WARP clients connect to
+// the Global Accelerator addresses instead of the default ones. Please contact
+// your account representative to enable this feature on your account. See
+// https://developers.cloudflare.com/china-network/concepts/global-acceleration/.
+type SettingsPolicyGlobalAcceleration struct {
+	// IP:port entries for the API endpoints.
+	APIEndpoints []string `json:"api_endpoints" api:"required"`
+	// Global acceleration settings are used only when "enabled".
+	Enabled bool `json:"enabled" api:"required"`
+	// IP:port entries for the MASQUE tunnel endpoints. Either wireguard_endpoints or
+	// masque_endpoints must be provided.
+	MasqueEndpoints []string `json:"masque_endpoints" api:"required"`
+	// IP:port entries for the WireGuard tunnel endpoints. Either wireguard_endpoints
+	// or masque_endpoints must be provided.
+	WireguardEndpoints []string `json:"wireguard_endpoints" api:"required"`
+	// Automatically switch Global Acceleration regions based on device location.
+	// Defaults to false when not provided.
+	Autoswitch bool                                 `json:"autoswitch"`
+	JSON       settingsPolicyGlobalAccelerationJSON `json:"-"`
+}
+
+// settingsPolicyGlobalAccelerationJSON contains the JSON metadata for the struct
+// [SettingsPolicyGlobalAcceleration]
+type settingsPolicyGlobalAccelerationJSON struct {
+	APIEndpoints       apijson.Field
+	Enabled            apijson.Field
+	MasqueEndpoints    apijson.Field
+	WireguardEndpoints apijson.Field
+	Autoswitch         apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *SettingsPolicyGlobalAcceleration) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r settingsPolicyGlobalAccelerationJSON) RawJSON() string {
+	return r.raw
+}
+
+// The client type to which the device settings profile applies. This field is set
+// when the profile is created and cannot be changed.
+type SettingsPolicyProfileType string
+
+const (
+	SettingsPolicyProfileTypeWARP             SettingsPolicyProfileType = "warp"
+	SettingsPolicyProfileTypeBrowserExtension SettingsPolicyProfileType = "browser_extension"
+)
+
+func (r SettingsPolicyProfileType) IsKnown() bool {
+	switch r {
+	case SettingsPolicyProfileTypeWARP, SettingsPolicyProfileTypeBrowserExtension:
+		return true
+	}
+	return false
 }
 
 type SettingsPolicyServiceModeV2 struct {

@@ -34,7 +34,8 @@ func NewBillingTopupConfigService(opts ...option.RequestOption) (r *BillingTopup
 	return
 }
 
-// Configure auto top-up with a balance threshold and top-up amount.
+// Configure auto top-up with a balance threshold and top-up amount. Dashboard
+// sessions only: API token, OAuth, and service credentials are rejected with 403.
 func (r *BillingTopupConfigService) New(ctx context.Context, params BillingTopupConfigNewParams, opts ...option.RequestOption) (res *BillingTopupConfigNewResponse, err error) {
 	var env BillingTopupConfigNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -51,7 +52,8 @@ func (r *BillingTopupConfigService) New(ctx context.Context, params BillingTopup
 	return res, nil
 }
 
-// Remove the auto top-up configuration for the account.
+// Remove the auto top-up configuration for the account. Dashboard sessions only:
+// API token, OAuth, and service credentials are rejected with 403.
 func (r *BillingTopupConfigService) Delete(ctx context.Context, body BillingTopupConfigDeleteParams, opts ...option.RequestOption) (res *BillingTopupConfigDeleteResponse, err error) {
 	var env BillingTopupConfigDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -112,10 +114,10 @@ type BillingTopupConfigDeleteResponse = interface{}
 
 type BillingTopupConfigGetResponse struct {
 	Amount         float64                           `json:"amount" api:"required,nullable"`
-	DisabledReason string                            `json:"disabledReason" api:"required,nullable"`
-	Error          string                            `json:"error" api:"required,nullable"`
-	LastFailedAt   float64                           `json:"lastFailedAt" api:"required,nullable"`
 	Threshold      float64                           `json:"threshold" api:"required,nullable"`
+	DisabledReason string                            `json:"disabledReason" api:"nullable"`
+	Error          string                            `json:"error" api:"nullable"`
+	LastFailedAt   float64                           `json:"lastFailedAt" api:"nullable"`
 	JSON           billingTopupConfigGetResponseJSON `json:"-"`
 }
 
@@ -123,10 +125,10 @@ type BillingTopupConfigGetResponse struct {
 // [BillingTopupConfigGetResponse]
 type billingTopupConfigGetResponseJSON struct {
 	Amount         apijson.Field
+	Threshold      apijson.Field
 	DisabledReason apijson.Field
 	Error          apijson.Field
 	LastFailedAt   apijson.Field
-	Threshold      apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }

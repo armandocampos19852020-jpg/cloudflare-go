@@ -157,6 +157,7 @@ type QualityIQISummaryResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                  `json:"tags"`
 	JSON            qualityIQISummaryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -170,6 +171,7 @@ type qualityIQISummaryResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -225,7 +227,6 @@ func (r QualityIQISummaryResponseMetaConfidenceInfoAnnotationsDataSource) IsKnow
 type QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -235,7 +236,7 @@ const (
 
 func (r QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualityIQISummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -313,8 +314,11 @@ func (r qualityIQISummaryResponseMetaUnitJSON) RawJSON() string {
 }
 
 type QualityIQISummaryResponseSummary0 struct {
-	P25  string                                `json:"p25" api:"required"`
-	P50  string                                `json:"p50" api:"required"`
+	// A numeric string.
+	P25 string `json:"p25" api:"required"`
+	// A numeric string.
+	P50 string `json:"p50" api:"required"`
+	// A numeric string.
 	P75  string                                `json:"p75" api:"required"`
 	JSON qualityIQISummaryResponseSummary0JSON `json:"-"`
 }
@@ -457,6 +461,7 @@ type QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                           `json:"tags"`
 	JSON            qualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -471,6 +476,7 @@ type qualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -526,7 +532,6 @@ func (r QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsDataSourc
 type QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -536,7 +541,7 @@ const (
 
 func (r QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualityIQITimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -647,13 +652,29 @@ type QualityIQISummaryParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualityIQISummaryParamsFormat] `query:"format"`
@@ -736,6 +757,9 @@ type QualityIQITimeseriesGroupsParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[QualityIQITimeseriesGroupsParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
@@ -746,13 +770,29 @@ type QualityIQITimeseriesGroupsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualityIQITimeseriesGroupsParamsFormat] `query:"format"`
@@ -795,6 +835,9 @@ func (r QualityIQITimeseriesGroupsParamsMetric) IsKnown() bool {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type QualityIQITimeseriesGroupsParamsAggInterval string
 
 const (

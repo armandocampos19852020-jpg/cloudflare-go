@@ -23,7 +23,7 @@ import (
 // the [NewOperationSchemaValidationService] method instead.
 //
 // Deprecated: Use the
-// [github.com/cloudflare/cloudflare-go/v7/schema_validation.SettingOperationService]
+// [github.com/cloudflare/cloudflare-go/v6/schema_validation.SettingOperationService]
 // service instead
 type OperationSchemaValidationService struct {
 	Options []option.RequestOption
@@ -38,7 +38,8 @@ func NewOperationSchemaValidationService(opts ...option.RequestOption) (r *Opera
 	return
 }
 
-// Updates operation-level schema validation settings on the zone
+// Updates operation-level schema validation settings on the zone. Deprecated; use
+// `/zones/{zone_id}/schema_validation/settings/operations/{operation_id}` instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -58,7 +59,9 @@ func (r *OperationSchemaValidationService) Update(ctx context.Context, operation
 	return res, err
 }
 
-// Updates multiple operation-level schema validation settings on the zone
+// Updates multiple operation-level schema validation settings on the zone.
+// Deprecated; use `/zones/{zone_id}/schema_validation/settings/operations`
+// instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)
@@ -79,7 +82,9 @@ func (r *OperationSchemaValidationService) Edit(ctx context.Context, params Oper
 	return res, nil
 }
 
-// Retrieves operation-level schema validation settings on the zone
+// Retrieves operation-level schema validation settings on the zone. Deprecated;
+// use `/zones/{zone_id}/schema_validation/settings/operations/{operation_id}`
+// instead.
 //
 // Deprecated: Use
 // [Schema Validation API](https://developers.cloudflare.com/api/resources/schema_validation/)

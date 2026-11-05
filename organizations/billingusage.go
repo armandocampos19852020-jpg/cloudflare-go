@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"time"
 
@@ -16,6 +17,8 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/internal/param"
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
+	"github.com/tidwall/gjson"
 )
 
 // BillingUsageService contains methods and other services that help with
@@ -46,11 +49,15 @@ func NewBillingUsageService(opts ...option.RequestOption) (r *BillingUsageServic
 // allowances and may result in zero cost. The response includes usage for every
 // account belonging to the specified organization.
 //
-// **Note:** Cost and pricing fields are not yet populated and will be absent from
-// responses until billing integration is complete.
+// **Note:** This endpoint serves `usage` records only; cost and pricing fields are
+// absent from responses. Rated costs are available per account via
+// `POST /accounts/{account_id}/billable/usage` with `Metric: cost`.
 //
 // When `from` and `to` are omitted, defaults to the start of the current month
 // through today. The maximum date range is 31 days.
+//
+// An organization with no accounts, or an organization ID that does not exist,
+// returns a successful response with an empty result set rather than an error.
 func (r *BillingUsageService) Get(ctx context.Context, organizationID string, query BillingUsageGetParams, opts ...option.RequestOption) (res *[]BillingUsageGetResponse, err error) {
 	var env BillingUsageGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -70,10 +77,6 @@ func (r *BillingUsageService) Get(ctx context.Context, organizationID string, qu
 // A single cost and usage record for a metered product within a specific charge
 // period, aligned with the FinOps FOCUS v1.3 specification.
 type BillingUsageGetResponse struct {
-	// Public identifier of the Cloudflare account (account tag).
-	BillingAccountID string `json:"BillingAccountId" api:"required"`
-	// Display name of the Cloudflare account.
-	BillingAccountName string `json:"BillingAccountName" api:"required"`
 	// Highest-level classification of a charge based on the nature of how it gets
 	// billed. Currently only "Usage" is supported.
 	ChargeCategory BillingUsageGetResponseChargeCategory `json:"ChargeCategory" api:"required"`
@@ -85,9 +88,6 @@ type BillingUsageGetResponse struct {
 	ChargePeriodEnd time.Time `json:"ChargePeriodEnd" api:"required" format:"date-time"`
 	// Inclusive start of the time interval during which the usage was consumed.
 	ChargePeriodStart time.Time `json:"ChargePeriodStart" api:"required" format:"date-time"`
-	// Measured usage amount within the charge period. Reflects raw metered consumption
-	// before pricing transformations.
-	ConsumedQuantity float64 `json:"ConsumedQuantity" api:"required"`
 	// Unit of measure for the consumed quantity (e.g., "GB", "Requests",
 	// "vCPU-Hours").
 	ConsumedUnit string `json:"ConsumedUnit" api:"required"`
@@ -97,13 +97,21 @@ type BillingUsageGetResponse struct {
 	InvoiceIssuerName string `json:"InvoiceIssuerName" api:"required"`
 	// Name of the entity that made the services available for purchase.
 	ServiceProviderName string `json:"ServiceProviderName" api:"required"`
-	// The display name of the billable metric. Cloudflare extension; replaces FOCUS
-	// SkuMeter.
-	XBillableMetricName string `json:"x_BillableMetricName" api:"required"`
+	// The unique identifier for the billable metric in the Cloudflare catalog.
+	// Cloudflare extension; replaces FOCUS SkuId.
+	XBillableMetricID string `json:"x_BillableMetricId" api:"required"`
 	// A charge serving as the basis for invoicing, inclusive of all reduced rates and
 	// discounts while excluding the amortization of upfront charges (one-time or
 	// recurring).
 	BilledCost float64 `json:"BilledCost" api:"nullable"`
+	// Public identifier of the Cloudflare account (account tag). Omitted when account
+	// is not part of the requested grouping, and always omitted for usage measured at
+	// contract level, even when grouping by account: that usage is returned as its own
+	// record with no account.
+	BillingAccountID string `json:"BillingAccountId"`
+	// Display name of the Cloudflare account. Omitted when account is not part of the
+	// requested grouping, and for usage measured at contract level.
+	BillingAccountName string `json:"BillingAccountName"`
 	// Currency that a charge was billed in (ISO 4217).
 	BillingCurrency string `json:"BillingCurrency" api:"nullable"`
 	// Exclusive end of the billing cycle that contains this usage record.
@@ -113,6 +121,9 @@ type BillingUsageGetResponse struct {
 	// Indicates whether the row represents a correction to one or more charges
 	// invoiced in a previous billing period.
 	ChargeClass BillingUsageGetResponseChargeClass `json:"ChargeClass" api:"nullable"`
+	// Measured usage amount within the charge period. Reflects raw metered consumption
+	// before pricing transformations.
+	ConsumedQuantity float64 `json:"ConsumedQuantity"`
 	// Cost calculated by multiplying ContractedUnitPrice and the corresponding
 	// PricingQuantity.
 	ContractedCost float64 `json:"ContractedCost" api:"nullable"`
@@ -147,15 +158,29 @@ type BillingUsageGetResponse struct {
 	// Name assigned to a grouping of services. For Cloudflare, this is the
 	// subscription or contract display name.
 	SubAccountName string `json:"SubAccountName"`
-	// The unique identifier for the billable metric in the Cloudflare catalog.
-	// Cloudflare extension; replaces FOCUS SkuId.
-	XBillableMetricID string `json:"x_BillableMetricId"`
+	// Tag values for the requested `GroupBy` keys. Omitted when `GroupBy` is not
+	// provided. Missing keys are omitted, and key-only tags are returned as boolean
+	// `true`. All other tag values are strings.
+	Tags map[string]BillingUsageGetResponseTagsUnion `json:"Tags"`
+	// The display name of the billable metric. Cloudflare extension; replaces FOCUS
+	// SkuMeter.
+	XBillableMetricName string `json:"x_BillableMetricName"`
+	// The product category the charge belongs to (e.g., "Developer", "Cloudflare
+	// One"). Cloudflare extension; replaces FOCUS ServiceCategory.
+	XProductCategoryName string `json:"x_ProductCategoryName"`
+	// The unique identifier for the product family in the Cloudflare catalog.
+	// Cloudflare extension; replaces FOCUS ServiceId.
+	XProductFamilyID string `json:"x_ProductFamilyId"`
 	// The product family the charge belongs to (e.g., "R2", "Workers"). Cloudflare
 	// extension; replaces FOCUS ServiceName.
 	XProductFamilyName string `json:"x_ProductFamilyName"`
-	// The identifier for the Cloudflare zone (zone tag). Cloudflare extension.
+	// The identifier for the Cloudflare zone (zone tag). Omitted when zone is not part
+	// of the requested grouping, and always omitted for usage measured at contract
+	// level, even when grouping by zone. Cloudflare extension.
 	XZoneID string `json:"x_ZoneId" api:"nullable"`
-	// The display name of the Cloudflare zone. Cloudflare extension.
+	// The display name of the Cloudflare zone. Omitted when zone is not part of the
+	// requested grouping, and for usage measured at contract level. Cloudflare
+	// extension.
 	XZoneName string                      `json:"x_ZoneName" api:"nullable"`
 	JSON      billingUsageGetResponseJSON `json:"-"`
 }
@@ -163,41 +188,44 @@ type BillingUsageGetResponse struct {
 // billingUsageGetResponseJSON contains the JSON metadata for the struct
 // [BillingUsageGetResponse]
 type billingUsageGetResponseJSON struct {
-	BillingAccountID    apijson.Field
-	BillingAccountName  apijson.Field
-	ChargeCategory      apijson.Field
-	ChargeDescription   apijson.Field
-	ChargeFrequency     apijson.Field
-	ChargePeriodEnd     apijson.Field
-	ChargePeriodStart   apijson.Field
-	ConsumedQuantity    apijson.Field
-	ConsumedUnit        apijson.Field
-	HostProviderName    apijson.Field
-	InvoiceIssuerName   apijson.Field
-	ServiceProviderName apijson.Field
-	XBillableMetricName apijson.Field
-	BilledCost          apijson.Field
-	BillingCurrency     apijson.Field
-	BillingPeriodEnd    apijson.Field
-	BillingPeriodStart  apijson.Field
-	ChargeClass         apijson.Field
-	ContractedCost      apijson.Field
-	ContractedUnitPrice apijson.Field
-	EffectiveCost       apijson.Field
-	ListCost            apijson.Field
-	ListUnitPrice       apijson.Field
-	PricingQuantity     apijson.Field
-	PricingUnit         apijson.Field
-	RegionID            apijson.Field
-	RegionName          apijson.Field
-	SubAccountID        apijson.Field
-	SubAccountName      apijson.Field
-	XBillableMetricID   apijson.Field
-	XProductFamilyName  apijson.Field
-	XZoneID             apijson.Field
-	XZoneName           apijson.Field
-	raw                 string
-	ExtraFields         map[string]apijson.Field
+	ChargeCategory       apijson.Field
+	ChargeDescription    apijson.Field
+	ChargeFrequency      apijson.Field
+	ChargePeriodEnd      apijson.Field
+	ChargePeriodStart    apijson.Field
+	ConsumedUnit         apijson.Field
+	HostProviderName     apijson.Field
+	InvoiceIssuerName    apijson.Field
+	ServiceProviderName  apijson.Field
+	XBillableMetricID    apijson.Field
+	BilledCost           apijson.Field
+	BillingAccountID     apijson.Field
+	BillingAccountName   apijson.Field
+	BillingCurrency      apijson.Field
+	BillingPeriodEnd     apijson.Field
+	BillingPeriodStart   apijson.Field
+	ChargeClass          apijson.Field
+	ConsumedQuantity     apijson.Field
+	ContractedCost       apijson.Field
+	ContractedUnitPrice  apijson.Field
+	EffectiveCost        apijson.Field
+	ListCost             apijson.Field
+	ListUnitPrice        apijson.Field
+	PricingQuantity      apijson.Field
+	PricingUnit          apijson.Field
+	RegionID             apijson.Field
+	RegionName           apijson.Field
+	SubAccountID         apijson.Field
+	SubAccountName       apijson.Field
+	Tags                 apijson.Field
+	XBillableMetricName  apijson.Field
+	XProductCategoryName apijson.Field
+	XProductFamilyID     apijson.Field
+	XProductFamilyName   apijson.Field
+	XZoneID              apijson.Field
+	XZoneName            apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
 }
 
 func (r *BillingUsageGetResponse) UnmarshalJSON(data []byte) (err error) {
@@ -255,14 +283,52 @@ func (r BillingUsageGetResponseChargeClass) IsKnown() bool {
 	return false
 }
 
+// Union satisfied by [shared.UnionString] or [BillingUsageGetResponseTagsBoolean].
+type BillingUsageGetResponseTagsUnion interface {
+	ImplementsBillingUsageGetResponseTagsUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*BillingUsageGetResponseTagsUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.True,
+			Type:       reflect.TypeOf(BillingUsageGetResponseTagsBoolean(false)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.False,
+			Type:       reflect.TypeOf(BillingUsageGetResponseTagsBoolean(false)),
+		},
+	)
+}
+
+type BillingUsageGetResponseTagsBoolean bool
+
+const (
+	BillingUsageGetResponseTagsBooleanTrue BillingUsageGetResponseTagsBoolean = true
+)
+
+func (r BillingUsageGetResponseTagsBoolean) IsKnown() bool {
+	switch r {
+	case BillingUsageGetResponseTagsBooleanTrue:
+		return true
+	}
+	return false
+}
+
+func (r BillingUsageGetResponseTagsBoolean) ImplementsBillingUsageGetResponseTagsUnion() {}
+
 type BillingUsageGetParams struct {
 	// Start date for the usage query (ISO 8601). Required if `to` is set. When omitted
 	// along with `to`, defaults to the start of the current month. Filters by charge
 	// period (when consumption happened), not billing period. The maximum date range
 	// is 31 days.
 	From param.Field[time.Time] `query:"from" format:"date"`
-	// Filter results by billable metric id (e.g., workers_standard_requests).
-	Metric param.Field[string] `query:"metric"`
 	// End date for the usage query (ISO 8601). Required if `from` is set. When omitted
 	// along with `from`, defaults to today. Filters by charge period (when consumption
 	// happened), not billing period. The maximum date range is 31 days.

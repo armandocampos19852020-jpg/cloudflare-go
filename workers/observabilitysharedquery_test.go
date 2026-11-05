@@ -16,6 +16,7 @@ import (
 )
 
 func TestObservabilitySharedQueryNewWithOptionalParams(t *testing.T) {
+	t.Skip("HTTP 400 error from prism")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -32,24 +33,26 @@ func TestObservabilitySharedQueryNewWithOptionalParams(t *testing.T) {
 		AccountID: cloudflare.F("account_id"),
 		QueryID:   cloudflare.F("queryId"),
 		Timeframe: cloudflare.F(workers.ObservabilitySharedQueryNewParamsTimeframe{
-			From: cloudflare.F(0.000000),
-			To:   cloudflare.F(0.000000),
+			From: cloudflare.F(int64(0)),
+			To:   cloudflare.F(int64(0)),
 		}),
-		Chart:           cloudflare.F(true),
-		Compare:         cloudflare.F(true),
-		Dry:             cloudflare.F(true),
-		Granularity:     cloudflare.F(0.000000),
-		IgnoreSeries:    cloudflare.F(true),
-		Limit:           cloudflare.F(2000.000000),
-		Offset:          cloudflare.F("offset"),
-		OffsetBy:        cloudflare.F(0.000000),
-		OffsetDirection: cloudflare.F("offsetDirection"),
+		Chart:             cloudflare.F(true),
+		ChartType:         cloudflare.F(workers.ObservabilitySharedQueryNewParamsChartTypeTimeseriesAndAggregate),
+		Compare:           cloudflare.F(true),
+		DistributionScale: cloudflare.F(workers.ObservabilitySharedQueryNewParamsDistributionScaleLog),
+		Dry:               cloudflare.F(true),
+		Granularity:       cloudflare.F(0.000000),
+		IgnoreSeries:      cloudflare.F(true),
+		Limit:             cloudflare.F(2000.000000),
+		Offset:            cloudflare.F("offset"),
+		OffsetBy:          cloudflare.F(0.000000),
+		OffsetDirection:   cloudflare.F("offsetDirection"),
 		Parameters: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParameters{
-			Calculations: cloudflare.F([]workers.ObservabilitySharedQueryNewParamsParametersCalculation{{
-				Operator: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersCalculationsOperatorUniq),
+			Calculations: cloudflare.F([]workers.ObservabilitySharedQueryNewParamsParametersCalculationUnion{workers.ObservabilitySharedQueryNewParamsParametersCalculationsObject{
+				Operator: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperatorCount),
 				Alias:    cloudflare.F("alias"),
 				Key:      cloudflare.F("key"),
-				KeyType:  cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersCalculationsKeyTypeString),
+				KeyType:  cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeString),
 			}}),
 			Datasets:          cloudflare.F([]string{"string"}),
 			FilterCombination: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersFilterCombinationAnd),
@@ -57,7 +60,7 @@ func TestObservabilitySharedQueryNewWithOptionalParams(t *testing.T) {
 				FilterCombination: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectFilterCombinationAnd),
 				Filters: cloudflare.F([]workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectFilterUnion{workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectFiltersObject{
 					FilterCombination: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectFiltersObjectFilterCombinationAnd),
-					Filters:           cloudflare.F([]interface{}{map[string]interface{}{}}),
+					Filters:           cloudflare.F([]interface{}{}),
 					Kind:              cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectFiltersObjectKindGroup),
 				}}),
 				Kind: cloudflare.F(workers.ObservabilitySharedQueryNewParamsParametersFiltersObjectKindGroup),

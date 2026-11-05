@@ -189,6 +189,7 @@ type QualitySpeedHistogramResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            qualitySpeedHistogramResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -203,6 +204,7 @@ type qualitySpeedHistogramResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -258,7 +260,6 @@ func (r QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -268,7 +269,7 @@ const (
 
 func (r QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedHistogramResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -439,6 +440,7 @@ type QualitySpeedSummaryResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            qualitySpeedSummaryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -453,6 +455,7 @@ type qualitySpeedSummaryResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -508,7 +511,6 @@ func (r QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -518,7 +520,7 @@ const (
 
 func (r QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, QualitySpeedSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -596,14 +598,21 @@ func (r qualitySpeedSummaryResponseMetaUnitJSON) RawJSON() string {
 }
 
 type QualitySpeedSummaryResponseSummary0 struct {
-	BandwidthDownload string                                  `json:"bandwidthDownload" api:"required"`
-	BandwidthUpload   string                                  `json:"bandwidthUpload" api:"required"`
-	JitterIdle        string                                  `json:"jitterIdle" api:"required"`
-	JitterLoaded      string                                  `json:"jitterLoaded" api:"required"`
-	LatencyIdle       string                                  `json:"latencyIdle" api:"required"`
-	LatencyLoaded     string                                  `json:"latencyLoaded" api:"required"`
-	PacketLoss        string                                  `json:"packetLoss" api:"required"`
-	JSON              qualitySpeedSummaryResponseSummary0JSON `json:"-"`
+	// A numeric string.
+	BandwidthDownload string `json:"bandwidthDownload" api:"required"`
+	// A numeric string.
+	BandwidthUpload string `json:"bandwidthUpload" api:"required"`
+	// A numeric string.
+	JitterIdle string `json:"jitterIdle" api:"required"`
+	// A numeric string.
+	JitterLoaded string `json:"jitterLoaded" api:"required"`
+	// A numeric string.
+	LatencyIdle string `json:"latencyIdle" api:"required"`
+	// A numeric string.
+	LatencyLoaded string `json:"latencyLoaded" api:"required"`
+	// A numeric string.
+	PacketLoss string                                  `json:"packetLoss" api:"required"`
+	JSON       qualitySpeedSummaryResponseSummary0JSON `json:"-"`
 }
 
 // qualitySpeedSummaryResponseSummary0JSON contains the JSON metadata for the
@@ -640,7 +649,11 @@ type QualitySpeedHistogramParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualitySpeedHistogramParamsFormat] `query:"format"`
@@ -729,7 +742,11 @@ type QualitySpeedSummaryParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[QualitySpeedSummaryParamsFormat] `query:"format"`

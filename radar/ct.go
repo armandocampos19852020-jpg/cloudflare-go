@@ -177,6 +177,7 @@ type CTSummaryResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                              `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                            `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                         `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                          `json:"tags"`
 	JSON            ctSummaryResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -190,6 +191,7 @@ type ctSummaryResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -245,7 +247,6 @@ func (r CTSummaryResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() bool
 type CTSummaryResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent             CTSummaryResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           CTSummaryResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage            CTSummaryResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection CTSummaryResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -255,7 +256,7 @@ const (
 
 func (r CTSummaryResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeEvent, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTSummaryResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -528,6 +529,7 @@ type CTTimeseriesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                 `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                               `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                            `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                             `json:"tags"`
 	JSON            ctTimeseriesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -541,6 +543,7 @@ type ctTimeseriesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -596,7 +599,6 @@ func (r CTTimeseriesResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() b
 type CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -606,7 +608,7 @@ const (
 
 func (r CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -803,6 +805,7 @@ type CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                       `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                     `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                  `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                   `json:"tags"`
 	JSON            ctTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -816,6 +819,7 @@ type ctTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -871,7 +875,6 @@ func (r CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsDataSource) IsKno
 type CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -881,7 +884,7 @@ const (
 
 func (r CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, CTTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1173,17 +1176,34 @@ type CTSummaryParams struct {
 	CA param.Field[[]string] `query:"ca"`
 	// Filters results by certificate authority owner.
 	CAOwner param.Field[[]string] `query:"caOwner"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by certificate duration.
 	Duration param.Field[[]CTSummaryParamsDuration] `query:"duration"`
-	// Filters results by entry type (certificate vs. pre-certificate).
+	// Filters results by entry type (certificate vs. pre-certificate). Incompatible
+	// with the `tld` filter/dimension.
 	EntryType param.Field[[]CTSummaryParamsEntryType] `query:"entryType"`
 	// Filters results by expiration status (expired vs. valid).
 	ExpirationStatus param.Field[[]CTSummaryParamsExpirationStatus] `query:"expirationStatus"`
@@ -1196,13 +1216,17 @@ type CTSummaryParams struct {
 	HasWildcards param.Field[[]bool] `query:"hasWildcards"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
-	// Filters results by certificate log.
+	// Filters results by certificate log. Incompatible with the `tld`
+	// filter/dimension.
 	Log param.Field[[]string] `query:"log"`
-	// Filters results by certificate log API (RFC6962 vs. static).
+	// Filters results by certificate log API (RFC6962 vs. static). Incompatible with
+	// the `tld` filter/dimension.
 	LogAPI param.Field[[]CTSummaryParamsLogAPI] `query:"logApi"`
-	// Filters results by certificate log operator.
+	// Filters results by certificate log operator. Incompatible with the `tld`
+	// filter/dimension.
 	LogOperator param.Field[[]string] `query:"logOperator"`
 	// Array of names used to label the series in the response.
 	Name param.Field[[]string] `query:"name"`
@@ -1213,7 +1237,8 @@ type CTSummaryParams struct {
 	PublicKeyAlgorithm param.Field[[]CTSummaryParamsPublicKeyAlgorithm] `query:"publicKeyAlgorithm"`
 	// Filters results by signature algorithm.
 	SignatureAlgorithm param.Field[[]CTSummaryParamsSignatureAlgorithm] `query:"signatureAlgorithm"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `log`, `logApi`,
+	// `logOperator`, and `entryType` filters/dimensions.
 	TLD param.Field[[]string] `query:"tld"`
 	// Specifies whether to filter out duplicate certificates and pre-certificates. Set
 	// to true for unique entries only.
@@ -1458,22 +1483,42 @@ type CTTimeseriesParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[CTTimeseriesParamsAggInterval] `query:"aggInterval"`
 	// Filters results by certificate authority.
 	CA param.Field[[]string] `query:"ca"`
 	// Filters results by certificate authority owner.
 	CAOwner param.Field[[]string] `query:"caOwner"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by certificate duration.
 	Duration param.Field[[]CTTimeseriesParamsDuration] `query:"duration"`
-	// Filters results by entry type (certificate vs. pre-certificate).
+	// Filters results by entry type (certificate vs. pre-certificate). Incompatible
+	// with the `tld` filter/dimension.
 	EntryType param.Field[[]CTTimeseriesParamsEntryType] `query:"entryType"`
 	// Filters results by expiration status (expired vs. valid).
 	ExpirationStatus param.Field[[]CTTimeseriesParamsExpirationStatus] `query:"expirationStatus"`
@@ -1484,11 +1529,14 @@ type CTTimeseriesParams struct {
 	HasIPs param.Field[[]bool] `query:"hasIps"`
 	// Filters results based on whether the certificates contain wildcard domains.
 	HasWildcards param.Field[[]bool] `query:"hasWildcards"`
-	// Filters results by certificate log.
+	// Filters results by certificate log. Incompatible with the `tld`
+	// filter/dimension.
 	Log param.Field[[]string] `query:"log"`
-	// Filters results by certificate log API (RFC6962 vs. static).
+	// Filters results by certificate log API (RFC6962 vs. static). Incompatible with
+	// the `tld` filter/dimension.
 	LogAPI param.Field[[]CTTimeseriesParamsLogAPI] `query:"logApi"`
-	// Filters results by certificate log operator.
+	// Filters results by certificate log operator. Incompatible with the `tld`
+	// filter/dimension.
 	LogOperator param.Field[[]string] `query:"logOperator"`
 	// Array of names used to label the series in the response.
 	Name param.Field[[]string] `query:"name"`
@@ -1496,7 +1544,8 @@ type CTTimeseriesParams struct {
 	PublicKeyAlgorithm param.Field[[]CTTimeseriesParamsPublicKeyAlgorithm] `query:"publicKeyAlgorithm"`
 	// Filters results by signature algorithm.
 	SignatureAlgorithm param.Field[[]CTTimeseriesParamsSignatureAlgorithm] `query:"signatureAlgorithm"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `log`, `logApi`,
+	// `logOperator`, and `entryType` filters/dimensions.
 	TLD param.Field[[]string] `query:"tld"`
 	// Specifies whether to filter out duplicate certificates and pre-certificates. Set
 	// to true for unique entries only.
@@ -1516,6 +1565,9 @@ func (r CTTimeseriesParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type CTTimeseriesParamsAggInterval string
 
 const (
@@ -1716,22 +1768,42 @@ type CTTimeseriesGroupsParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[CTTimeseriesGroupsParamsAggInterval] `query:"aggInterval"`
 	// Filters results by certificate authority.
 	CA param.Field[[]string] `query:"ca"`
 	// Filters results by certificate authority owner.
 	CAOwner param.Field[[]string] `query:"caOwner"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by certificate duration.
 	Duration param.Field[[]CTTimeseriesGroupsParamsDuration] `query:"duration"`
-	// Filters results by entry type (certificate vs. pre-certificate).
+	// Filters results by entry type (certificate vs. pre-certificate). Incompatible
+	// with the `tld` filter/dimension.
 	EntryType param.Field[[]CTTimeseriesGroupsParamsEntryType] `query:"entryType"`
 	// Filters results by expiration status (expired vs. valid).
 	ExpirationStatus param.Field[[]CTTimeseriesGroupsParamsExpirationStatus] `query:"expirationStatus"`
@@ -1744,13 +1816,17 @@ type CTTimeseriesGroupsParams struct {
 	HasWildcards param.Field[[]bool] `query:"hasWildcards"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
-	// Filters results by certificate log.
+	// Filters results by certificate log. Incompatible with the `tld`
+	// filter/dimension.
 	Log param.Field[[]string] `query:"log"`
-	// Filters results by certificate log API (RFC6962 vs. static).
+	// Filters results by certificate log API (RFC6962 vs. static). Incompatible with
+	// the `tld` filter/dimension.
 	LogAPI param.Field[[]CTTimeseriesGroupsParamsLogAPI] `query:"logApi"`
-	// Filters results by certificate log operator.
+	// Filters results by certificate log operator. Incompatible with the `tld`
+	// filter/dimension.
 	LogOperator param.Field[[]string] `query:"logOperator"`
 	// Array of names used to label the series in the response.
 	Name param.Field[[]string] `query:"name"`
@@ -1761,7 +1837,8 @@ type CTTimeseriesGroupsParams struct {
 	PublicKeyAlgorithm param.Field[[]CTTimeseriesGroupsParamsPublicKeyAlgorithm] `query:"publicKeyAlgorithm"`
 	// Filters results by signature algorithm.
 	SignatureAlgorithm param.Field[[]CTTimeseriesGroupsParamsSignatureAlgorithm] `query:"signatureAlgorithm"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `log`, `logApi`,
+	// `logOperator`, and `entryType` filters/dimensions.
 	TLD param.Field[[]string] `query:"tld"`
 	// Specifies whether to filter out duplicate certificates and pre-certificates. Set
 	// to true for unique entries only.
@@ -1810,6 +1887,9 @@ func (r CTTimeseriesGroupsParamsDimension) IsKnown() bool {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type CTTimeseriesGroupsParamsAggInterval string
 
 const (

@@ -16,7 +16,7 @@ import (
 )
 
 func TestRecordingGetActiveRecordings(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -32,7 +32,7 @@ func TestRecordingGetActiveRecordings(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Recordings.GetActiveRecordings(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"meeting_id",
 		realtime_kit.RecordingGetActiveRecordingsParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -48,7 +48,7 @@ func TestRecordingGetActiveRecordings(t *testing.T) {
 }
 
 func TestRecordingGetOneRecording(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -64,8 +64,8 @@ func TestRecordingGetOneRecording(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Recordings.GetOneRecording(
 		context.TODO(),
-		"app_id",
-		"recording_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
+		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.RecordingGetOneRecordingParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 		},
@@ -80,7 +80,7 @@ func TestRecordingGetOneRecording(t *testing.T) {
 }
 
 func TestRecordingGetRecordingsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -96,7 +96,7 @@ func TestRecordingGetRecordingsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Recordings.GetRecordings(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		realtime_kit.RecordingGetRecordingsParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			EndTime:   cloudflare.F(time.Now()),
@@ -121,7 +121,7 @@ func TestRecordingGetRecordingsWithOptionalParams(t *testing.T) {
 }
 
 func TestRecordingPauseResumeStopRecording(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -137,8 +137,8 @@ func TestRecordingPauseResumeStopRecording(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Recordings.PauseResumeStopRecording(
 		context.TODO(),
-		"2a95132c15732412d22c1476fa83f27a",
-		"recording_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
+		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.RecordingPauseResumeStopRecordingParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			Action:    cloudflare.F(realtime_kit.RecordingPauseResumeStopRecordingParamsActionStop),
@@ -154,7 +154,7 @@ func TestRecordingPauseResumeStopRecording(t *testing.T) {
 }
 
 func TestRecordingStartRecordingsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -170,9 +170,10 @@ func TestRecordingStartRecordingsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Recordings.StartRecordings(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		realtime_kit.RecordingStartRecordingsParams{
 			AccountID:               cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			MeetingID:               cloudflare.F("97440c6a-140b-40a9-9499-b23fd7a3868a"),
 			AllowMultipleRecordings: cloudflare.F(false),
 			AudioConfig: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsAudioConfig{
 				Channel:    cloudflare.F(realtime_kit.RecordingStartRecordingsParamsAudioConfigChannelStereo),
@@ -184,17 +185,15 @@ func TestRecordingStartRecordingsWithOptionalParams(t *testing.T) {
 				Type: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsInteractiveConfigTypeId3),
 			}),
 			MaxSeconds: cloudflare.F(int64(60)),
-			MeetingID:  cloudflare.F("97440c6a-140b-40a9-9499-b23fd7a3868a"),
 			RealtimekitBucketConfig: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsRealtimekitBucketConfig{
 				Enabled: cloudflare.F(true),
 			}),
 			RtmpOutConfig: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsRtmpOutConfig{
 				RtmpURL: cloudflare.F("rtmp://a.rtmp.youtube.com/live2"),
 			}),
-			StorageConfig: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsStorageConfig{
-				Type:       cloudflare.F(realtime_kit.RecordingStartRecordingsParamsStorageConfigTypeAws),
+			StorageConfig: cloudflare.F[realtime_kit.RecordingStartRecordingsParamsStorageConfigUnion](realtime_kit.RecordingStartRecordingsParamsStorageConfigObject{
 				AccessKey:  cloudflare.F("access_key"),
-				AuthMethod: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsStorageConfigAuthMethodKey),
+				AuthMethod: cloudflare.F(realtime_kit.RecordingStartRecordingsParamsStorageConfigObjectAuthMethodKey),
 				Bucket:     cloudflare.F("bucket"),
 				Host:       cloudflare.F("host"),
 				Password:   cloudflare.F("password"),
@@ -203,6 +202,7 @@ func TestRecordingStartRecordingsWithOptionalParams(t *testing.T) {
 				PrivateKey: cloudflare.F("private_key"),
 				Region:     cloudflare.F("us-east-1"),
 				Secret:     cloudflare.F("secret"),
+				Type:       cloudflare.F(realtime_kit.RecordingStartRecordingsParamsStorageConfigObjectTypeGcs),
 				Username:   cloudflare.F("username"),
 			}),
 			URL: cloudflare.F("https://example.com"),
@@ -232,7 +232,7 @@ func TestRecordingStartRecordingsWithOptionalParams(t *testing.T) {
 }
 
 func TestRecordingStartTrackRecordingWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires active WebRTC session with real participants")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -246,55 +246,19 @@ func TestRecordingStartTrackRecordingWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
-	err := client.RealtimeKit.Recordings.StartTrackRecording(
+	_, err := client.RealtimeKit.Recordings.StartTrackRecording(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		realtime_kit.RecordingStartTrackRecordingParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			MeetingID: cloudflare.F("97440c6a-140b-40a9-9499-b23fd7a3868a"),
 			Layers: cloudflare.F(map[string]realtime_kit.RecordingStartTrackRecordingParamsLayers{
-				"default": {
-					FileNamePrefix: cloudflare.F("string"),
-					Outputs: cloudflare.F([]realtime_kit.RecordingStartTrackRecordingParamsLayersOutput{{
-						StorageConfig: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfig{
-							Type:       cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfigTypeAws),
-							AccessKey:  cloudflare.F("access_key"),
-							AuthMethod: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfigAuthMethodKey),
-							Bucket:     cloudflare.F("bucket"),
-							Host:       cloudflare.F("host"),
-							Password:   cloudflare.F("password"),
-							Path:       cloudflare.F("path"),
-							Port:       cloudflare.F(0.000000),
-							PrivateKey: cloudflare.F("private_key"),
-							Region:     cloudflare.F("us-east-1"),
-							Secret:     cloudflare.F("secret"),
-							Username:   cloudflare.F("username"),
-						}),
-						Type: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsTypeRealtimekitBucket),
-					}}),
-				},
-				"default-video": {
-					FileNamePrefix: cloudflare.F("string"),
-					Outputs: cloudflare.F([]realtime_kit.RecordingStartTrackRecordingParamsLayersOutput{{
-						StorageConfig: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfig{
-							Type:       cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfigTypeAws),
-							AccessKey:  cloudflare.F("access_key"),
-							AuthMethod: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsStorageConfigAuthMethodKey),
-							Bucket:     cloudflare.F("bucket"),
-							Host:       cloudflare.F("host"),
-							Password:   cloudflare.F("password"),
-							Path:       cloudflare.F("path"),
-							Port:       cloudflare.F(0.000000),
-							PrivateKey: cloudflare.F("private_key"),
-							Region:     cloudflare.F("us-east-1"),
-							Secret:     cloudflare.F("secret"),
-							Username:   cloudflare.F("username"),
-						}),
-						Type: cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersOutputsTypeRealtimekitBucket),
-					}}),
+				"foo": {
+					FileNamePrefix: cloudflare.F("file_name_prefix"),
+					MediaKind:      cloudflare.F(realtime_kit.RecordingStartTrackRecordingParamsLayersMediaKindAudio),
 				},
 			}),
-			MeetingID:  cloudflare.F("string"),
-			MaxSeconds: cloudflare.F(60.000000),
+			UserIDs: cloudflare.F([]string{"x"}),
 		},
 	)
 	if err != nil {

@@ -30,6 +30,7 @@ import (
 type AIGatewayService struct {
 	Options         []option.RequestOption
 	EvaluationTypes *EvaluationTypeService
+	CustomProviders *CustomProviderService
 	Logs            *LogService
 	Datasets        *DatasetService
 	Evaluations     *EvaluationService
@@ -46,6 +47,7 @@ func NewAIGatewayService(opts ...option.RequestOption) (r *AIGatewayService) {
 	r = &AIGatewayService{}
 	r.Options = opts
 	r.EvaluationTypes = NewEvaluationTypeService(opts...)
+	r.CustomProviders = NewCustomProviderService(opts...)
 	r.Logs = NewLogService(opts...)
 	r.Datasets = NewDatasetService(opts...)
 	r.Evaluations = NewEvaluationService(opts...)
@@ -56,7 +58,9 @@ func NewAIGatewayService(opts ...option.RequestOption) (r *AIGatewayService) {
 	return
 }
 
-// Creates a new AI Gateway.
+// Creates an AI Gateway in the account with the specified caching, rate limiting,
+// logging, and authentication settings. The gateway ID appears in request URLs and
+// must be unique within the account.
 func (r *AIGatewayService) New(ctx context.Context, params AIGatewayNewParams, opts ...option.RequestOption) (res *AIGatewayNewResponse, err error) {
 	var env AIGatewayNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -73,7 +77,8 @@ func (r *AIGatewayService) New(ctx context.Context, params AIGatewayNewParams, o
 	return res, nil
 }
 
-// Updates an existing AI Gateway dataset.
+// Updates the configuration of an AI Gateway, such as its caching, rate limiting,
+// logging, and authentication settings.
 func (r *AIGatewayService) Update(ctx context.Context, id string, params AIGatewayUpdateParams, opts ...option.RequestOption) (res *AIGatewayUpdateResponse, err error) {
 	var env AIGatewayUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -94,7 +99,7 @@ func (r *AIGatewayService) Update(ctx context.Context, id string, params AIGatew
 	return res, nil
 }
 
-// Lists all AI Gateway evaluator types configured for the account.
+// Lists the AI Gateways in the account. Use `search` to filter by gateway ID.
 func (r *AIGatewayService) List(ctx context.Context, params AIGatewayListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[AIGatewayListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -116,12 +121,12 @@ func (r *AIGatewayService) List(ctx context.Context, params AIGatewayListParams,
 	return res, nil
 }
 
-// Lists all AI Gateway evaluator types configured for the account.
+// Lists the AI Gateways in the account. Use `search` to filter by gateway ID.
 func (r *AIGatewayService) ListAutoPaging(ctx context.Context, params AIGatewayListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[AIGatewayListResponse] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, params, opts...))
 }
 
-// Deletes an AI Gateway dataset.
+// Permanently deletes an AI Gateway, its configuration, and its stored logs.
 func (r *AIGatewayService) Delete(ctx context.Context, id string, body AIGatewayDeleteParams, opts ...option.RequestOption) (res *AIGatewayDeleteResponse, err error) {
 	var env AIGatewayDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -142,7 +147,7 @@ func (r *AIGatewayService) Delete(ctx context.Context, id string, body AIGateway
 	return res, nil
 }
 
-// Retrieves details for a specific AI Gateway dataset.
+// Retrieves the configuration of an AI Gateway.
 func (r *AIGatewayService) Get(ctx context.Context, id string, query AIGatewayGetParams, opts ...option.RequestOption) (res *AIGatewayGetResponse, err error) {
 	var env AIGatewayGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -164,35 +169,42 @@ func (r *AIGatewayService) Get(ctx context.Context, id string, query AIGatewayGe
 }
 
 type AIGatewayNewResponse struct {
-	// gateway id
-	ID                      string                                    `json:"id" api:"required"`
-	CacheInvalidateOnUpdate bool                                      `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                int64                                     `json:"cache_ttl" api:"required,nullable"`
-	CollectLogs             bool                                      `json:"collect_logs" api:"required"`
-	CreatedAt               time.Time                                 `json:"created_at" api:"required" format:"date-time"`
-	ModifiedAt              time.Time                                 `json:"modified_at" api:"required" format:"date-time"`
-	RateLimitingInterval    int64                                     `json:"rate_limiting_interval" api:"required,nullable"`
-	RateLimitingLimit       int64                                     `json:"rate_limiting_limit" api:"required,nullable"`
-	Authentication          bool                                      `json:"authentication"`
-	DLP                     AIGatewayNewResponseDLP                   `json:"dlp"`
-	Guardrails              AIGatewayNewResponseGuardrails            `json:"guardrails" api:"nullable"`
-	IsDefault               bool                                      `json:"is_default"`
-	LogManagement           int64                                     `json:"log_management" api:"nullable"`
-	LogManagementStrategy   AIGatewayNewResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
-	Logpush                 bool                                      `json:"logpush"`
-	LogpushPublicKey        string                                    `json:"logpush_public_key" api:"nullable"`
-	Otel                    []AIGatewayNewResponseOtel                `json:"otel" api:"nullable"`
-	RateLimitingTechnique   AIGatewayNewResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      string    `json:"id" api:"required"`
+	CacheInvalidateOnUpdate bool      `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                int64     `json:"cache_ttl" api:"required,nullable"`
+	CollectLogs             bool      `json:"collect_logs" api:"required"`
+	CreatedAt               time.Time `json:"created_at" api:"required" format:"date-time"`
+	ModifiedAt              time.Time `json:"modified_at" api:"required" format:"date-time"`
+	RateLimitingInterval    int64     `json:"rate_limiting_interval" api:"required,nullable"`
+	RateLimitingLimit       int64     `json:"rate_limiting_limit" api:"required,nullable"`
+	Authentication          bool      `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              bool                                      `json:"byok_only"`
+	DLP                   AIGatewayNewResponseDLP                   `json:"dlp"`
+	Guardrails            AIGatewayNewResponseGuardrails            `json:"guardrails" api:"nullable"`
+	IsDefault             bool                                      `json:"is_default"`
+	LogClassification     bool                                      `json:"log_classification"`
+	LogManagement         int64                                     `json:"log_management" api:"nullable"`
+	LogManagementStrategy AIGatewayNewResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
+	Logpush               bool                                      `json:"logpush"`
+	LogpushPublicKey      string                                    `json:"logpush_public_key" api:"nullable"`
+	Otel                  []AIGatewayNewResponseOtel                `json:"otel" api:"nullable"`
+	RateLimitingTechnique AIGatewayNewResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
 	// Backoff strategy for retry delays
 	RetryBackoff AIGatewayNewResponseRetryBackoff `json:"retry_backoff" api:"nullable"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay int64 `json:"retry_delay" api:"nullable"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts int64                      `json:"retry_max_attempts" api:"nullable"`
-	StoreID          string                     `json:"store_id" api:"nullable"`
-	Stripe           AIGatewayNewResponseStripe `json:"stripe" api:"nullable"`
+	RetryMaxAttempts int64                           `json:"retry_max_attempts" api:"nullable"`
+	SpendLimits      AIGatewayNewResponseSpendLimits `json:"spend_limits" api:"nullable"`
+	StoreID          string                          `json:"store_id" api:"nullable"`
+	Stripe           AIGatewayNewResponseStripe      `json:"stripe" api:"nullable"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode AIGatewayNewResponseWorkersAIBillingMode `json:"workers_ai_billing_mode"`
 	Zdr                  bool                                     `json:"zdr"`
 	JSON                 aiGatewayNewResponseJSON                 `json:"-"`
@@ -210,9 +222,11 @@ type aiGatewayNewResponseJSON struct {
 	RateLimitingInterval    apijson.Field
 	RateLimitingLimit       apijson.Field
 	Authentication          apijson.Field
+	ByokOnly                apijson.Field
 	DLP                     apijson.Field
 	Guardrails              apijson.Field
 	IsDefault               apijson.Field
+	LogClassification       apijson.Field
 	LogManagement           apijson.Field
 	LogManagementStrategy   apijson.Field
 	Logpush                 apijson.Field
@@ -222,6 +236,7 @@ type aiGatewayNewResponseJSON struct {
 	RetryBackoff            apijson.Field
 	RetryDelay              apijson.Field
 	RetryMaxAttempts        apijson.Field
+	SpendLimits             apijson.Field
 	StoreID                 apijson.Field
 	Stripe                  apijson.Field
 	WorkersAIBillingMode    apijson.Field
@@ -913,9 +928,9 @@ func (r AIGatewayNewResponseLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayNewResponseOtel struct {
-	Authorization string                              `json:"authorization" api:"required"`
 	Headers       map[string]string                   `json:"headers" api:"required"`
 	URL           string                              `json:"url" api:"required" format:"uri"`
+	Authorization string                              `json:"authorization"`
 	ContentType   AIGatewayNewResponseOtelContentType `json:"content_type"`
 	JSON          aiGatewayNewResponseOtelJSON        `json:"-"`
 }
@@ -923,9 +938,9 @@ type AIGatewayNewResponseOtel struct {
 // aiGatewayNewResponseOtelJSON contains the JSON metadata for the struct
 // [AIGatewayNewResponseOtel]
 type aiGatewayNewResponseOtelJSON struct {
-	Authorization apijson.Field
 	Headers       apijson.Field
 	URL           apijson.Field
+	Authorization apijson.Field
 	ContentType   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
@@ -986,6 +1001,308 @@ func (r AIGatewayNewResponseRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayNewResponseSpendLimits struct {
+	Enabled bool                                  `json:"enabled"`
+	Rules   []AIGatewayNewResponseSpendLimitsRule `json:"rules"`
+	JSON    aiGatewayNewResponseSpendLimitsJSON   `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsJSON contains the JSON metadata for the struct
+// [AIGatewayNewResponseSpendLimits]
+type aiGatewayNewResponseSpendLimitsJSON struct {
+	Enabled     apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimits) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayNewResponseSpendLimitsRule struct {
+	Limit     float64                                                 `json:"limit" api:"required"`
+	LimitType AIGatewayNewResponseSpendLimitsRulesLimitType           `json:"limitType" api:"required"`
+	Window    int64                                                   `json:"window" api:"required"`
+	ID        string                                                  `json:"id"`
+	Enabled   bool                                                    `json:"enabled"`
+	Metadata  map[string]AIGatewayNewResponseSpendLimitsRulesMetadata `json:"metadata"`
+	Model     AIGatewayNewResponseSpendLimitsRulesModel               `json:"model"`
+	Provider  AIGatewayNewResponseSpendLimitsRulesProvider            `json:"provider"`
+	Technique AIGatewayNewResponseSpendLimitsRulesTechnique           `json:"technique"`
+	JSON      aiGatewayNewResponseSpendLimitsRuleJSON                 `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsRuleJSON contains the JSON metadata for the
+// struct [AIGatewayNewResponseSpendLimitsRule]
+type aiGatewayNewResponseSpendLimitsRuleJSON struct {
+	Limit       apijson.Field
+	LimitType   apijson.Field
+	Window      apijson.Field
+	ID          apijson.Field
+	Enabled     apijson.Field
+	Metadata    apijson.Field
+	Model       apijson.Field
+	Provider    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRule) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsRuleJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayNewResponseSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesLimitTypeCost AIGatewayNewResponseSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewResponseSpendLimitsRulesMetadata struct {
+	Mode AIGatewayNewResponseSpendLimitsRulesMetadataMode `json:"mode" api:"required"`
+	// This field can have the runtime type of [[]string].
+	Values interface{}                                      `json:"values"`
+	JSON   aiGatewayNewResponseSpendLimitsRulesMetadataJSON `json:"-"`
+	union  AIGatewayNewResponseSpendLimitsRulesMetadataUnion
+}
+
+// aiGatewayNewResponseSpendLimitsRulesMetadataJSON contains the JSON metadata for
+// the struct [AIGatewayNewResponseSpendLimitsRulesMetadata]
+type aiGatewayNewResponseSpendLimitsRulesMetadataJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r aiGatewayNewResponseSpendLimitsRulesMetadataJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRulesMetadata) UnmarshalJSON(data []byte) (err error) {
+	*r = AIGatewayNewResponseSpendLimitsRulesMetadata{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [AIGatewayNewResponseSpendLimitsRulesMetadataUnion] interface
+// which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [AIGatewayNewResponseSpendLimitsRulesMetadataMode],
+// [AIGatewayNewResponseSpendLimitsRulesMetadataObject].
+func (r AIGatewayNewResponseSpendLimitsRulesMetadata) AsUnion() AIGatewayNewResponseSpendLimitsRulesMetadataUnion {
+	return r.union
+}
+
+// Union satisfied by [AIGatewayNewResponseSpendLimitsRulesMetadataMode] or
+// [AIGatewayNewResponseSpendLimitsRulesMetadataObject].
+type AIGatewayNewResponseSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayNewResponseSpendLimitsRulesMetadata()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AIGatewayNewResponseSpendLimitsRulesMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayNewResponseSpendLimitsRulesMetadataMode{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayNewResponseSpendLimitsRulesMetadataObject{}),
+		},
+	)
+}
+
+type AIGatewayNewResponseSpendLimitsRulesMetadataMode struct {
+	Mode AIGatewayNewResponseSpendLimitsRulesMetadataModeMode `json:"mode" api:"required"`
+	JSON aiGatewayNewResponseSpendLimitsRulesMetadataModeJSON `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsRulesMetadataModeJSON contains the JSON metadata
+// for the struct [AIGatewayNewResponseSpendLimitsRulesMetadataMode]
+type aiGatewayNewResponseSpendLimitsRulesMetadataModeJSON struct {
+	Mode        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRulesMetadataMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsRulesMetadataModeJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayNewResponseSpendLimitsRulesMetadataMode) implementsAIGatewayNewResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayNewResponseSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesMetadataModeModePartition AIGatewayNewResponseSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewResponseSpendLimitsRulesMetadataObject struct {
+	Mode   AIGatewayNewResponseSpendLimitsRulesMetadataObjectMode `json:"mode" api:"required"`
+	Values []string                                               `json:"values" api:"required"`
+	JSON   aiGatewayNewResponseSpendLimitsRulesMetadataObjectJSON `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsRulesMetadataObjectJSON contains the JSON
+// metadata for the struct [AIGatewayNewResponseSpendLimitsRulesMetadataObject]
+type aiGatewayNewResponseSpendLimitsRulesMetadataObjectJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRulesMetadataObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsRulesMetadataObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayNewResponseSpendLimitsRulesMetadataObject) implementsAIGatewayNewResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayNewResponseSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesMetadataObjectModeFilter AIGatewayNewResponseSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewResponseSpendLimitsRulesModel struct {
+	Mode   AIGatewayNewResponseSpendLimitsRulesModelMode `json:"mode" api:"required"`
+	Values []string                                      `json:"values" api:"required"`
+	JSON   aiGatewayNewResponseSpendLimitsRulesModelJSON `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsRulesModelJSON contains the JSON metadata for the
+// struct [AIGatewayNewResponseSpendLimitsRulesModel]
+type aiGatewayNewResponseSpendLimitsRulesModelJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRulesModel) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsRulesModelJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayNewResponseSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesModelModeFilter AIGatewayNewResponseSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewResponseSpendLimitsRulesProvider struct {
+	Mode   AIGatewayNewResponseSpendLimitsRulesProviderMode `json:"mode" api:"required"`
+	Values []string                                         `json:"values" api:"required"`
+	JSON   aiGatewayNewResponseSpendLimitsRulesProviderJSON `json:"-"`
+}
+
+// aiGatewayNewResponseSpendLimitsRulesProviderJSON contains the JSON metadata for
+// the struct [AIGatewayNewResponseSpendLimitsRulesProvider]
+type aiGatewayNewResponseSpendLimitsRulesProviderJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayNewResponseSpendLimitsRulesProvider) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayNewResponseSpendLimitsRulesProviderJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayNewResponseSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesProviderModeFilter AIGatewayNewResponseSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewResponseSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayNewResponseSpendLimitsRulesTechniqueFixed   AIGatewayNewResponseSpendLimitsRulesTechnique = "fixed"
+	AIGatewayNewResponseSpendLimitsRulesTechniqueSliding AIGatewayNewResponseSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayNewResponseSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayNewResponseSpendLimitsRulesTechniqueFixed, AIGatewayNewResponseSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayNewResponseStripe struct {
 	Authorization string                                 `json:"authorization" api:"required"`
 	UsageEvents   []AIGatewayNewResponseStripeUsageEvent `json:"usage_events" api:"required"`
@@ -1031,51 +1348,61 @@ func (r aiGatewayNewResponseStripeUsageEventJSON) RawJSON() string {
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayNewResponseWorkersAIBillingMode string
 
 const (
 	AIGatewayNewResponseWorkersAIBillingModePostpaid AIGatewayNewResponseWorkersAIBillingMode = "postpaid"
+	AIGatewayNewResponseWorkersAIBillingModeUnified  AIGatewayNewResponseWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayNewResponseWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayNewResponseWorkersAIBillingModePostpaid:
+	case AIGatewayNewResponseWorkersAIBillingModePostpaid, AIGatewayNewResponseWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
 }
 
 type AIGatewayUpdateResponse struct {
-	// gateway id
-	ID                      string                                       `json:"id" api:"required"`
-	CacheInvalidateOnUpdate bool                                         `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                int64                                        `json:"cache_ttl" api:"required,nullable"`
-	CollectLogs             bool                                         `json:"collect_logs" api:"required"`
-	CreatedAt               time.Time                                    `json:"created_at" api:"required" format:"date-time"`
-	ModifiedAt              time.Time                                    `json:"modified_at" api:"required" format:"date-time"`
-	RateLimitingInterval    int64                                        `json:"rate_limiting_interval" api:"required,nullable"`
-	RateLimitingLimit       int64                                        `json:"rate_limiting_limit" api:"required,nullable"`
-	Authentication          bool                                         `json:"authentication"`
-	DLP                     AIGatewayUpdateResponseDLP                   `json:"dlp"`
-	Guardrails              AIGatewayUpdateResponseGuardrails            `json:"guardrails" api:"nullable"`
-	IsDefault               bool                                         `json:"is_default"`
-	LogManagement           int64                                        `json:"log_management" api:"nullable"`
-	LogManagementStrategy   AIGatewayUpdateResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
-	Logpush                 bool                                         `json:"logpush"`
-	LogpushPublicKey        string                                       `json:"logpush_public_key" api:"nullable"`
-	Otel                    []AIGatewayUpdateResponseOtel                `json:"otel" api:"nullable"`
-	RateLimitingTechnique   AIGatewayUpdateResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      string    `json:"id" api:"required"`
+	CacheInvalidateOnUpdate bool      `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                int64     `json:"cache_ttl" api:"required,nullable"`
+	CollectLogs             bool      `json:"collect_logs" api:"required"`
+	CreatedAt               time.Time `json:"created_at" api:"required" format:"date-time"`
+	ModifiedAt              time.Time `json:"modified_at" api:"required" format:"date-time"`
+	RateLimitingInterval    int64     `json:"rate_limiting_interval" api:"required,nullable"`
+	RateLimitingLimit       int64     `json:"rate_limiting_limit" api:"required,nullable"`
+	Authentication          bool      `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              bool                                         `json:"byok_only"`
+	DLP                   AIGatewayUpdateResponseDLP                   `json:"dlp"`
+	Guardrails            AIGatewayUpdateResponseGuardrails            `json:"guardrails" api:"nullable"`
+	IsDefault             bool                                         `json:"is_default"`
+	LogClassification     bool                                         `json:"log_classification"`
+	LogManagement         int64                                        `json:"log_management" api:"nullable"`
+	LogManagementStrategy AIGatewayUpdateResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
+	Logpush               bool                                         `json:"logpush"`
+	LogpushPublicKey      string                                       `json:"logpush_public_key" api:"nullable"`
+	Otel                  []AIGatewayUpdateResponseOtel                `json:"otel" api:"nullable"`
+	RateLimitingTechnique AIGatewayUpdateResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
 	// Backoff strategy for retry delays
 	RetryBackoff AIGatewayUpdateResponseRetryBackoff `json:"retry_backoff" api:"nullable"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay int64 `json:"retry_delay" api:"nullable"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts int64                         `json:"retry_max_attempts" api:"nullable"`
-	StoreID          string                        `json:"store_id" api:"nullable"`
-	Stripe           AIGatewayUpdateResponseStripe `json:"stripe" api:"nullable"`
+	RetryMaxAttempts int64                              `json:"retry_max_attempts" api:"nullable"`
+	SpendLimits      AIGatewayUpdateResponseSpendLimits `json:"spend_limits" api:"nullable"`
+	StoreID          string                             `json:"store_id" api:"nullable"`
+	Stripe           AIGatewayUpdateResponseStripe      `json:"stripe" api:"nullable"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode AIGatewayUpdateResponseWorkersAIBillingMode `json:"workers_ai_billing_mode"`
 	Zdr                  bool                                        `json:"zdr"`
 	JSON                 aiGatewayUpdateResponseJSON                 `json:"-"`
@@ -1093,9 +1420,11 @@ type aiGatewayUpdateResponseJSON struct {
 	RateLimitingInterval    apijson.Field
 	RateLimitingLimit       apijson.Field
 	Authentication          apijson.Field
+	ByokOnly                apijson.Field
 	DLP                     apijson.Field
 	Guardrails              apijson.Field
 	IsDefault               apijson.Field
+	LogClassification       apijson.Field
 	LogManagement           apijson.Field
 	LogManagementStrategy   apijson.Field
 	Logpush                 apijson.Field
@@ -1105,6 +1434,7 @@ type aiGatewayUpdateResponseJSON struct {
 	RetryBackoff            apijson.Field
 	RetryDelay              apijson.Field
 	RetryMaxAttempts        apijson.Field
+	SpendLimits             apijson.Field
 	StoreID                 apijson.Field
 	Stripe                  apijson.Field
 	WorkersAIBillingMode    apijson.Field
@@ -1797,9 +2127,9 @@ func (r AIGatewayUpdateResponseLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayUpdateResponseOtel struct {
-	Authorization string                                 `json:"authorization" api:"required"`
 	Headers       map[string]string                      `json:"headers" api:"required"`
 	URL           string                                 `json:"url" api:"required" format:"uri"`
+	Authorization string                                 `json:"authorization"`
 	ContentType   AIGatewayUpdateResponseOtelContentType `json:"content_type"`
 	JSON          aiGatewayUpdateResponseOtelJSON        `json:"-"`
 }
@@ -1807,9 +2137,9 @@ type AIGatewayUpdateResponseOtel struct {
 // aiGatewayUpdateResponseOtelJSON contains the JSON metadata for the struct
 // [AIGatewayUpdateResponseOtel]
 type aiGatewayUpdateResponseOtelJSON struct {
-	Authorization apijson.Field
 	Headers       apijson.Field
 	URL           apijson.Field
+	Authorization apijson.Field
 	ContentType   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
@@ -1870,6 +2200,308 @@ func (r AIGatewayUpdateResponseRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayUpdateResponseSpendLimits struct {
+	Enabled bool                                     `json:"enabled"`
+	Rules   []AIGatewayUpdateResponseSpendLimitsRule `json:"rules"`
+	JSON    aiGatewayUpdateResponseSpendLimitsJSON   `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsJSON contains the JSON metadata for the struct
+// [AIGatewayUpdateResponseSpendLimits]
+type aiGatewayUpdateResponseSpendLimitsJSON struct {
+	Enabled     apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimits) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayUpdateResponseSpendLimitsRule struct {
+	Limit     float64                                                    `json:"limit" api:"required"`
+	LimitType AIGatewayUpdateResponseSpendLimitsRulesLimitType           `json:"limitType" api:"required"`
+	Window    int64                                                      `json:"window" api:"required"`
+	ID        string                                                     `json:"id"`
+	Enabled   bool                                                       `json:"enabled"`
+	Metadata  map[string]AIGatewayUpdateResponseSpendLimitsRulesMetadata `json:"metadata"`
+	Model     AIGatewayUpdateResponseSpendLimitsRulesModel               `json:"model"`
+	Provider  AIGatewayUpdateResponseSpendLimitsRulesProvider            `json:"provider"`
+	Technique AIGatewayUpdateResponseSpendLimitsRulesTechnique           `json:"technique"`
+	JSON      aiGatewayUpdateResponseSpendLimitsRuleJSON                 `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsRuleJSON contains the JSON metadata for the
+// struct [AIGatewayUpdateResponseSpendLimitsRule]
+type aiGatewayUpdateResponseSpendLimitsRuleJSON struct {
+	Limit       apijson.Field
+	LimitType   apijson.Field
+	Window      apijson.Field
+	ID          apijson.Field
+	Enabled     apijson.Field
+	Metadata    apijson.Field
+	Model       apijson.Field
+	Provider    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRule) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRuleJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesLimitTypeCost AIGatewayUpdateResponseSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesMetadata struct {
+	Mode AIGatewayUpdateResponseSpendLimitsRulesMetadataMode `json:"mode" api:"required"`
+	// This field can have the runtime type of [[]string].
+	Values interface{}                                         `json:"values"`
+	JSON   aiGatewayUpdateResponseSpendLimitsRulesMetadataJSON `json:"-"`
+	union  AIGatewayUpdateResponseSpendLimitsRulesMetadataUnion
+}
+
+// aiGatewayUpdateResponseSpendLimitsRulesMetadataJSON contains the JSON metadata
+// for the struct [AIGatewayUpdateResponseSpendLimitsRulesMetadata]
+type aiGatewayUpdateResponseSpendLimitsRulesMetadataJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRulesMetadataJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRulesMetadata) UnmarshalJSON(data []byte) (err error) {
+	*r = AIGatewayUpdateResponseSpendLimitsRulesMetadata{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [AIGatewayUpdateResponseSpendLimitsRulesMetadataUnion]
+// interface which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [AIGatewayUpdateResponseSpendLimitsRulesMetadataMode],
+// [AIGatewayUpdateResponseSpendLimitsRulesMetadataObject].
+func (r AIGatewayUpdateResponseSpendLimitsRulesMetadata) AsUnion() AIGatewayUpdateResponseSpendLimitsRulesMetadataUnion {
+	return r.union
+}
+
+// Union satisfied by [AIGatewayUpdateResponseSpendLimitsRulesMetadataMode] or
+// [AIGatewayUpdateResponseSpendLimitsRulesMetadataObject].
+type AIGatewayUpdateResponseSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayUpdateResponseSpendLimitsRulesMetadata()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AIGatewayUpdateResponseSpendLimitsRulesMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayUpdateResponseSpendLimitsRulesMetadataMode{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayUpdateResponseSpendLimitsRulesMetadataObject{}),
+		},
+	)
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesMetadataMode struct {
+	Mode AIGatewayUpdateResponseSpendLimitsRulesMetadataModeMode `json:"mode" api:"required"`
+	JSON aiGatewayUpdateResponseSpendLimitsRulesMetadataModeJSON `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsRulesMetadataModeJSON contains the JSON
+// metadata for the struct [AIGatewayUpdateResponseSpendLimitsRulesMetadataMode]
+type aiGatewayUpdateResponseSpendLimitsRulesMetadataModeJSON struct {
+	Mode        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRulesMetadataMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRulesMetadataModeJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesMetadataMode) implementsAIGatewayUpdateResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesMetadataModeModePartition AIGatewayUpdateResponseSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesMetadataObject struct {
+	Mode   AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectMode `json:"mode" api:"required"`
+	Values []string                                                  `json:"values" api:"required"`
+	JSON   aiGatewayUpdateResponseSpendLimitsRulesMetadataObjectJSON `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsRulesMetadataObjectJSON contains the JSON
+// metadata for the struct [AIGatewayUpdateResponseSpendLimitsRulesMetadataObject]
+type aiGatewayUpdateResponseSpendLimitsRulesMetadataObjectJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRulesMetadataObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRulesMetadataObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesMetadataObject) implementsAIGatewayUpdateResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectModeFilter AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesModel struct {
+	Mode   AIGatewayUpdateResponseSpendLimitsRulesModelMode `json:"mode" api:"required"`
+	Values []string                                         `json:"values" api:"required"`
+	JSON   aiGatewayUpdateResponseSpendLimitsRulesModelJSON `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsRulesModelJSON contains the JSON metadata for
+// the struct [AIGatewayUpdateResponseSpendLimitsRulesModel]
+type aiGatewayUpdateResponseSpendLimitsRulesModelJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRulesModel) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRulesModelJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesModelModeFilter AIGatewayUpdateResponseSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesProvider struct {
+	Mode   AIGatewayUpdateResponseSpendLimitsRulesProviderMode `json:"mode" api:"required"`
+	Values []string                                            `json:"values" api:"required"`
+	JSON   aiGatewayUpdateResponseSpendLimitsRulesProviderJSON `json:"-"`
+}
+
+// aiGatewayUpdateResponseSpendLimitsRulesProviderJSON contains the JSON metadata
+// for the struct [AIGatewayUpdateResponseSpendLimitsRulesProvider]
+type aiGatewayUpdateResponseSpendLimitsRulesProviderJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayUpdateResponseSpendLimitsRulesProvider) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayUpdateResponseSpendLimitsRulesProviderJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesProviderModeFilter AIGatewayUpdateResponseSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateResponseSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayUpdateResponseSpendLimitsRulesTechniqueFixed   AIGatewayUpdateResponseSpendLimitsRulesTechnique = "fixed"
+	AIGatewayUpdateResponseSpendLimitsRulesTechniqueSliding AIGatewayUpdateResponseSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayUpdateResponseSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateResponseSpendLimitsRulesTechniqueFixed, AIGatewayUpdateResponseSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayUpdateResponseStripe struct {
 	Authorization string                                    `json:"authorization" api:"required"`
 	UsageEvents   []AIGatewayUpdateResponseStripeUsageEvent `json:"usage_events" api:"required"`
@@ -1915,51 +2547,61 @@ func (r aiGatewayUpdateResponseStripeUsageEventJSON) RawJSON() string {
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayUpdateResponseWorkersAIBillingMode string
 
 const (
 	AIGatewayUpdateResponseWorkersAIBillingModePostpaid AIGatewayUpdateResponseWorkersAIBillingMode = "postpaid"
+	AIGatewayUpdateResponseWorkersAIBillingModeUnified  AIGatewayUpdateResponseWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayUpdateResponseWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayUpdateResponseWorkersAIBillingModePostpaid:
+	case AIGatewayUpdateResponseWorkersAIBillingModePostpaid, AIGatewayUpdateResponseWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
 }
 
 type AIGatewayListResponse struct {
-	// gateway id
-	ID                      string                                     `json:"id" api:"required"`
-	CacheInvalidateOnUpdate bool                                       `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                int64                                      `json:"cache_ttl" api:"required,nullable"`
-	CollectLogs             bool                                       `json:"collect_logs" api:"required"`
-	CreatedAt               time.Time                                  `json:"created_at" api:"required" format:"date-time"`
-	ModifiedAt              time.Time                                  `json:"modified_at" api:"required" format:"date-time"`
-	RateLimitingInterval    int64                                      `json:"rate_limiting_interval" api:"required,nullable"`
-	RateLimitingLimit       int64                                      `json:"rate_limiting_limit" api:"required,nullable"`
-	Authentication          bool                                       `json:"authentication"`
-	DLP                     AIGatewayListResponseDLP                   `json:"dlp"`
-	Guardrails              AIGatewayListResponseGuardrails            `json:"guardrails" api:"nullable"`
-	IsDefault               bool                                       `json:"is_default"`
-	LogManagement           int64                                      `json:"log_management" api:"nullable"`
-	LogManagementStrategy   AIGatewayListResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
-	Logpush                 bool                                       `json:"logpush"`
-	LogpushPublicKey        string                                     `json:"logpush_public_key" api:"nullable"`
-	Otel                    []AIGatewayListResponseOtel                `json:"otel" api:"nullable"`
-	RateLimitingTechnique   AIGatewayListResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      string    `json:"id" api:"required"`
+	CacheInvalidateOnUpdate bool      `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                int64     `json:"cache_ttl" api:"required,nullable"`
+	CollectLogs             bool      `json:"collect_logs" api:"required"`
+	CreatedAt               time.Time `json:"created_at" api:"required" format:"date-time"`
+	ModifiedAt              time.Time `json:"modified_at" api:"required" format:"date-time"`
+	RateLimitingInterval    int64     `json:"rate_limiting_interval" api:"required,nullable"`
+	RateLimitingLimit       int64     `json:"rate_limiting_limit" api:"required,nullable"`
+	Authentication          bool      `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              bool                                       `json:"byok_only"`
+	DLP                   AIGatewayListResponseDLP                   `json:"dlp"`
+	Guardrails            AIGatewayListResponseGuardrails            `json:"guardrails" api:"nullable"`
+	IsDefault             bool                                       `json:"is_default"`
+	LogClassification     bool                                       `json:"log_classification"`
+	LogManagement         int64                                      `json:"log_management" api:"nullable"`
+	LogManagementStrategy AIGatewayListResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
+	Logpush               bool                                       `json:"logpush"`
+	LogpushPublicKey      string                                     `json:"logpush_public_key" api:"nullable"`
+	Otel                  []AIGatewayListResponseOtel                `json:"otel" api:"nullable"`
+	RateLimitingTechnique AIGatewayListResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
 	// Backoff strategy for retry delays
 	RetryBackoff AIGatewayListResponseRetryBackoff `json:"retry_backoff" api:"nullable"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay int64 `json:"retry_delay" api:"nullable"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts int64                       `json:"retry_max_attempts" api:"nullable"`
-	StoreID          string                      `json:"store_id" api:"nullable"`
-	Stripe           AIGatewayListResponseStripe `json:"stripe" api:"nullable"`
+	RetryMaxAttempts int64                            `json:"retry_max_attempts" api:"nullable"`
+	SpendLimits      AIGatewayListResponseSpendLimits `json:"spend_limits" api:"nullable"`
+	StoreID          string                           `json:"store_id" api:"nullable"`
+	Stripe           AIGatewayListResponseStripe      `json:"stripe" api:"nullable"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode AIGatewayListResponseWorkersAIBillingMode `json:"workers_ai_billing_mode"`
 	Zdr                  bool                                      `json:"zdr"`
 	JSON                 aiGatewayListResponseJSON                 `json:"-"`
@@ -1977,9 +2619,11 @@ type aiGatewayListResponseJSON struct {
 	RateLimitingInterval    apijson.Field
 	RateLimitingLimit       apijson.Field
 	Authentication          apijson.Field
+	ByokOnly                apijson.Field
 	DLP                     apijson.Field
 	Guardrails              apijson.Field
 	IsDefault               apijson.Field
+	LogClassification       apijson.Field
 	LogManagement           apijson.Field
 	LogManagementStrategy   apijson.Field
 	Logpush                 apijson.Field
@@ -1989,6 +2633,7 @@ type aiGatewayListResponseJSON struct {
 	RetryBackoff            apijson.Field
 	RetryDelay              apijson.Field
 	RetryMaxAttempts        apijson.Field
+	SpendLimits             apijson.Field
 	StoreID                 apijson.Field
 	Stripe                  apijson.Field
 	WorkersAIBillingMode    apijson.Field
@@ -2681,9 +3326,9 @@ func (r AIGatewayListResponseLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayListResponseOtel struct {
-	Authorization string                               `json:"authorization" api:"required"`
 	Headers       map[string]string                    `json:"headers" api:"required"`
 	URL           string                               `json:"url" api:"required" format:"uri"`
+	Authorization string                               `json:"authorization"`
 	ContentType   AIGatewayListResponseOtelContentType `json:"content_type"`
 	JSON          aiGatewayListResponseOtelJSON        `json:"-"`
 }
@@ -2691,9 +3336,9 @@ type AIGatewayListResponseOtel struct {
 // aiGatewayListResponseOtelJSON contains the JSON metadata for the struct
 // [AIGatewayListResponseOtel]
 type aiGatewayListResponseOtelJSON struct {
-	Authorization apijson.Field
 	Headers       apijson.Field
 	URL           apijson.Field
+	Authorization apijson.Field
 	ContentType   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
@@ -2754,6 +3399,308 @@ func (r AIGatewayListResponseRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayListResponseSpendLimits struct {
+	Enabled bool                                   `json:"enabled"`
+	Rules   []AIGatewayListResponseSpendLimitsRule `json:"rules"`
+	JSON    aiGatewayListResponseSpendLimitsJSON   `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsJSON contains the JSON metadata for the struct
+// [AIGatewayListResponseSpendLimits]
+type aiGatewayListResponseSpendLimitsJSON struct {
+	Enabled     apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimits) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayListResponseSpendLimitsRule struct {
+	Limit     float64                                                  `json:"limit" api:"required"`
+	LimitType AIGatewayListResponseSpendLimitsRulesLimitType           `json:"limitType" api:"required"`
+	Window    int64                                                    `json:"window" api:"required"`
+	ID        string                                                   `json:"id"`
+	Enabled   bool                                                     `json:"enabled"`
+	Metadata  map[string]AIGatewayListResponseSpendLimitsRulesMetadata `json:"metadata"`
+	Model     AIGatewayListResponseSpendLimitsRulesModel               `json:"model"`
+	Provider  AIGatewayListResponseSpendLimitsRulesProvider            `json:"provider"`
+	Technique AIGatewayListResponseSpendLimitsRulesTechnique           `json:"technique"`
+	JSON      aiGatewayListResponseSpendLimitsRuleJSON                 `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsRuleJSON contains the JSON metadata for the
+// struct [AIGatewayListResponseSpendLimitsRule]
+type aiGatewayListResponseSpendLimitsRuleJSON struct {
+	Limit       apijson.Field
+	LimitType   apijson.Field
+	Window      apijson.Field
+	ID          apijson.Field
+	Enabled     apijson.Field
+	Metadata    apijson.Field
+	Model       apijson.Field
+	Provider    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimitsRule) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsRuleJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayListResponseSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesLimitTypeCost AIGatewayListResponseSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayListResponseSpendLimitsRulesMetadata struct {
+	Mode AIGatewayListResponseSpendLimitsRulesMetadataMode `json:"mode" api:"required"`
+	// This field can have the runtime type of [[]string].
+	Values interface{}                                       `json:"values"`
+	JSON   aiGatewayListResponseSpendLimitsRulesMetadataJSON `json:"-"`
+	union  AIGatewayListResponseSpendLimitsRulesMetadataUnion
+}
+
+// aiGatewayListResponseSpendLimitsRulesMetadataJSON contains the JSON metadata for
+// the struct [AIGatewayListResponseSpendLimitsRulesMetadata]
+type aiGatewayListResponseSpendLimitsRulesMetadataJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r aiGatewayListResponseSpendLimitsRulesMetadataJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *AIGatewayListResponseSpendLimitsRulesMetadata) UnmarshalJSON(data []byte) (err error) {
+	*r = AIGatewayListResponseSpendLimitsRulesMetadata{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [AIGatewayListResponseSpendLimitsRulesMetadataUnion] interface
+// which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [AIGatewayListResponseSpendLimitsRulesMetadataMode],
+// [AIGatewayListResponseSpendLimitsRulesMetadataObject].
+func (r AIGatewayListResponseSpendLimitsRulesMetadata) AsUnion() AIGatewayListResponseSpendLimitsRulesMetadataUnion {
+	return r.union
+}
+
+// Union satisfied by [AIGatewayListResponseSpendLimitsRulesMetadataMode] or
+// [AIGatewayListResponseSpendLimitsRulesMetadataObject].
+type AIGatewayListResponseSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayListResponseSpendLimitsRulesMetadata()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AIGatewayListResponseSpendLimitsRulesMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayListResponseSpendLimitsRulesMetadataMode{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayListResponseSpendLimitsRulesMetadataObject{}),
+		},
+	)
+}
+
+type AIGatewayListResponseSpendLimitsRulesMetadataMode struct {
+	Mode AIGatewayListResponseSpendLimitsRulesMetadataModeMode `json:"mode" api:"required"`
+	JSON aiGatewayListResponseSpendLimitsRulesMetadataModeJSON `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsRulesMetadataModeJSON contains the JSON metadata
+// for the struct [AIGatewayListResponseSpendLimitsRulesMetadataMode]
+type aiGatewayListResponseSpendLimitsRulesMetadataModeJSON struct {
+	Mode        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimitsRulesMetadataMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsRulesMetadataModeJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayListResponseSpendLimitsRulesMetadataMode) implementsAIGatewayListResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayListResponseSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesMetadataModeModePartition AIGatewayListResponseSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayListResponseSpendLimitsRulesMetadataObject struct {
+	Mode   AIGatewayListResponseSpendLimitsRulesMetadataObjectMode `json:"mode" api:"required"`
+	Values []string                                                `json:"values" api:"required"`
+	JSON   aiGatewayListResponseSpendLimitsRulesMetadataObjectJSON `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsRulesMetadataObjectJSON contains the JSON
+// metadata for the struct [AIGatewayListResponseSpendLimitsRulesMetadataObject]
+type aiGatewayListResponseSpendLimitsRulesMetadataObjectJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimitsRulesMetadataObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsRulesMetadataObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayListResponseSpendLimitsRulesMetadataObject) implementsAIGatewayListResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayListResponseSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesMetadataObjectModeFilter AIGatewayListResponseSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayListResponseSpendLimitsRulesModel struct {
+	Mode   AIGatewayListResponseSpendLimitsRulesModelMode `json:"mode" api:"required"`
+	Values []string                                       `json:"values" api:"required"`
+	JSON   aiGatewayListResponseSpendLimitsRulesModelJSON `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsRulesModelJSON contains the JSON metadata for
+// the struct [AIGatewayListResponseSpendLimitsRulesModel]
+type aiGatewayListResponseSpendLimitsRulesModelJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimitsRulesModel) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsRulesModelJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayListResponseSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesModelModeFilter AIGatewayListResponseSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayListResponseSpendLimitsRulesProvider struct {
+	Mode   AIGatewayListResponseSpendLimitsRulesProviderMode `json:"mode" api:"required"`
+	Values []string                                          `json:"values" api:"required"`
+	JSON   aiGatewayListResponseSpendLimitsRulesProviderJSON `json:"-"`
+}
+
+// aiGatewayListResponseSpendLimitsRulesProviderJSON contains the JSON metadata for
+// the struct [AIGatewayListResponseSpendLimitsRulesProvider]
+type aiGatewayListResponseSpendLimitsRulesProviderJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayListResponseSpendLimitsRulesProvider) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayListResponseSpendLimitsRulesProviderJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayListResponseSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesProviderModeFilter AIGatewayListResponseSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayListResponseSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayListResponseSpendLimitsRulesTechniqueFixed   AIGatewayListResponseSpendLimitsRulesTechnique = "fixed"
+	AIGatewayListResponseSpendLimitsRulesTechniqueSliding AIGatewayListResponseSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayListResponseSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayListResponseSpendLimitsRulesTechniqueFixed, AIGatewayListResponseSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayListResponseStripe struct {
 	Authorization string                                  `json:"authorization" api:"required"`
 	UsageEvents   []AIGatewayListResponseStripeUsageEvent `json:"usage_events" api:"required"`
@@ -2799,51 +3746,61 @@ func (r aiGatewayListResponseStripeUsageEventJSON) RawJSON() string {
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayListResponseWorkersAIBillingMode string
 
 const (
 	AIGatewayListResponseWorkersAIBillingModePostpaid AIGatewayListResponseWorkersAIBillingMode = "postpaid"
+	AIGatewayListResponseWorkersAIBillingModeUnified  AIGatewayListResponseWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayListResponseWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayListResponseWorkersAIBillingModePostpaid:
+	case AIGatewayListResponseWorkersAIBillingModePostpaid, AIGatewayListResponseWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
 }
 
 type AIGatewayDeleteResponse struct {
-	// gateway id
-	ID                      string                                       `json:"id" api:"required"`
-	CacheInvalidateOnUpdate bool                                         `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                int64                                        `json:"cache_ttl" api:"required,nullable"`
-	CollectLogs             bool                                         `json:"collect_logs" api:"required"`
-	CreatedAt               time.Time                                    `json:"created_at" api:"required" format:"date-time"`
-	ModifiedAt              time.Time                                    `json:"modified_at" api:"required" format:"date-time"`
-	RateLimitingInterval    int64                                        `json:"rate_limiting_interval" api:"required,nullable"`
-	RateLimitingLimit       int64                                        `json:"rate_limiting_limit" api:"required,nullable"`
-	Authentication          bool                                         `json:"authentication"`
-	DLP                     AIGatewayDeleteResponseDLP                   `json:"dlp"`
-	Guardrails              AIGatewayDeleteResponseGuardrails            `json:"guardrails" api:"nullable"`
-	IsDefault               bool                                         `json:"is_default"`
-	LogManagement           int64                                        `json:"log_management" api:"nullable"`
-	LogManagementStrategy   AIGatewayDeleteResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
-	Logpush                 bool                                         `json:"logpush"`
-	LogpushPublicKey        string                                       `json:"logpush_public_key" api:"nullable"`
-	Otel                    []AIGatewayDeleteResponseOtel                `json:"otel" api:"nullable"`
-	RateLimitingTechnique   AIGatewayDeleteResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      string    `json:"id" api:"required"`
+	CacheInvalidateOnUpdate bool      `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                int64     `json:"cache_ttl" api:"required,nullable"`
+	CollectLogs             bool      `json:"collect_logs" api:"required"`
+	CreatedAt               time.Time `json:"created_at" api:"required" format:"date-time"`
+	ModifiedAt              time.Time `json:"modified_at" api:"required" format:"date-time"`
+	RateLimitingInterval    int64     `json:"rate_limiting_interval" api:"required,nullable"`
+	RateLimitingLimit       int64     `json:"rate_limiting_limit" api:"required,nullable"`
+	Authentication          bool      `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              bool                                         `json:"byok_only"`
+	DLP                   AIGatewayDeleteResponseDLP                   `json:"dlp"`
+	Guardrails            AIGatewayDeleteResponseGuardrails            `json:"guardrails" api:"nullable"`
+	IsDefault             bool                                         `json:"is_default"`
+	LogClassification     bool                                         `json:"log_classification"`
+	LogManagement         int64                                        `json:"log_management" api:"nullable"`
+	LogManagementStrategy AIGatewayDeleteResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
+	Logpush               bool                                         `json:"logpush"`
+	LogpushPublicKey      string                                       `json:"logpush_public_key" api:"nullable"`
+	Otel                  []AIGatewayDeleteResponseOtel                `json:"otel" api:"nullable"`
+	RateLimitingTechnique AIGatewayDeleteResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
 	// Backoff strategy for retry delays
 	RetryBackoff AIGatewayDeleteResponseRetryBackoff `json:"retry_backoff" api:"nullable"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay int64 `json:"retry_delay" api:"nullable"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts int64                         `json:"retry_max_attempts" api:"nullable"`
-	StoreID          string                        `json:"store_id" api:"nullable"`
-	Stripe           AIGatewayDeleteResponseStripe `json:"stripe" api:"nullable"`
+	RetryMaxAttempts int64                              `json:"retry_max_attempts" api:"nullable"`
+	SpendLimits      AIGatewayDeleteResponseSpendLimits `json:"spend_limits" api:"nullable"`
+	StoreID          string                             `json:"store_id" api:"nullable"`
+	Stripe           AIGatewayDeleteResponseStripe      `json:"stripe" api:"nullable"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode AIGatewayDeleteResponseWorkersAIBillingMode `json:"workers_ai_billing_mode"`
 	Zdr                  bool                                        `json:"zdr"`
 	JSON                 aiGatewayDeleteResponseJSON                 `json:"-"`
@@ -2861,9 +3818,11 @@ type aiGatewayDeleteResponseJSON struct {
 	RateLimitingInterval    apijson.Field
 	RateLimitingLimit       apijson.Field
 	Authentication          apijson.Field
+	ByokOnly                apijson.Field
 	DLP                     apijson.Field
 	Guardrails              apijson.Field
 	IsDefault               apijson.Field
+	LogClassification       apijson.Field
 	LogManagement           apijson.Field
 	LogManagementStrategy   apijson.Field
 	Logpush                 apijson.Field
@@ -2873,6 +3832,7 @@ type aiGatewayDeleteResponseJSON struct {
 	RetryBackoff            apijson.Field
 	RetryDelay              apijson.Field
 	RetryMaxAttempts        apijson.Field
+	SpendLimits             apijson.Field
 	StoreID                 apijson.Field
 	Stripe                  apijson.Field
 	WorkersAIBillingMode    apijson.Field
@@ -3565,9 +4525,9 @@ func (r AIGatewayDeleteResponseLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayDeleteResponseOtel struct {
-	Authorization string                                 `json:"authorization" api:"required"`
 	Headers       map[string]string                      `json:"headers" api:"required"`
 	URL           string                                 `json:"url" api:"required" format:"uri"`
+	Authorization string                                 `json:"authorization"`
 	ContentType   AIGatewayDeleteResponseOtelContentType `json:"content_type"`
 	JSON          aiGatewayDeleteResponseOtelJSON        `json:"-"`
 }
@@ -3575,9 +4535,9 @@ type AIGatewayDeleteResponseOtel struct {
 // aiGatewayDeleteResponseOtelJSON contains the JSON metadata for the struct
 // [AIGatewayDeleteResponseOtel]
 type aiGatewayDeleteResponseOtelJSON struct {
-	Authorization apijson.Field
 	Headers       apijson.Field
 	URL           apijson.Field
+	Authorization apijson.Field
 	ContentType   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
@@ -3638,6 +4598,308 @@ func (r AIGatewayDeleteResponseRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayDeleteResponseSpendLimits struct {
+	Enabled bool                                     `json:"enabled"`
+	Rules   []AIGatewayDeleteResponseSpendLimitsRule `json:"rules"`
+	JSON    aiGatewayDeleteResponseSpendLimitsJSON   `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsJSON contains the JSON metadata for the struct
+// [AIGatewayDeleteResponseSpendLimits]
+type aiGatewayDeleteResponseSpendLimitsJSON struct {
+	Enabled     apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimits) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayDeleteResponseSpendLimitsRule struct {
+	Limit     float64                                                    `json:"limit" api:"required"`
+	LimitType AIGatewayDeleteResponseSpendLimitsRulesLimitType           `json:"limitType" api:"required"`
+	Window    int64                                                      `json:"window" api:"required"`
+	ID        string                                                     `json:"id"`
+	Enabled   bool                                                       `json:"enabled"`
+	Metadata  map[string]AIGatewayDeleteResponseSpendLimitsRulesMetadata `json:"metadata"`
+	Model     AIGatewayDeleteResponseSpendLimitsRulesModel               `json:"model"`
+	Provider  AIGatewayDeleteResponseSpendLimitsRulesProvider            `json:"provider"`
+	Technique AIGatewayDeleteResponseSpendLimitsRulesTechnique           `json:"technique"`
+	JSON      aiGatewayDeleteResponseSpendLimitsRuleJSON                 `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsRuleJSON contains the JSON metadata for the
+// struct [AIGatewayDeleteResponseSpendLimitsRule]
+type aiGatewayDeleteResponseSpendLimitsRuleJSON struct {
+	Limit       apijson.Field
+	LimitType   apijson.Field
+	Window      apijson.Field
+	ID          apijson.Field
+	Enabled     apijson.Field
+	Metadata    apijson.Field
+	Model       apijson.Field
+	Provider    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRule) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRuleJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesLimitTypeCost AIGatewayDeleteResponseSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesMetadata struct {
+	Mode AIGatewayDeleteResponseSpendLimitsRulesMetadataMode `json:"mode" api:"required"`
+	// This field can have the runtime type of [[]string].
+	Values interface{}                                         `json:"values"`
+	JSON   aiGatewayDeleteResponseSpendLimitsRulesMetadataJSON `json:"-"`
+	union  AIGatewayDeleteResponseSpendLimitsRulesMetadataUnion
+}
+
+// aiGatewayDeleteResponseSpendLimitsRulesMetadataJSON contains the JSON metadata
+// for the struct [AIGatewayDeleteResponseSpendLimitsRulesMetadata]
+type aiGatewayDeleteResponseSpendLimitsRulesMetadataJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRulesMetadataJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRulesMetadata) UnmarshalJSON(data []byte) (err error) {
+	*r = AIGatewayDeleteResponseSpendLimitsRulesMetadata{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [AIGatewayDeleteResponseSpendLimitsRulesMetadataUnion]
+// interface which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [AIGatewayDeleteResponseSpendLimitsRulesMetadataMode],
+// [AIGatewayDeleteResponseSpendLimitsRulesMetadataObject].
+func (r AIGatewayDeleteResponseSpendLimitsRulesMetadata) AsUnion() AIGatewayDeleteResponseSpendLimitsRulesMetadataUnion {
+	return r.union
+}
+
+// Union satisfied by [AIGatewayDeleteResponseSpendLimitsRulesMetadataMode] or
+// [AIGatewayDeleteResponseSpendLimitsRulesMetadataObject].
+type AIGatewayDeleteResponseSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayDeleteResponseSpendLimitsRulesMetadata()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AIGatewayDeleteResponseSpendLimitsRulesMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayDeleteResponseSpendLimitsRulesMetadataMode{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayDeleteResponseSpendLimitsRulesMetadataObject{}),
+		},
+	)
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesMetadataMode struct {
+	Mode AIGatewayDeleteResponseSpendLimitsRulesMetadataModeMode `json:"mode" api:"required"`
+	JSON aiGatewayDeleteResponseSpendLimitsRulesMetadataModeJSON `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsRulesMetadataModeJSON contains the JSON
+// metadata for the struct [AIGatewayDeleteResponseSpendLimitsRulesMetadataMode]
+type aiGatewayDeleteResponseSpendLimitsRulesMetadataModeJSON struct {
+	Mode        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRulesMetadataMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRulesMetadataModeJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesMetadataMode) implementsAIGatewayDeleteResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesMetadataModeModePartition AIGatewayDeleteResponseSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesMetadataObject struct {
+	Mode   AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectMode `json:"mode" api:"required"`
+	Values []string                                                  `json:"values" api:"required"`
+	JSON   aiGatewayDeleteResponseSpendLimitsRulesMetadataObjectJSON `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsRulesMetadataObjectJSON contains the JSON
+// metadata for the struct [AIGatewayDeleteResponseSpendLimitsRulesMetadataObject]
+type aiGatewayDeleteResponseSpendLimitsRulesMetadataObjectJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRulesMetadataObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRulesMetadataObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesMetadataObject) implementsAIGatewayDeleteResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectModeFilter AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesModel struct {
+	Mode   AIGatewayDeleteResponseSpendLimitsRulesModelMode `json:"mode" api:"required"`
+	Values []string                                         `json:"values" api:"required"`
+	JSON   aiGatewayDeleteResponseSpendLimitsRulesModelJSON `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsRulesModelJSON contains the JSON metadata for
+// the struct [AIGatewayDeleteResponseSpendLimitsRulesModel]
+type aiGatewayDeleteResponseSpendLimitsRulesModelJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRulesModel) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRulesModelJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesModelModeFilter AIGatewayDeleteResponseSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesProvider struct {
+	Mode   AIGatewayDeleteResponseSpendLimitsRulesProviderMode `json:"mode" api:"required"`
+	Values []string                                            `json:"values" api:"required"`
+	JSON   aiGatewayDeleteResponseSpendLimitsRulesProviderJSON `json:"-"`
+}
+
+// aiGatewayDeleteResponseSpendLimitsRulesProviderJSON contains the JSON metadata
+// for the struct [AIGatewayDeleteResponseSpendLimitsRulesProvider]
+type aiGatewayDeleteResponseSpendLimitsRulesProviderJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayDeleteResponseSpendLimitsRulesProvider) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayDeleteResponseSpendLimitsRulesProviderJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesProviderModeFilter AIGatewayDeleteResponseSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayDeleteResponseSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayDeleteResponseSpendLimitsRulesTechniqueFixed   AIGatewayDeleteResponseSpendLimitsRulesTechnique = "fixed"
+	AIGatewayDeleteResponseSpendLimitsRulesTechniqueSliding AIGatewayDeleteResponseSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayDeleteResponseSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayDeleteResponseSpendLimitsRulesTechniqueFixed, AIGatewayDeleteResponseSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayDeleteResponseStripe struct {
 	Authorization string                                    `json:"authorization" api:"required"`
 	UsageEvents   []AIGatewayDeleteResponseStripeUsageEvent `json:"usage_events" api:"required"`
@@ -3683,51 +4945,61 @@ func (r aiGatewayDeleteResponseStripeUsageEventJSON) RawJSON() string {
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayDeleteResponseWorkersAIBillingMode string
 
 const (
 	AIGatewayDeleteResponseWorkersAIBillingModePostpaid AIGatewayDeleteResponseWorkersAIBillingMode = "postpaid"
+	AIGatewayDeleteResponseWorkersAIBillingModeUnified  AIGatewayDeleteResponseWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayDeleteResponseWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayDeleteResponseWorkersAIBillingModePostpaid:
+	case AIGatewayDeleteResponseWorkersAIBillingModePostpaid, AIGatewayDeleteResponseWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
 }
 
 type AIGatewayGetResponse struct {
-	// gateway id
-	ID                      string                                    `json:"id" api:"required"`
-	CacheInvalidateOnUpdate bool                                      `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                int64                                     `json:"cache_ttl" api:"required,nullable"`
-	CollectLogs             bool                                      `json:"collect_logs" api:"required"`
-	CreatedAt               time.Time                                 `json:"created_at" api:"required" format:"date-time"`
-	ModifiedAt              time.Time                                 `json:"modified_at" api:"required" format:"date-time"`
-	RateLimitingInterval    int64                                     `json:"rate_limiting_interval" api:"required,nullable"`
-	RateLimitingLimit       int64                                     `json:"rate_limiting_limit" api:"required,nullable"`
-	Authentication          bool                                      `json:"authentication"`
-	DLP                     AIGatewayGetResponseDLP                   `json:"dlp"`
-	Guardrails              AIGatewayGetResponseGuardrails            `json:"guardrails" api:"nullable"`
-	IsDefault               bool                                      `json:"is_default"`
-	LogManagement           int64                                     `json:"log_management" api:"nullable"`
-	LogManagementStrategy   AIGatewayGetResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
-	Logpush                 bool                                      `json:"logpush"`
-	LogpushPublicKey        string                                    `json:"logpush_public_key" api:"nullable"`
-	Otel                    []AIGatewayGetResponseOtel                `json:"otel" api:"nullable"`
-	RateLimitingTechnique   AIGatewayGetResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      string    `json:"id" api:"required"`
+	CacheInvalidateOnUpdate bool      `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                int64     `json:"cache_ttl" api:"required,nullable"`
+	CollectLogs             bool      `json:"collect_logs" api:"required"`
+	CreatedAt               time.Time `json:"created_at" api:"required" format:"date-time"`
+	ModifiedAt              time.Time `json:"modified_at" api:"required" format:"date-time"`
+	RateLimitingInterval    int64     `json:"rate_limiting_interval" api:"required,nullable"`
+	RateLimitingLimit       int64     `json:"rate_limiting_limit" api:"required,nullable"`
+	Authentication          bool      `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              bool                                      `json:"byok_only"`
+	DLP                   AIGatewayGetResponseDLP                   `json:"dlp"`
+	Guardrails            AIGatewayGetResponseGuardrails            `json:"guardrails" api:"nullable"`
+	IsDefault             bool                                      `json:"is_default"`
+	LogClassification     bool                                      `json:"log_classification"`
+	LogManagement         int64                                     `json:"log_management" api:"nullable"`
+	LogManagementStrategy AIGatewayGetResponseLogManagementStrategy `json:"log_management_strategy" api:"nullable"`
+	Logpush               bool                                      `json:"logpush"`
+	LogpushPublicKey      string                                    `json:"logpush_public_key" api:"nullable"`
+	Otel                  []AIGatewayGetResponseOtel                `json:"otel" api:"nullable"`
+	RateLimitingTechnique AIGatewayGetResponseRateLimitingTechnique `json:"rate_limiting_technique" api:"nullable"`
 	// Backoff strategy for retry delays
 	RetryBackoff AIGatewayGetResponseRetryBackoff `json:"retry_backoff" api:"nullable"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay int64 `json:"retry_delay" api:"nullable"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts int64                      `json:"retry_max_attempts" api:"nullable"`
-	StoreID          string                     `json:"store_id" api:"nullable"`
-	Stripe           AIGatewayGetResponseStripe `json:"stripe" api:"nullable"`
+	RetryMaxAttempts int64                           `json:"retry_max_attempts" api:"nullable"`
+	SpendLimits      AIGatewayGetResponseSpendLimits `json:"spend_limits" api:"nullable"`
+	StoreID          string                          `json:"store_id" api:"nullable"`
+	Stripe           AIGatewayGetResponseStripe      `json:"stripe" api:"nullable"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode AIGatewayGetResponseWorkersAIBillingMode `json:"workers_ai_billing_mode"`
 	Zdr                  bool                                     `json:"zdr"`
 	JSON                 aiGatewayGetResponseJSON                 `json:"-"`
@@ -3745,9 +5017,11 @@ type aiGatewayGetResponseJSON struct {
 	RateLimitingInterval    apijson.Field
 	RateLimitingLimit       apijson.Field
 	Authentication          apijson.Field
+	ByokOnly                apijson.Field
 	DLP                     apijson.Field
 	Guardrails              apijson.Field
 	IsDefault               apijson.Field
+	LogClassification       apijson.Field
 	LogManagement           apijson.Field
 	LogManagementStrategy   apijson.Field
 	Logpush                 apijson.Field
@@ -3757,6 +5031,7 @@ type aiGatewayGetResponseJSON struct {
 	RetryBackoff            apijson.Field
 	RetryDelay              apijson.Field
 	RetryMaxAttempts        apijson.Field
+	SpendLimits             apijson.Field
 	StoreID                 apijson.Field
 	Stripe                  apijson.Field
 	WorkersAIBillingMode    apijson.Field
@@ -4448,9 +5723,9 @@ func (r AIGatewayGetResponseLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayGetResponseOtel struct {
-	Authorization string                              `json:"authorization" api:"required"`
 	Headers       map[string]string                   `json:"headers" api:"required"`
 	URL           string                              `json:"url" api:"required" format:"uri"`
+	Authorization string                              `json:"authorization"`
 	ContentType   AIGatewayGetResponseOtelContentType `json:"content_type"`
 	JSON          aiGatewayGetResponseOtelJSON        `json:"-"`
 }
@@ -4458,9 +5733,9 @@ type AIGatewayGetResponseOtel struct {
 // aiGatewayGetResponseOtelJSON contains the JSON metadata for the struct
 // [AIGatewayGetResponseOtel]
 type aiGatewayGetResponseOtelJSON struct {
-	Authorization apijson.Field
 	Headers       apijson.Field
 	URL           apijson.Field
+	Authorization apijson.Field
 	ContentType   apijson.Field
 	raw           string
 	ExtraFields   map[string]apijson.Field
@@ -4521,6 +5796,308 @@ func (r AIGatewayGetResponseRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayGetResponseSpendLimits struct {
+	Enabled bool                                  `json:"enabled"`
+	Rules   []AIGatewayGetResponseSpendLimitsRule `json:"rules"`
+	JSON    aiGatewayGetResponseSpendLimitsJSON   `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsJSON contains the JSON metadata for the struct
+// [AIGatewayGetResponseSpendLimits]
+type aiGatewayGetResponseSpendLimitsJSON struct {
+	Enabled     apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimits) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayGetResponseSpendLimitsRule struct {
+	Limit     float64                                                 `json:"limit" api:"required"`
+	LimitType AIGatewayGetResponseSpendLimitsRulesLimitType           `json:"limitType" api:"required"`
+	Window    int64                                                   `json:"window" api:"required"`
+	ID        string                                                  `json:"id"`
+	Enabled   bool                                                    `json:"enabled"`
+	Metadata  map[string]AIGatewayGetResponseSpendLimitsRulesMetadata `json:"metadata"`
+	Model     AIGatewayGetResponseSpendLimitsRulesModel               `json:"model"`
+	Provider  AIGatewayGetResponseSpendLimitsRulesProvider            `json:"provider"`
+	Technique AIGatewayGetResponseSpendLimitsRulesTechnique           `json:"technique"`
+	JSON      aiGatewayGetResponseSpendLimitsRuleJSON                 `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsRuleJSON contains the JSON metadata for the
+// struct [AIGatewayGetResponseSpendLimitsRule]
+type aiGatewayGetResponseSpendLimitsRuleJSON struct {
+	Limit       apijson.Field
+	LimitType   apijson.Field
+	Window      apijson.Field
+	ID          apijson.Field
+	Enabled     apijson.Field
+	Metadata    apijson.Field
+	Model       apijson.Field
+	Provider    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRule) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsRuleJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayGetResponseSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesLimitTypeCost AIGatewayGetResponseSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayGetResponseSpendLimitsRulesMetadata struct {
+	Mode AIGatewayGetResponseSpendLimitsRulesMetadataMode `json:"mode" api:"required"`
+	// This field can have the runtime type of [[]string].
+	Values interface{}                                      `json:"values"`
+	JSON   aiGatewayGetResponseSpendLimitsRulesMetadataJSON `json:"-"`
+	union  AIGatewayGetResponseSpendLimitsRulesMetadataUnion
+}
+
+// aiGatewayGetResponseSpendLimitsRulesMetadataJSON contains the JSON metadata for
+// the struct [AIGatewayGetResponseSpendLimitsRulesMetadata]
+type aiGatewayGetResponseSpendLimitsRulesMetadataJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r aiGatewayGetResponseSpendLimitsRulesMetadataJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRulesMetadata) UnmarshalJSON(data []byte) (err error) {
+	*r = AIGatewayGetResponseSpendLimitsRulesMetadata{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [AIGatewayGetResponseSpendLimitsRulesMetadataUnion] interface
+// which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [AIGatewayGetResponseSpendLimitsRulesMetadataMode],
+// [AIGatewayGetResponseSpendLimitsRulesMetadataObject].
+func (r AIGatewayGetResponseSpendLimitsRulesMetadata) AsUnion() AIGatewayGetResponseSpendLimitsRulesMetadataUnion {
+	return r.union
+}
+
+// Union satisfied by [AIGatewayGetResponseSpendLimitsRulesMetadataMode] or
+// [AIGatewayGetResponseSpendLimitsRulesMetadataObject].
+type AIGatewayGetResponseSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayGetResponseSpendLimitsRulesMetadata()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AIGatewayGetResponseSpendLimitsRulesMetadataUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayGetResponseSpendLimitsRulesMetadataMode{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AIGatewayGetResponseSpendLimitsRulesMetadataObject{}),
+		},
+	)
+}
+
+type AIGatewayGetResponseSpendLimitsRulesMetadataMode struct {
+	Mode AIGatewayGetResponseSpendLimitsRulesMetadataModeMode `json:"mode" api:"required"`
+	JSON aiGatewayGetResponseSpendLimitsRulesMetadataModeJSON `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsRulesMetadataModeJSON contains the JSON metadata
+// for the struct [AIGatewayGetResponseSpendLimitsRulesMetadataMode]
+type aiGatewayGetResponseSpendLimitsRulesMetadataModeJSON struct {
+	Mode        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRulesMetadataMode) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsRulesMetadataModeJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayGetResponseSpendLimitsRulesMetadataMode) implementsAIGatewayGetResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayGetResponseSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesMetadataModeModePartition AIGatewayGetResponseSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayGetResponseSpendLimitsRulesMetadataObject struct {
+	Mode   AIGatewayGetResponseSpendLimitsRulesMetadataObjectMode `json:"mode" api:"required"`
+	Values []string                                               `json:"values" api:"required"`
+	JSON   aiGatewayGetResponseSpendLimitsRulesMetadataObjectJSON `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsRulesMetadataObjectJSON contains the JSON
+// metadata for the struct [AIGatewayGetResponseSpendLimitsRulesMetadataObject]
+type aiGatewayGetResponseSpendLimitsRulesMetadataObjectJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRulesMetadataObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsRulesMetadataObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AIGatewayGetResponseSpendLimitsRulesMetadataObject) implementsAIGatewayGetResponseSpendLimitsRulesMetadata() {
+}
+
+type AIGatewayGetResponseSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesMetadataObjectModeFilter AIGatewayGetResponseSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayGetResponseSpendLimitsRulesModel struct {
+	Mode   AIGatewayGetResponseSpendLimitsRulesModelMode `json:"mode" api:"required"`
+	Values []string                                      `json:"values" api:"required"`
+	JSON   aiGatewayGetResponseSpendLimitsRulesModelJSON `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsRulesModelJSON contains the JSON metadata for the
+// struct [AIGatewayGetResponseSpendLimitsRulesModel]
+type aiGatewayGetResponseSpendLimitsRulesModelJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRulesModel) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsRulesModelJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayGetResponseSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesModelModeFilter AIGatewayGetResponseSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayGetResponseSpendLimitsRulesProvider struct {
+	Mode   AIGatewayGetResponseSpendLimitsRulesProviderMode `json:"mode" api:"required"`
+	Values []string                                         `json:"values" api:"required"`
+	JSON   aiGatewayGetResponseSpendLimitsRulesProviderJSON `json:"-"`
+}
+
+// aiGatewayGetResponseSpendLimitsRulesProviderJSON contains the JSON metadata for
+// the struct [AIGatewayGetResponseSpendLimitsRulesProvider]
+type aiGatewayGetResponseSpendLimitsRulesProviderJSON struct {
+	Mode        apijson.Field
+	Values      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AIGatewayGetResponseSpendLimitsRulesProvider) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiGatewayGetResponseSpendLimitsRulesProviderJSON) RawJSON() string {
+	return r.raw
+}
+
+type AIGatewayGetResponseSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesProviderModeFilter AIGatewayGetResponseSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayGetResponseSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayGetResponseSpendLimitsRulesTechniqueFixed   AIGatewayGetResponseSpendLimitsRulesTechnique = "fixed"
+	AIGatewayGetResponseSpendLimitsRulesTechniqueSliding AIGatewayGetResponseSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayGetResponseSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayGetResponseSpendLimitsRulesTechniqueFixed, AIGatewayGetResponseSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayGetResponseStripe struct {
 	Authorization string                                 `json:"authorization" api:"required"`
 	UsageEvents   []AIGatewayGetResponseStripeUsageEvent `json:"usage_events" api:"required"`
@@ -4566,16 +6143,19 @@ func (r aiGatewayGetResponseStripeUsageEventJSON) RawJSON() string {
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayGetResponseWorkersAIBillingMode string
 
 const (
 	AIGatewayGetResponseWorkersAIBillingModePostpaid AIGatewayGetResponseWorkersAIBillingMode = "postpaid"
+	AIGatewayGetResponseWorkersAIBillingModeUnified  AIGatewayGetResponseWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayGetResponseWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayGetResponseWorkersAIBillingModePostpaid:
+	case AIGatewayGetResponseWorkersAIBillingModePostpaid, AIGatewayGetResponseWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
@@ -4583,33 +6163,577 @@ func (r AIGatewayGetResponseWorkersAIBillingMode) IsKnown() bool {
 
 type AIGatewayNewParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// gateway id
-	ID                      param.Field[string]                                  `json:"id" api:"required"`
-	CacheInvalidateOnUpdate param.Field[bool]                                    `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                param.Field[int64]                                   `json:"cache_ttl" api:"required"`
-	CollectLogs             param.Field[bool]                                    `json:"collect_logs" api:"required"`
-	RateLimitingInterval    param.Field[int64]                                   `json:"rate_limiting_interval" api:"required"`
-	RateLimitingLimit       param.Field[int64]                                   `json:"rate_limiting_limit" api:"required"`
-	Authentication          param.Field[bool]                                    `json:"authentication"`
-	LogManagement           param.Field[int64]                                   `json:"log_management"`
-	LogManagementStrategy   param.Field[AIGatewayNewParamsLogManagementStrategy] `json:"log_management_strategy"`
-	Logpush                 param.Field[bool]                                    `json:"logpush"`
-	LogpushPublicKey        param.Field[string]                                  `json:"logpush_public_key"`
-	RateLimitingTechnique   param.Field[AIGatewayNewParamsRateLimitingTechnique] `json:"rate_limiting_technique"`
+	// Unique identifier of the AI Gateway within the account.
+	ID                      param.Field[string] `json:"id" api:"required"`
+	CacheInvalidateOnUpdate param.Field[bool]   `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                param.Field[int64]  `json:"cache_ttl" api:"required"`
+	CollectLogs             param.Field[bool]   `json:"collect_logs" api:"required"`
+	RateLimitingInterval    param.Field[int64]  `json:"rate_limiting_interval" api:"required"`
+	RateLimitingLimit       param.Field[int64]  `json:"rate_limiting_limit" api:"required"`
+	Authentication          param.Field[bool]   `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              param.Field[bool]                                    `json:"byok_only"`
+	DLP                   param.Field[AIGatewayNewParamsDLPUnion]              `json:"dlp"`
+	Guardrails            param.Field[AIGatewayNewParamsGuardrails]            `json:"guardrails"`
+	LogClassification     param.Field[bool]                                    `json:"log_classification"`
+	LogManagement         param.Field[int64]                                   `json:"log_management"`
+	LogManagementStrategy param.Field[AIGatewayNewParamsLogManagementStrategy] `json:"log_management_strategy"`
+	Logpush               param.Field[bool]                                    `json:"logpush"`
+	LogpushPublicKey      param.Field[string]                                  `json:"logpush_public_key"`
+	Otel                  param.Field[[]AIGatewayNewParamsOtel]                `json:"otel"`
+	RateLimitingTechnique param.Field[AIGatewayNewParamsRateLimitingTechnique] `json:"rate_limiting_technique"`
 	// Backoff strategy for retry delays
 	RetryBackoff param.Field[AIGatewayNewParamsRetryBackoff] `json:"retry_backoff"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay param.Field[int64] `json:"retry_delay"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts param.Field[int64] `json:"retry_max_attempts"`
+	RetryMaxAttempts param.Field[int64]                         `json:"retry_max_attempts"`
+	SpendLimits      param.Field[AIGatewayNewParamsSpendLimits] `json:"spend_limits"`
+	StoreID          param.Field[string]                        `json:"store_id"`
+	Stripe           param.Field[AIGatewayNewParamsStripe]      `json:"stripe"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode param.Field[AIGatewayNewParamsWorkersAIBillingMode] `json:"workers_ai_billing_mode"`
 	Zdr                  param.Field[bool]                                   `json:"zdr"`
 }
 
 func (r AIGatewayNewParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsDLP struct {
+	Enabled  param.Field[bool]                        `json:"enabled" api:"required"`
+	Action   param.Field[AIGatewayNewParamsDLPAction] `json:"action"`
+	Policies param.Field[interface{}]                 `json:"policies"`
+	Profiles param.Field[interface{}]                 `json:"profiles"`
+}
+
+func (r AIGatewayNewParamsDLP) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayNewParamsDLP) implementsAIGatewayNewParamsDLPUnion() {}
+
+// Satisfied by [ai_gateway.AIGatewayNewParamsDLPObject],
+// [ai_gateway.AIGatewayNewParamsDLPObject], [AIGatewayNewParamsDLP].
+type AIGatewayNewParamsDLPUnion interface {
+	implementsAIGatewayNewParamsDLPUnion()
+}
+
+type AIGatewayNewParamsDLPObject struct {
+	Action   param.Field[AIGatewayNewParamsDLPObjectAction] `json:"action" api:"required"`
+	Enabled  param.Field[bool]                              `json:"enabled" api:"required"`
+	Profiles param.Field[[]string]                          `json:"profiles" api:"required"`
+}
+
+func (r AIGatewayNewParamsDLPObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayNewParamsDLPObject) implementsAIGatewayNewParamsDLPUnion() {}
+
+type AIGatewayNewParamsDLPObjectAction string
+
+const (
+	AIGatewayNewParamsDLPObjectActionBlock AIGatewayNewParamsDLPObjectAction = "BLOCK"
+	AIGatewayNewParamsDLPObjectActionFlag  AIGatewayNewParamsDLPObjectAction = "FLAG"
+)
+
+func (r AIGatewayNewParamsDLPObjectAction) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsDLPObjectActionBlock, AIGatewayNewParamsDLPObjectActionFlag:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsDLPAction string
+
+const (
+	AIGatewayNewParamsDLPActionBlock AIGatewayNewParamsDLPAction = "BLOCK"
+	AIGatewayNewParamsDLPActionFlag  AIGatewayNewParamsDLPAction = "FLAG"
+)
+
+func (r AIGatewayNewParamsDLPAction) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsDLPActionBlock, AIGatewayNewParamsDLPActionFlag:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrails struct {
+	Prompt   param.Field[AIGatewayNewParamsGuardrailsPrompt]   `json:"prompt" api:"required"`
+	Response param.Field[AIGatewayNewParamsGuardrailsResponse] `json:"response" api:"required"`
+}
+
+func (r AIGatewayNewParamsGuardrails) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsGuardrailsPrompt struct {
+	P1  param.Field[AIGatewayNewParamsGuardrailsPromptP1]  `json:"P1"`
+	S1  param.Field[AIGatewayNewParamsGuardrailsPromptS1]  `json:"S1"`
+	S10 param.Field[AIGatewayNewParamsGuardrailsPromptS10] `json:"S10"`
+	S11 param.Field[AIGatewayNewParamsGuardrailsPromptS11] `json:"S11"`
+	S12 param.Field[AIGatewayNewParamsGuardrailsPromptS12] `json:"S12"`
+	S13 param.Field[AIGatewayNewParamsGuardrailsPromptS13] `json:"S13"`
+	S2  param.Field[AIGatewayNewParamsGuardrailsPromptS2]  `json:"S2"`
+	S3  param.Field[AIGatewayNewParamsGuardrailsPromptS3]  `json:"S3"`
+	S4  param.Field[AIGatewayNewParamsGuardrailsPromptS4]  `json:"S4"`
+	S5  param.Field[AIGatewayNewParamsGuardrailsPromptS5]  `json:"S5"`
+	S6  param.Field[AIGatewayNewParamsGuardrailsPromptS6]  `json:"S6"`
+	S7  param.Field[AIGatewayNewParamsGuardrailsPromptS7]  `json:"S7"`
+	S8  param.Field[AIGatewayNewParamsGuardrailsPromptS8]  `json:"S8"`
+	S9  param.Field[AIGatewayNewParamsGuardrailsPromptS9]  `json:"S9"`
+}
+
+func (r AIGatewayNewParamsGuardrailsPrompt) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsGuardrailsPromptP1 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptP1Flag  AIGatewayNewParamsGuardrailsPromptP1 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptP1Block AIGatewayNewParamsGuardrailsPromptP1 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptP1) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptP1Flag, AIGatewayNewParamsGuardrailsPromptP1Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS1 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS1Flag  AIGatewayNewParamsGuardrailsPromptS1 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS1Block AIGatewayNewParamsGuardrailsPromptS1 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS1) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS1Flag, AIGatewayNewParamsGuardrailsPromptS1Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS10 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS10Flag  AIGatewayNewParamsGuardrailsPromptS10 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS10Block AIGatewayNewParamsGuardrailsPromptS10 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS10) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS10Flag, AIGatewayNewParamsGuardrailsPromptS10Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS11 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS11Flag  AIGatewayNewParamsGuardrailsPromptS11 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS11Block AIGatewayNewParamsGuardrailsPromptS11 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS11) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS11Flag, AIGatewayNewParamsGuardrailsPromptS11Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS12 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS12Flag  AIGatewayNewParamsGuardrailsPromptS12 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS12Block AIGatewayNewParamsGuardrailsPromptS12 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS12) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS12Flag, AIGatewayNewParamsGuardrailsPromptS12Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS13 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS13Flag  AIGatewayNewParamsGuardrailsPromptS13 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS13Block AIGatewayNewParamsGuardrailsPromptS13 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS13) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS13Flag, AIGatewayNewParamsGuardrailsPromptS13Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS2 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS2Flag  AIGatewayNewParamsGuardrailsPromptS2 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS2Block AIGatewayNewParamsGuardrailsPromptS2 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS2) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS2Flag, AIGatewayNewParamsGuardrailsPromptS2Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS3 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS3Flag  AIGatewayNewParamsGuardrailsPromptS3 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS3Block AIGatewayNewParamsGuardrailsPromptS3 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS3) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS3Flag, AIGatewayNewParamsGuardrailsPromptS3Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS4 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS4Flag  AIGatewayNewParamsGuardrailsPromptS4 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS4Block AIGatewayNewParamsGuardrailsPromptS4 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS4) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS4Flag, AIGatewayNewParamsGuardrailsPromptS4Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS5 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS5Flag  AIGatewayNewParamsGuardrailsPromptS5 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS5Block AIGatewayNewParamsGuardrailsPromptS5 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS5) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS5Flag, AIGatewayNewParamsGuardrailsPromptS5Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS6 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS6Flag  AIGatewayNewParamsGuardrailsPromptS6 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS6Block AIGatewayNewParamsGuardrailsPromptS6 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS6) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS6Flag, AIGatewayNewParamsGuardrailsPromptS6Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS7 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS7Flag  AIGatewayNewParamsGuardrailsPromptS7 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS7Block AIGatewayNewParamsGuardrailsPromptS7 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS7) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS7Flag, AIGatewayNewParamsGuardrailsPromptS7Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS8 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS8Flag  AIGatewayNewParamsGuardrailsPromptS8 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS8Block AIGatewayNewParamsGuardrailsPromptS8 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS8) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS8Flag, AIGatewayNewParamsGuardrailsPromptS8Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsPromptS9 string
+
+const (
+	AIGatewayNewParamsGuardrailsPromptS9Flag  AIGatewayNewParamsGuardrailsPromptS9 = "FLAG"
+	AIGatewayNewParamsGuardrailsPromptS9Block AIGatewayNewParamsGuardrailsPromptS9 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsPromptS9) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsPromptS9Flag, AIGatewayNewParamsGuardrailsPromptS9Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponse struct {
+	P1  param.Field[AIGatewayNewParamsGuardrailsResponseP1]  `json:"P1"`
+	S1  param.Field[AIGatewayNewParamsGuardrailsResponseS1]  `json:"S1"`
+	S10 param.Field[AIGatewayNewParamsGuardrailsResponseS10] `json:"S10"`
+	S11 param.Field[AIGatewayNewParamsGuardrailsResponseS11] `json:"S11"`
+	S12 param.Field[AIGatewayNewParamsGuardrailsResponseS12] `json:"S12"`
+	S13 param.Field[AIGatewayNewParamsGuardrailsResponseS13] `json:"S13"`
+	S2  param.Field[AIGatewayNewParamsGuardrailsResponseS2]  `json:"S2"`
+	S3  param.Field[AIGatewayNewParamsGuardrailsResponseS3]  `json:"S3"`
+	S4  param.Field[AIGatewayNewParamsGuardrailsResponseS4]  `json:"S4"`
+	S5  param.Field[AIGatewayNewParamsGuardrailsResponseS5]  `json:"S5"`
+	S6  param.Field[AIGatewayNewParamsGuardrailsResponseS6]  `json:"S6"`
+	S7  param.Field[AIGatewayNewParamsGuardrailsResponseS7]  `json:"S7"`
+	S8  param.Field[AIGatewayNewParamsGuardrailsResponseS8]  `json:"S8"`
+	S9  param.Field[AIGatewayNewParamsGuardrailsResponseS9]  `json:"S9"`
+}
+
+func (r AIGatewayNewParamsGuardrailsResponse) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsGuardrailsResponseP1 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseP1Flag  AIGatewayNewParamsGuardrailsResponseP1 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseP1Block AIGatewayNewParamsGuardrailsResponseP1 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseP1) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseP1Flag, AIGatewayNewParamsGuardrailsResponseP1Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS1 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS1Flag  AIGatewayNewParamsGuardrailsResponseS1 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS1Block AIGatewayNewParamsGuardrailsResponseS1 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS1) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS1Flag, AIGatewayNewParamsGuardrailsResponseS1Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS10 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS10Flag  AIGatewayNewParamsGuardrailsResponseS10 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS10Block AIGatewayNewParamsGuardrailsResponseS10 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS10) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS10Flag, AIGatewayNewParamsGuardrailsResponseS10Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS11 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS11Flag  AIGatewayNewParamsGuardrailsResponseS11 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS11Block AIGatewayNewParamsGuardrailsResponseS11 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS11) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS11Flag, AIGatewayNewParamsGuardrailsResponseS11Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS12 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS12Flag  AIGatewayNewParamsGuardrailsResponseS12 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS12Block AIGatewayNewParamsGuardrailsResponseS12 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS12) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS12Flag, AIGatewayNewParamsGuardrailsResponseS12Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS13 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS13Flag  AIGatewayNewParamsGuardrailsResponseS13 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS13Block AIGatewayNewParamsGuardrailsResponseS13 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS13) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS13Flag, AIGatewayNewParamsGuardrailsResponseS13Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS2 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS2Flag  AIGatewayNewParamsGuardrailsResponseS2 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS2Block AIGatewayNewParamsGuardrailsResponseS2 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS2) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS2Flag, AIGatewayNewParamsGuardrailsResponseS2Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS3 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS3Flag  AIGatewayNewParamsGuardrailsResponseS3 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS3Block AIGatewayNewParamsGuardrailsResponseS3 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS3) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS3Flag, AIGatewayNewParamsGuardrailsResponseS3Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS4 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS4Flag  AIGatewayNewParamsGuardrailsResponseS4 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS4Block AIGatewayNewParamsGuardrailsResponseS4 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS4) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS4Flag, AIGatewayNewParamsGuardrailsResponseS4Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS5 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS5Flag  AIGatewayNewParamsGuardrailsResponseS5 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS5Block AIGatewayNewParamsGuardrailsResponseS5 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS5) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS5Flag, AIGatewayNewParamsGuardrailsResponseS5Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS6 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS6Flag  AIGatewayNewParamsGuardrailsResponseS6 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS6Block AIGatewayNewParamsGuardrailsResponseS6 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS6) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS6Flag, AIGatewayNewParamsGuardrailsResponseS6Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS7 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS7Flag  AIGatewayNewParamsGuardrailsResponseS7 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS7Block AIGatewayNewParamsGuardrailsResponseS7 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS7) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS7Flag, AIGatewayNewParamsGuardrailsResponseS7Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS8 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS8Flag  AIGatewayNewParamsGuardrailsResponseS8 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS8Block AIGatewayNewParamsGuardrailsResponseS8 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS8) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS8Flag, AIGatewayNewParamsGuardrailsResponseS8Block:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsGuardrailsResponseS9 string
+
+const (
+	AIGatewayNewParamsGuardrailsResponseS9Flag  AIGatewayNewParamsGuardrailsResponseS9 = "FLAG"
+	AIGatewayNewParamsGuardrailsResponseS9Block AIGatewayNewParamsGuardrailsResponseS9 = "BLOCK"
+)
+
+func (r AIGatewayNewParamsGuardrailsResponseS9) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsGuardrailsResponseS9Flag, AIGatewayNewParamsGuardrailsResponseS9Block:
+		return true
+	}
+	return false
 }
 
 type AIGatewayNewParamsLogManagementStrategy string
@@ -4622,6 +6746,32 @@ const (
 func (r AIGatewayNewParamsLogManagementStrategy) IsKnown() bool {
 	switch r {
 	case AIGatewayNewParamsLogManagementStrategyStopInserting, AIGatewayNewParamsLogManagementStrategyDeleteOldest:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsOtel struct {
+	Headers       param.Field[map[string]string]                 `json:"headers" api:"required"`
+	URL           param.Field[string]                            `json:"url" api:"required" format:"uri"`
+	Authorization param.Field[string]                            `json:"authorization"`
+	ContentType   param.Field[AIGatewayNewParamsOtelContentType] `json:"content_type"`
+}
+
+func (r AIGatewayNewParamsOtel) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsOtelContentType string
+
+const (
+	AIGatewayNewParamsOtelContentTypeJson     AIGatewayNewParamsOtelContentType = "json"
+	AIGatewayNewParamsOtelContentTypeProtobuf AIGatewayNewParamsOtelContentType = "protobuf"
+)
+
+func (r AIGatewayNewParamsOtelContentType) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsOtelContentTypeJson, AIGatewayNewParamsOtelContentTypeProtobuf:
 		return true
 	}
 	return false
@@ -4659,17 +6809,207 @@ func (r AIGatewayNewParamsRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayNewParamsSpendLimits struct {
+	Enabled param.Field[bool]                                `json:"enabled"`
+	Rules   param.Field[[]AIGatewayNewParamsSpendLimitsRule] `json:"rules"`
+}
+
+func (r AIGatewayNewParamsSpendLimits) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsSpendLimitsRule struct {
+	Limit     param.Field[float64]                                                    `json:"limit" api:"required"`
+	LimitType param.Field[AIGatewayNewParamsSpendLimitsRulesLimitType]                `json:"limitType" api:"required"`
+	Window    param.Field[int64]                                                      `json:"window" api:"required"`
+	ID        param.Field[string]                                                     `json:"id"`
+	Enabled   param.Field[bool]                                                       `json:"enabled"`
+	Metadata  param.Field[map[string]AIGatewayNewParamsSpendLimitsRulesMetadataUnion] `json:"metadata"`
+	Model     param.Field[AIGatewayNewParamsSpendLimitsRulesModel]                    `json:"model"`
+	Provider  param.Field[AIGatewayNewParamsSpendLimitsRulesProvider]                 `json:"provider"`
+	Technique param.Field[AIGatewayNewParamsSpendLimitsRulesTechnique]                `json:"technique"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRule) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesLimitTypeCost AIGatewayNewParamsSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsSpendLimitsRulesMetadata struct {
+	Mode   param.Field[AIGatewayNewParamsSpendLimitsRulesMetadataMode] `json:"mode" api:"required"`
+	Values param.Field[interface{}]                                    `json:"values"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadata) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadata) implementsAIGatewayNewParamsSpendLimitsRulesMetadataUnion() {
+}
+
+// Satisfied by [ai_gateway.AIGatewayNewParamsSpendLimitsRulesMetadataMode],
+// [ai_gateway.AIGatewayNewParamsSpendLimitsRulesMetadataObject],
+// [AIGatewayNewParamsSpendLimitsRulesMetadata].
+type AIGatewayNewParamsSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayNewParamsSpendLimitsRulesMetadataUnion()
+}
+
+type AIGatewayNewParamsSpendLimitsRulesMetadataMode struct {
+	Mode param.Field[AIGatewayNewParamsSpendLimitsRulesMetadataModeMode] `json:"mode" api:"required"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataMode) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataMode) implementsAIGatewayNewParamsSpendLimitsRulesMetadataUnion() {
+}
+
+type AIGatewayNewParamsSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesMetadataModeModePartition AIGatewayNewParamsSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsSpendLimitsRulesMetadataObject struct {
+	Mode   param.Field[AIGatewayNewParamsSpendLimitsRulesMetadataObjectMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                             `json:"values" api:"required"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataObject) implementsAIGatewayNewParamsSpendLimitsRulesMetadataUnion() {
+}
+
+type AIGatewayNewParamsSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesMetadataObjectModeFilter AIGatewayNewParamsSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsSpendLimitsRulesModel struct {
+	Mode   param.Field[AIGatewayNewParamsSpendLimitsRulesModelMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                    `json:"values" api:"required"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesModel) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesModelModeFilter AIGatewayNewParamsSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsSpendLimitsRulesProvider struct {
+	Mode   param.Field[AIGatewayNewParamsSpendLimitsRulesProviderMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                       `json:"values" api:"required"`
+}
+
+func (r AIGatewayNewParamsSpendLimitsRulesProvider) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesProviderModeFilter AIGatewayNewParamsSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayNewParamsSpendLimitsRulesTechniqueFixed   AIGatewayNewParamsSpendLimitsRulesTechnique = "fixed"
+	AIGatewayNewParamsSpendLimitsRulesTechniqueSliding AIGatewayNewParamsSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayNewParamsSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayNewParamsSpendLimitsRulesTechniqueFixed, AIGatewayNewParamsSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type AIGatewayNewParamsStripe struct {
+	Authorization param.Field[string]                               `json:"authorization" api:"required"`
+	UsageEvents   param.Field[[]AIGatewayNewParamsStripeUsageEvent] `json:"usage_events" api:"required"`
+}
+
+func (r AIGatewayNewParamsStripe) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayNewParamsStripeUsageEvent struct {
+	Payload param.Field[string] `json:"payload" api:"required"`
+}
+
+func (r AIGatewayNewParamsStripeUsageEvent) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayNewParamsWorkersAIBillingMode string
 
 const (
 	AIGatewayNewParamsWorkersAIBillingModePostpaid AIGatewayNewParamsWorkersAIBillingMode = "postpaid"
+	AIGatewayNewParamsWorkersAIBillingModeUnified  AIGatewayNewParamsWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayNewParamsWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayNewParamsWorkersAIBillingModePostpaid:
+	case AIGatewayNewParamsWorkersAIBillingModePostpaid, AIGatewayNewParamsWorkersAIBillingModeUnified:
 		return true
 	}
 	return false
@@ -4699,31 +7039,38 @@ func (r aiGatewayNewResponseEnvelopeJSON) RawJSON() string {
 }
 
 type AIGatewayUpdateParams struct {
-	AccountID               param.Field[string]                                     `path:"account_id" api:"required"`
-	CacheInvalidateOnUpdate param.Field[bool]                                       `json:"cache_invalidate_on_update" api:"required"`
-	CacheTTL                param.Field[int64]                                      `json:"cache_ttl" api:"required"`
-	CollectLogs             param.Field[bool]                                       `json:"collect_logs" api:"required"`
-	RateLimitingInterval    param.Field[int64]                                      `json:"rate_limiting_interval" api:"required"`
-	RateLimitingLimit       param.Field[int64]                                      `json:"rate_limiting_limit" api:"required"`
-	Authentication          param.Field[bool]                                       `json:"authentication"`
-	DLP                     param.Field[AIGatewayUpdateParamsDLPUnion]              `json:"dlp"`
-	Guardrails              param.Field[AIGatewayUpdateParamsGuardrails]            `json:"guardrails"`
-	LogManagement           param.Field[int64]                                      `json:"log_management"`
-	LogManagementStrategy   param.Field[AIGatewayUpdateParamsLogManagementStrategy] `json:"log_management_strategy"`
-	Logpush                 param.Field[bool]                                       `json:"logpush"`
-	LogpushPublicKey        param.Field[string]                                     `json:"logpush_public_key"`
-	Otel                    param.Field[[]AIGatewayUpdateParamsOtel]                `json:"otel"`
-	RateLimitingTechnique   param.Field[AIGatewayUpdateParamsRateLimitingTechnique] `json:"rate_limiting_technique"`
+	AccountID               param.Field[string] `path:"account_id" api:"required"`
+	CacheInvalidateOnUpdate param.Field[bool]   `json:"cache_invalidate_on_update" api:"required"`
+	CacheTTL                param.Field[int64]  `json:"cache_ttl" api:"required"`
+	CollectLogs             param.Field[bool]   `json:"collect_logs" api:"required"`
+	RateLimitingInterval    param.Field[int64]  `json:"rate_limiting_interval" api:"required"`
+	RateLimitingLimit       param.Field[int64]  `json:"rate_limiting_limit" api:"required"`
+	Authentication          param.Field[bool]   `json:"authentication"`
+	// Requires customer-provided provider credentials and prevents fallback to Unified
+	// Billing.
+	ByokOnly              param.Field[bool]                                       `json:"byok_only"`
+	DLP                   param.Field[AIGatewayUpdateParamsDLPUnion]              `json:"dlp"`
+	Guardrails            param.Field[AIGatewayUpdateParamsGuardrails]            `json:"guardrails"`
+	LogClassification     param.Field[bool]                                       `json:"log_classification"`
+	LogManagement         param.Field[int64]                                      `json:"log_management"`
+	LogManagementStrategy param.Field[AIGatewayUpdateParamsLogManagementStrategy] `json:"log_management_strategy"`
+	Logpush               param.Field[bool]                                       `json:"logpush"`
+	LogpushPublicKey      param.Field[string]                                     `json:"logpush_public_key"`
+	Otel                  param.Field[[]AIGatewayUpdateParamsOtel]                `json:"otel"`
+	RateLimitingTechnique param.Field[AIGatewayUpdateParamsRateLimitingTechnique] `json:"rate_limiting_technique"`
 	// Backoff strategy for retry delays
 	RetryBackoff param.Field[AIGatewayUpdateParamsRetryBackoff] `json:"retry_backoff"`
-	// Delay between retry attempts in milliseconds (0-5000)
+	// Delay between retry attempts in milliseconds (0-60000)
 	RetryDelay param.Field[int64] `json:"retry_delay"`
 	// Maximum number of retry attempts for failed requests (1-5)
-	RetryMaxAttempts param.Field[int64]                       `json:"retry_max_attempts"`
-	StoreID          param.Field[string]                      `json:"store_id"`
-	Stripe           param.Field[AIGatewayUpdateParamsStripe] `json:"stripe"`
+	RetryMaxAttempts param.Field[int64]                            `json:"retry_max_attempts"`
+	SpendLimits      param.Field[AIGatewayUpdateParamsSpendLimits] `json:"spend_limits"`
+	StoreID          param.Field[string]                           `json:"store_id"`
+	Stripe           param.Field[AIGatewayUpdateParamsStripe]      `json:"stripe"`
 	// Controls how Workers AI inference calls routed through this gateway are billed.
-	// Only 'postpaid' is currently supported.
+	// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+	// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+	// Gateway.
 	WorkersAIBillingMode param.Field[AIGatewayUpdateParamsWorkersAIBillingMode] `json:"workers_ai_billing_mode"`
 	Zdr                  param.Field[bool]                                      `json:"zdr"`
 }
@@ -5280,9 +7627,9 @@ func (r AIGatewayUpdateParamsLogManagementStrategy) IsKnown() bool {
 }
 
 type AIGatewayUpdateParamsOtel struct {
-	Authorization param.Field[string]                               `json:"authorization" api:"required"`
 	Headers       param.Field[map[string]string]                    `json:"headers" api:"required"`
 	URL           param.Field[string]                               `json:"url" api:"required" format:"uri"`
+	Authorization param.Field[string]                               `json:"authorization"`
 	ContentType   param.Field[AIGatewayUpdateParamsOtelContentType] `json:"content_type"`
 }
 
@@ -5337,6 +7684,176 @@ func (r AIGatewayUpdateParamsRetryBackoff) IsKnown() bool {
 	return false
 }
 
+type AIGatewayUpdateParamsSpendLimits struct {
+	Enabled param.Field[bool]                                   `json:"enabled"`
+	Rules   param.Field[[]AIGatewayUpdateParamsSpendLimitsRule] `json:"rules"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimits) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayUpdateParamsSpendLimitsRule struct {
+	Limit     param.Field[float64]                                                       `json:"limit" api:"required"`
+	LimitType param.Field[AIGatewayUpdateParamsSpendLimitsRulesLimitType]                `json:"limitType" api:"required"`
+	Window    param.Field[int64]                                                         `json:"window" api:"required"`
+	ID        param.Field[string]                                                        `json:"id"`
+	Enabled   param.Field[bool]                                                          `json:"enabled"`
+	Metadata  param.Field[map[string]AIGatewayUpdateParamsSpendLimitsRulesMetadataUnion] `json:"metadata"`
+	Model     param.Field[AIGatewayUpdateParamsSpendLimitsRulesModel]                    `json:"model"`
+	Provider  param.Field[AIGatewayUpdateParamsSpendLimitsRulesProvider]                 `json:"provider"`
+	Technique param.Field[AIGatewayUpdateParamsSpendLimitsRulesTechnique]                `json:"technique"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRule) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesLimitType string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesLimitTypeCost AIGatewayUpdateParamsSpendLimitsRulesLimitType = "cost"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesLimitType) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesLimitTypeCost:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesMetadata struct {
+	Mode   param.Field[AIGatewayUpdateParamsSpendLimitsRulesMetadataMode] `json:"mode" api:"required"`
+	Values param.Field[interface{}]                                       `json:"values"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadata) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadata) implementsAIGatewayUpdateParamsSpendLimitsRulesMetadataUnion() {
+}
+
+// Satisfied by [ai_gateway.AIGatewayUpdateParamsSpendLimitsRulesMetadataMode],
+// [ai_gateway.AIGatewayUpdateParamsSpendLimitsRulesMetadataObject],
+// [AIGatewayUpdateParamsSpendLimitsRulesMetadata].
+type AIGatewayUpdateParamsSpendLimitsRulesMetadataUnion interface {
+	implementsAIGatewayUpdateParamsSpendLimitsRulesMetadataUnion()
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesMetadataMode struct {
+	Mode param.Field[AIGatewayUpdateParamsSpendLimitsRulesMetadataModeMode] `json:"mode" api:"required"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataMode) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataMode) implementsAIGatewayUpdateParamsSpendLimitsRulesMetadataUnion() {
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesMetadataModeMode string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesMetadataModeModePartition AIGatewayUpdateParamsSpendLimitsRulesMetadataModeMode = "partition"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataModeMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesMetadataModeModePartition:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesMetadataObject struct {
+	Mode   param.Field[AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                                `json:"values" api:"required"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataObject) implementsAIGatewayUpdateParamsSpendLimitsRulesMetadataUnion() {
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectMode string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectModeFilter AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectMode = "filter"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesMetadataObjectModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesModel struct {
+	Mode   param.Field[AIGatewayUpdateParamsSpendLimitsRulesModelMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                       `json:"values" api:"required"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesModel) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesModelMode string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesModelModeFilter AIGatewayUpdateParamsSpendLimitsRulesModelMode = "filter"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesModelMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesModelModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesProvider struct {
+	Mode   param.Field[AIGatewayUpdateParamsSpendLimitsRulesProviderMode] `json:"mode" api:"required"`
+	Values param.Field[[]string]                                          `json:"values" api:"required"`
+}
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesProvider) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesProviderMode string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesProviderModeFilter AIGatewayUpdateParamsSpendLimitsRulesProviderMode = "filter"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesProviderMode) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesProviderModeFilter:
+		return true
+	}
+	return false
+}
+
+type AIGatewayUpdateParamsSpendLimitsRulesTechnique string
+
+const (
+	AIGatewayUpdateParamsSpendLimitsRulesTechniqueFixed   AIGatewayUpdateParamsSpendLimitsRulesTechnique = "fixed"
+	AIGatewayUpdateParamsSpendLimitsRulesTechniqueSliding AIGatewayUpdateParamsSpendLimitsRulesTechnique = "sliding"
+)
+
+func (r AIGatewayUpdateParamsSpendLimitsRulesTechnique) IsKnown() bool {
+	switch r {
+	case AIGatewayUpdateParamsSpendLimitsRulesTechniqueFixed, AIGatewayUpdateParamsSpendLimitsRulesTechniqueSliding:
+		return true
+	}
+	return false
+}
+
 type AIGatewayUpdateParamsStripe struct {
 	Authorization param.Field[string]                                  `json:"authorization" api:"required"`
 	UsageEvents   param.Field[[]AIGatewayUpdateParamsStripeUsageEvent] `json:"usage_events" api:"required"`
@@ -5355,16 +7872,19 @@ func (r AIGatewayUpdateParamsStripeUsageEvent) MarshalJSON() (data []byte, err e
 }
 
 // Controls how Workers AI inference calls routed through this gateway are billed.
-// Only 'postpaid' is currently supported.
+// 'postpaid' bills the account directly through Workers AI; 'unified' deducts
+// credits via AI Gateway using neuron-based pricing and delegates billing to AI
+// Gateway.
 type AIGatewayUpdateParamsWorkersAIBillingMode string
 
 const (
 	AIGatewayUpdateParamsWorkersAIBillingModePostpaid AIGatewayUpdateParamsWorkersAIBillingMode = "postpaid"
+	AIGatewayUpdateParamsWorkersAIBillingModeUnified  AIGatewayUpdateParamsWorkersAIBillingMode = "unified"
 )
 
 func (r AIGatewayUpdateParamsWorkersAIBillingMode) IsKnown() bool {
 	switch r {
-	case AIGatewayUpdateParamsWorkersAIBillingModePostpaid:
+	case AIGatewayUpdateParamsWorkersAIBillingModePostpaid, AIGatewayUpdateParamsWorkersAIBillingModeUnified:
 		return true
 	}
 	return false

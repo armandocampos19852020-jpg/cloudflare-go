@@ -61,7 +61,18 @@ func (r *ResourceSharingService) New(ctx context.Context, params ResourceSharing
 	return res, nil
 }
 
-// Updating is not immediate, an updated share object with a new status will be
+// Updates the share's display name and tags. This endpoint does **not** modify
+// recipients or resources — those are managed via dedicated subresource endpoints:
+//
+//   - **Recipients**: Use `POST /accounts/{account_id}/shares/{share_id}/recipients`
+//     to add a single recipient,
+//     `PUT /accounts/{account_id}/shares/{share_id}/recipients` to replace the full
+//     recipient list, or
+//     `DELETE /accounts/{account_id}/shares/{share_id}/recipients/{recipient_id}` to
+//     remove a recipient.
+//   - **Resources**: Use the share's resource subresource endpoints.
+//
+// Updating is not immediate; an updated share object with a new status will be
 // returned.
 func (r *ResourceSharingService) Update(ctx context.Context, shareID string, params ResourceSharingUpdateParams, opts ...option.RequestOption) (res *ResourceSharingUpdateResponse, err error) {
 	var env ResourceSharingUpdateResponseEnvelope
@@ -321,11 +332,12 @@ const (
 	ResourceSharingNewResponseResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingNewResponseResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingNewResponseResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingNewResponseResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingNewResponseResourcesResourceTypeIdPFederationGrant           ResourceSharingNewResponseResourcesResourceType = "idp-federation-grant"
+	ResourceSharingNewResponseResourcesResourceTypeTrustGrant                   ResourceSharingNewResponseResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingNewResponseResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingNewResponseResourcesResourceTypeCustomRuleset, ResourceSharingNewResponseResourcesResourceTypeGatewayPolicy, ResourceSharingNewResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingNewResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingNewResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingNewResponseResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingNewResponseResourcesResourceTypeCustomRuleset, ResourceSharingNewResponseResourcesResourceTypeGatewayPolicy, ResourceSharingNewResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingNewResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingNewResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingNewResponseResourcesResourceTypeIdPFederationGrant, ResourceSharingNewResponseResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -516,11 +528,12 @@ const (
 	ResourceSharingUpdateResponseResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingUpdateResponseResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingUpdateResponseResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingUpdateResponseResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingUpdateResponseResourcesResourceTypeIdPFederationGrant           ResourceSharingUpdateResponseResourcesResourceType = "idp-federation-grant"
+	ResourceSharingUpdateResponseResourcesResourceTypeTrustGrant                   ResourceSharingUpdateResponseResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingUpdateResponseResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingUpdateResponseResourcesResourceTypeCustomRuleset, ResourceSharingUpdateResponseResourcesResourceTypeGatewayPolicy, ResourceSharingUpdateResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingUpdateResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingUpdateResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingUpdateResponseResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingUpdateResponseResourcesResourceTypeCustomRuleset, ResourceSharingUpdateResponseResourcesResourceTypeGatewayPolicy, ResourceSharingUpdateResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingUpdateResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingUpdateResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingUpdateResponseResourcesResourceTypeIdPFederationGrant, ResourceSharingUpdateResponseResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -711,11 +724,12 @@ const (
 	ResourceSharingListResponseResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingListResponseResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingListResponseResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingListResponseResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingListResponseResourcesResourceTypeIdPFederationGrant           ResourceSharingListResponseResourcesResourceType = "idp-federation-grant"
+	ResourceSharingListResponseResourcesResourceTypeTrustGrant                   ResourceSharingListResponseResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingListResponseResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingListResponseResourcesResourceTypeCustomRuleset, ResourceSharingListResponseResourcesResourceTypeGatewayPolicy, ResourceSharingListResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingListResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingListResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingListResponseResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingListResponseResourcesResourceTypeCustomRuleset, ResourceSharingListResponseResourcesResourceTypeGatewayPolicy, ResourceSharingListResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingListResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingListResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingListResponseResourcesResourceTypeIdPFederationGrant, ResourceSharingListResponseResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -906,11 +920,12 @@ const (
 	ResourceSharingDeleteResponseResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingDeleteResponseResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingDeleteResponseResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingDeleteResponseResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingDeleteResponseResourcesResourceTypeIdPFederationGrant           ResourceSharingDeleteResponseResourcesResourceType = "idp-federation-grant"
+	ResourceSharingDeleteResponseResourcesResourceTypeTrustGrant                   ResourceSharingDeleteResponseResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingDeleteResponseResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingDeleteResponseResourcesResourceTypeCustomRuleset, ResourceSharingDeleteResponseResourcesResourceTypeGatewayPolicy, ResourceSharingDeleteResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingDeleteResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingDeleteResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingDeleteResponseResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingDeleteResponseResourcesResourceTypeCustomRuleset, ResourceSharingDeleteResponseResourcesResourceTypeGatewayPolicy, ResourceSharingDeleteResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingDeleteResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingDeleteResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingDeleteResponseResourcesResourceTypeIdPFederationGrant, ResourceSharingDeleteResponseResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -1101,11 +1116,12 @@ const (
 	ResourceSharingGetResponseResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingGetResponseResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingGetResponseResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingGetResponseResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingGetResponseResourcesResourceTypeIdPFederationGrant           ResourceSharingGetResponseResourcesResourceType = "idp-federation-grant"
+	ResourceSharingGetResponseResourcesResourceTypeTrustGrant                   ResourceSharingGetResponseResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingGetResponseResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingGetResponseResourcesResourceTypeCustomRuleset, ResourceSharingGetResponseResourcesResourceTypeGatewayPolicy, ResourceSharingGetResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingGetResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingGetResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingGetResponseResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingGetResponseResourcesResourceTypeCustomRuleset, ResourceSharingGetResponseResourcesResourceTypeGatewayPolicy, ResourceSharingGetResponseResourcesResourceTypeGatewayDestinationIP, ResourceSharingGetResponseResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingGetResponseResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingGetResponseResourcesResourceTypeIdPFederationGrant, ResourceSharingGetResponseResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -1191,11 +1207,12 @@ const (
 	ResourceSharingNewParamsResourcesResourceTypeGatewayBlockPageSettings     ResourceSharingNewParamsResourcesResourceType = "gateway-block-page-settings"
 	ResourceSharingNewParamsResourcesResourceTypeGatewayExtendedEmailMatching ResourceSharingNewParamsResourcesResourceType = "gateway-extended-email-matching"
 	ResourceSharingNewParamsResourcesResourceTypeIdPFederationGrant           ResourceSharingNewParamsResourcesResourceType = "idp-federation-grant"
+	ResourceSharingNewParamsResourcesResourceTypeTrustGrant                   ResourceSharingNewParamsResourcesResourceType = "trust-grant"
 )
 
 func (r ResourceSharingNewParamsResourcesResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingNewParamsResourcesResourceTypeCustomRuleset, ResourceSharingNewParamsResourcesResourceTypeGatewayPolicy, ResourceSharingNewParamsResourcesResourceTypeGatewayDestinationIP, ResourceSharingNewParamsResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingNewParamsResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingNewParamsResourcesResourceTypeIdPFederationGrant:
+	case ResourceSharingNewParamsResourcesResourceTypeCustomRuleset, ResourceSharingNewParamsResourcesResourceTypeGatewayPolicy, ResourceSharingNewParamsResourcesResourceTypeGatewayDestinationIP, ResourceSharingNewParamsResourcesResourceTypeGatewayBlockPageSettings, ResourceSharingNewParamsResourcesResourceTypeGatewayExtendedEmailMatching, ResourceSharingNewParamsResourcesResourceTypeIdPFederationGrant, ResourceSharingNewParamsResourcesResourceTypeTrustGrant:
 		return true
 	}
 	return false
@@ -1364,11 +1381,12 @@ const (
 	ResourceSharingListParamsResourceTypeGatewayBlockPageSettings     ResourceSharingListParamsResourceType = "gateway-block-page-settings"
 	ResourceSharingListParamsResourceTypeGatewayExtendedEmailMatching ResourceSharingListParamsResourceType = "gateway-extended-email-matching"
 	ResourceSharingListParamsResourceTypeIdPFederationGrant           ResourceSharingListParamsResourceType = "idp-federation-grant"
+	ResourceSharingListParamsResourceTypeTrustGrant                   ResourceSharingListParamsResourceType = "trust-grant"
 )
 
 func (r ResourceSharingListParamsResourceType) IsKnown() bool {
 	switch r {
-	case ResourceSharingListParamsResourceTypeCustomRuleset, ResourceSharingListParamsResourceTypeGatewayPolicy, ResourceSharingListParamsResourceTypeGatewayDestinationIP, ResourceSharingListParamsResourceTypeGatewayBlockPageSettings, ResourceSharingListParamsResourceTypeGatewayExtendedEmailMatching, ResourceSharingListParamsResourceTypeIdPFederationGrant:
+	case ResourceSharingListParamsResourceTypeCustomRuleset, ResourceSharingListParamsResourceTypeGatewayPolicy, ResourceSharingListParamsResourceTypeGatewayDestinationIP, ResourceSharingListParamsResourceTypeGatewayBlockPageSettings, ResourceSharingListParamsResourceTypeGatewayExtendedEmailMatching, ResourceSharingListParamsResourceTypeIdPFederationGrant, ResourceSharingListParamsResourceTypeTrustGrant:
 		return true
 	}
 	return false

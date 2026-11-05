@@ -71,28 +71,41 @@ func (r *SubmissionService) ListAutoPaging(ctx context.Context, params Submissio
 
 type SubmissionListResponse struct {
 	// When the submission was requested (UTC).
-	RequestedAt           time.Time                                 `json:"requested_at" api:"required" format:"date-time"`
-	SubmissionID          string                                    `json:"submission_id" api:"required"`
-	CustomerStatus        SubmissionListResponseCustomerStatus      `json:"customer_status" api:"nullable"`
-	EscalatedAs           SubmissionListResponseEscalatedAs         `json:"escalated_as" api:"nullable"`
-	EscalatedAt           time.Time                                 `json:"escalated_at" api:"nullable" format:"date-time"`
-	EscalatedBy           string                                    `json:"escalated_by" api:"nullable"`
-	EscalatedSubmissionID string                                    `json:"escalated_submission_id" api:"nullable"`
-	OriginalDisposition   SubmissionListResponseOriginalDisposition `json:"original_disposition" api:"nullable"`
-	OriginalEdfHash       string                                    `json:"original_edf_hash" api:"nullable"`
-	// The postfix ID of the original message that was submitted
-	OriginalPostfixID    string                                     `json:"original_postfix_id" api:"nullable"`
-	Outcome              string                                     `json:"outcome" api:"nullable"`
-	OutcomeDisposition   SubmissionListResponseOutcomeDisposition   `json:"outcome_disposition" api:"nullable"`
-	RequestedBy          string                                     `json:"requested_by" api:"nullable"`
+	RequestedAt    time.Time                            `json:"requested_at" api:"required" format:"date-time"`
+	SubmissionID   string                               `json:"submission_id" api:"required"`
+	CustomerStatus SubmissionListResponseCustomerStatus `json:"customer_status" api:"nullable"`
+	// The disposition a message is submitted to have.
+	EscalatedAs SubmissionListResponseEscalatedAs `json:"escalated_as" api:"nullable"`
+	// When the submission was escalated to the security team.
+	EscalatedAt time.Time `json:"escalated_at" api:"nullable" format:"date-time"`
+	// Email address of the user who escalated the submission.
+	EscalatedBy string `json:"escalated_by" api:"nullable"`
+	// Submission ID of the escalated team submission, when this user submission was
+	// escalated.
+	EscalatedSubmissionID string `json:"escalated_submission_id" api:"nullable"`
+	// The disposition a message is submitted to have.
+	OriginalDisposition SubmissionListResponseOriginalDisposition `json:"original_disposition" api:"nullable"`
+	// EDF hash of the original message.
+	OriginalEdfHash string `json:"original_edf_hash" api:"nullable"`
+	// The postfix ID of the original message that was submitted.
+	OriginalPostfixID string `json:"original_postfix_id" api:"nullable"`
+	// Processing outcome of the submission.
+	Outcome string `json:"outcome" api:"nullable"`
+	// The disposition a message is submitted to have.
+	OutcomeDisposition SubmissionListResponseOutcomeDisposition `json:"outcome_disposition" api:"nullable"`
+	// Email address of the user who requested the submission.
+	RequestedBy string `json:"requested_by" api:"nullable"`
+	// The disposition a message is submitted to have.
 	RequestedDisposition SubmissionListResponseRequestedDisposition `json:"requested_disposition" api:"nullable"`
-	// Deprecated, use `requested_at` instead
+	// Deprecated, use `requested_at` instead.
 	//
-	// Deprecated: deprecated
+	// Deprecated: Use `requested_at` instead.
 	RequestedTs string `json:"requested_ts"`
-	Status      string `json:"status" api:"nullable"`
-	Subject     string `json:"subject" api:"nullable"`
-	// Whether the submission was created by a team member or an end user.
+	// Processing status of the submission.
+	Status string `json:"status" api:"nullable"`
+	// Subject line of the submitted message.
+	Subject string `json:"subject" api:"nullable"`
+	// Indicates whether a team member or an end user created the submission.
 	Type SubmissionListResponseType `json:"type" api:"nullable"`
 	JSON submissionListResponseJSON `json:"-"`
 }
@@ -146,6 +159,7 @@ func (r SubmissionListResponseCustomerStatus) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListResponseEscalatedAs string
 
 const (
@@ -165,6 +179,7 @@ func (r SubmissionListResponseEscalatedAs) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListResponseOriginalDisposition string
 
 const (
@@ -184,6 +199,7 @@ func (r SubmissionListResponseOriginalDisposition) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListResponseOutcomeDisposition string
 
 const (
@@ -203,6 +219,7 @@ func (r SubmissionListResponseOutcomeDisposition) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListResponseRequestedDisposition string
 
 const (
@@ -222,7 +239,7 @@ func (r SubmissionListResponseRequestedDisposition) IsKnown() bool {
 	return false
 }
 
-// Whether the submission was created by a team member or an end user.
+// Indicates whether a team member or an end user created the submission.
 type SubmissionListResponseType string
 
 const (
@@ -241,25 +258,37 @@ func (r SubmissionListResponseType) IsKnown() bool {
 type SubmissionListParams struct {
 	// Identifier.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// The sorting direction.
+	Direction param.Field[SubmissionListParamsDirection] `query:"direction"`
 	// The end of the search date range. Defaults to `now`.
 	End param.Field[time.Time] `query:"end" format:"date-time"`
 	// When true, return only submissions that were escalated by an end user (vs. by
 	// the security team). When false, return only submissions that were not escalated
 	// by an end user. When omitted, no filter is applied.
-	EscalatedFromUser   param.Field[bool]                                    `query:"escalated_from_user"`
+	EscalatedFromUser param.Field[bool] `query:"escalated_from_user"`
+	// Field to sort by.
+	Order param.Field[SubmissionListParamsOrder] `query:"order"`
+	// The disposition a message is submitted to have.
 	OriginalDisposition param.Field[SubmissionListParamsOriginalDisposition] `query:"original_disposition"`
-	OutcomeDisposition  param.Field[SubmissionListParamsOutcomeDisposition]  `query:"outcome_disposition"`
+	// The disposition a message is submitted to have.
+	OutcomeDisposition param.Field[SubmissionListParamsOutcomeDisposition] `query:"outcome_disposition"`
 	// Current page within paginated list of results.
 	Page param.Field[int64] `query:"page"`
 	// The number of results per page. Maximum value is 1000.
-	PerPage              param.Field[int64]                                    `query:"per_page"`
-	Query                param.Field[string]                                   `query:"query"`
+	PerPage param.Field[int64] `query:"per_page"`
+	// Search term for filtering submissions.
+	Query param.Field[string] `query:"query"`
+	// The disposition a message is submitted to have.
 	RequestedDisposition param.Field[SubmissionListParamsRequestedDisposition] `query:"requested_disposition"`
 	// The beginning of the search date range. Defaults to `now - 30 days`.
-	Start        param.Field[time.Time]                `query:"start" format:"date-time"`
-	Status       param.Field[string]                   `query:"status"`
-	SubmissionID param.Field[string]                   `query:"submission_id"`
-	Type         param.Field[SubmissionListParamsType] `query:"type"`
+	Start param.Field[time.Time] `query:"start" format:"date-time"`
+	// Filter by review status — `escalated`, `reviewed`, or `unreviewed`.
+	Status param.Field[string] `query:"status"`
+	// Filter by a specific submission ID.
+	SubmissionID param.Field[string] `query:"submission_id"`
+	// Filter by who created the submission — `TEAM` for security team members or
+	// `USER` for end users.
+	Type param.Field[SubmissionListParamsType] `query:"type"`
 }
 
 // URLQuery serializes [SubmissionListParams]'s query parameters as `url.Values`.
@@ -270,6 +299,43 @@ func (r SubmissionListParams) URLQuery() (v url.Values) {
 	})
 }
 
+// The sorting direction.
+type SubmissionListParamsDirection string
+
+const (
+	SubmissionListParamsDirectionAsc  SubmissionListParamsDirection = "asc"
+	SubmissionListParamsDirectionDesc SubmissionListParamsDirection = "desc"
+)
+
+func (r SubmissionListParamsDirection) IsKnown() bool {
+	switch r {
+	case SubmissionListParamsDirectionAsc, SubmissionListParamsDirectionDesc:
+		return true
+	}
+	return false
+}
+
+// Field to sort by.
+type SubmissionListParamsOrder string
+
+const (
+	SubmissionListParamsOrderSubmissionID         SubmissionListParamsOrder = "submission_id"
+	SubmissionListParamsOrderSubject              SubmissionListParamsOrder = "subject"
+	SubmissionListParamsOrderOriginalDisposition  SubmissionListParamsOrder = "original_disposition"
+	SubmissionListParamsOrderRequestedDisposition SubmissionListParamsOrder = "requested_disposition"
+	SubmissionListParamsOrderOutcomeDisposition   SubmissionListParamsOrder = "outcome_disposition"
+	SubmissionListParamsOrderRequestedAt          SubmissionListParamsOrder = "requested_at"
+)
+
+func (r SubmissionListParamsOrder) IsKnown() bool {
+	switch r {
+	case SubmissionListParamsOrderSubmissionID, SubmissionListParamsOrderSubject, SubmissionListParamsOrderOriginalDisposition, SubmissionListParamsOrderRequestedDisposition, SubmissionListParamsOrderOutcomeDisposition, SubmissionListParamsOrderRequestedAt:
+		return true
+	}
+	return false
+}
+
+// The disposition a message is submitted to have.
 type SubmissionListParamsOriginalDisposition string
 
 const (
@@ -289,6 +355,7 @@ func (r SubmissionListParamsOriginalDisposition) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListParamsOutcomeDisposition string
 
 const (
@@ -308,6 +375,7 @@ func (r SubmissionListParamsOutcomeDisposition) IsKnown() bool {
 	return false
 }
 
+// The disposition a message is submitted to have.
 type SubmissionListParamsRequestedDisposition string
 
 const (
@@ -327,6 +395,8 @@ func (r SubmissionListParamsRequestedDisposition) IsKnown() bool {
 	return false
 }
 
+// Filter by who created the submission — `TEAM` for security team members or
+// `USER` for end users.
 type SubmissionListParamsType string
 
 const (

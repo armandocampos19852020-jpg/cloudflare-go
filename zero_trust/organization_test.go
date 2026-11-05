@@ -30,10 +30,9 @@ func TestOrganizationNewWithOptionalParams(t *testing.T) {
 		option.WithAPIEmail("user@example.com"),
 	)
 	_, err := client.ZeroTrust.Organizations.New(context.TODO(), zero_trust.OrganizationNewParams{
-		AuthDomain:                             cloudflare.F("test.cloudflareaccess.com"),
-		Name:                                   cloudflare.F("Widget Corps Internal Applications"),
 		AccountID:                              cloudflare.F("account_id"),
 		AllowAuthenticateViaWARP:               cloudflare.F(true),
+		AuthDomain:                             cloudflare.F("test.cloudflareaccess.com"),
 		AutoRedirectToIdentity:                 cloudflare.F(true),
 		DenyUnmatchedRequests:                  cloudflare.F(true),
 		DenyUnmatchedRequestsExemptedZoneNames: cloudflare.F([]string{"example.com"}),
@@ -51,17 +50,25 @@ func TestOrganizationNewWithOptionalParams(t *testing.T) {
 			RequiredAaguids:            cloudflare.F("2fc0579f-8113-47ea-b116-bb5a8db9202a"),
 			SessionDuration:            cloudflare.F("24h"),
 		}),
-		MfaRequiredForAllApps: cloudflare.F(false),
-		MfaSSHPivKeyRequirements: cloudflare.F(zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirements{
-			PinPolicy:         cloudflare.F(zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsPinPolicyAlways),
+		MfaPivKeyRequirements: cloudflare.F(zero_trust.OrganizationNewParamsMfaPivKeyRequirements{
+			PinPolicy:         cloudflare.F(zero_trust.OrganizationNewParamsMfaPivKeyRequirementsPinPolicyAlways),
 			RequireFipsDevice: cloudflare.F(true),
-			SSHKeySize:        cloudflare.F([]zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeySize{zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeySize256, zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeySize2048}),
-			SSHKeyType:        cloudflare.F([]zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeyType{zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeyTypeEcdsa, zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsSSHKeyTypeRSA}),
-			TouchPolicy:       cloudflare.F(zero_trust.OrganizationNewParamsMfaSSHPivKeyRequirementsTouchPolicyAlways),
+			SSHKeySize:        cloudflare.F([]zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeySize{zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeySize256, zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeySize2048}),
+			SSHKeyType:        cloudflare.F([]zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeyType{zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeyTypeEcdsa, zero_trust.OrganizationNewParamsMfaPivKeyRequirementsSSHKeyTypeRSA}),
+			TouchPolicy:       cloudflare.F(zero_trust.OrganizationNewParamsMfaPivKeyRequirementsTouchPolicyAlways),
+		}),
+		MfaRequiredForAllApps: cloudflare.F(false),
+		Name:                  cloudflare.F("Widget Corps Internal Applications"),
+		ServiceTokenInactivity: cloudflare.F(zero_trust.OrganizationNewParamsServiceTokenInactivity{
+			Action:                  cloudflare.F(zero_trust.OrganizationNewParamsServiceTokenInactivityActionDisable),
+			Enabled:                 cloudflare.F(true),
+			InactivityThresholdDays: cloudflare.F(int64(30)),
 		}),
 		SessionDuration:                cloudflare.F("24h"),
+		StrictServiceTokenAuth:         cloudflare.F(true),
 		UIReadOnlyToggleReason:         cloudflare.F("Temporarily turn off the UI read only lock to make a change via the UI"),
 		UserSeatExpirationInactiveTime: cloudflare.F("730h"),
+		WARPAuthNonBrowser401:          cloudflare.F(false),
 		WARPAuthSessionDuration:        cloudflare.F("24h"),
 	})
 	if err != nil {
@@ -113,18 +120,25 @@ func TestOrganizationUpdateWithOptionalParams(t *testing.T) {
 			RequiredAaguids:            cloudflare.F("2fc0579f-8113-47ea-b116-bb5a8db9202a"),
 			SessionDuration:            cloudflare.F("24h"),
 		}),
-		MfaRequiredForAllApps: cloudflare.F(false),
-		MfaSSHPivKeyRequirements: cloudflare.F(zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirements{
-			PinPolicy:         cloudflare.F(zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsPinPolicyAlways),
+		MfaPivKeyRequirements: cloudflare.F(zero_trust.OrganizationUpdateParamsMfaPivKeyRequirements{
+			PinPolicy:         cloudflare.F(zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsPinPolicyAlways),
 			RequireFipsDevice: cloudflare.F(true),
-			SSHKeySize:        cloudflare.F([]zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeySize{zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeySize256, zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeySize2048}),
-			SSHKeyType:        cloudflare.F([]zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeyType{zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeyTypeEcdsa, zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsSSHKeyTypeRSA}),
-			TouchPolicy:       cloudflare.F(zero_trust.OrganizationUpdateParamsMfaSSHPivKeyRequirementsTouchPolicyAlways),
+			SSHKeySize:        cloudflare.F([]zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeySize{zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeySize256, zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeySize2048}),
+			SSHKeyType:        cloudflare.F([]zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeyType{zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeyTypeEcdsa, zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsSSHKeyTypeRSA}),
+			TouchPolicy:       cloudflare.F(zero_trust.OrganizationUpdateParamsMfaPivKeyRequirementsTouchPolicyAlways),
 		}),
-		Name:                           cloudflare.F("Widget Corps Internal Applications"),
+		MfaRequiredForAllApps: cloudflare.F(false),
+		Name:                  cloudflare.F("Widget Corps Internal Applications"),
+		ServiceTokenInactivity: cloudflare.F(zero_trust.OrganizationUpdateParamsServiceTokenInactivity{
+			Action:                  cloudflare.F(zero_trust.OrganizationUpdateParamsServiceTokenInactivityActionDisable),
+			Enabled:                 cloudflare.F(true),
+			InactivityThresholdDays: cloudflare.F(int64(30)),
+		}),
 		SessionDuration:                cloudflare.F("24h"),
+		StrictServiceTokenAuth:         cloudflare.F(true),
 		UIReadOnlyToggleReason:         cloudflare.F("Temporarily turn off the UI read only lock to make a change via the UI"),
 		UserSeatExpirationInactiveTime: cloudflare.F("730h"),
+		WARPAuthNonBrowser401:          cloudflare.F(false),
 		WARPAuthSessionDuration:        cloudflare.F("24h"),
 	})
 	if err != nil {

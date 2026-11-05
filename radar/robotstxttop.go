@@ -144,6 +144,7 @@ type RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                                 `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                               `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                            `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                             `json:"tags"`
 	JSON            robotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -158,6 +159,7 @@ type robotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationJSON struct
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -213,7 +215,6 @@ func (r RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsDataSou
 type RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -223,7 +224,7 @@ const (
 
 func (r RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, RobotsTXTTopDomainCategoriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false

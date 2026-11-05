@@ -217,8 +217,8 @@ type ObservabilityTelemetryQueryResponse struct {
 	// Query performance statistics from the database. Includes execution time, rows
 	// scanned, and bytes read. Does not include network latency.
 	Statistics ObservabilityTelemetryQueryResponseStatistics `json:"statistics" api:"required"`
-	// Durable Object agent summaries. Present when the query view is 'agents'. Each
-	// entry represents an agent with its event counts and status.
+	// Agent run summaries. Present when the query view is 'agents'. Each entry
+	// represents one trace containing at least one agent invocation.
 	Agents []ObservabilityTelemetryQueryResponseAgent `json:"agents"`
 	// Aggregated calculation results. Present when the query view is 'calculations'.
 	// Contains computed metrics (count, avg, p99, etc.) with optional group-by
@@ -227,6 +227,9 @@ type ObservabilityTelemetryQueryResponse struct {
 	// Comparison calculation results from the previous time period. Present when the
 	// compare option is enabled. Same structure as calculations.
 	Compare []ObservabilityTelemetryQueryResponseCompare `json:"compare"`
+	// Bucketed 2D histogram of a numeric field over time. Present when chartType is
+	// 'distribution'.
+	Distribution ObservabilityTelemetryQueryResponseDistribution `json:"distribution"`
 	// Individual event results. Present when the query view is 'events'. Contains the
 	// matching log lines and their metadata.
 	Events ObservabilityTelemetryQueryResponseEvents `json:"events"`
@@ -249,6 +252,7 @@ type observabilityTelemetryQueryResponseJSON struct {
 	Agents       apijson.Field
 	Calculations apijson.Field
 	Compare      apijson.Field
+	Distribution apijson.Field
 	Events       apijson.Field
 	Invocations  apijson.Field
 	Traces       apijson.Field
@@ -281,7 +285,8 @@ type ObservabilityTelemetryQueryResponseRun struct {
 	Query ObservabilityTelemetryQueryResponseRunQuery `json:"query" api:"required"`
 	// Current execution status of the query run.
 	Status ObservabilityTelemetryQueryResponseRunStatus `json:"status" api:"required"`
-	// Time range for the query execution
+	// Time range for the query execution. 'from' must be earlier than 'to'. No
+	// fractional milliseconds.
 	Timeframe ObservabilityTelemetryQueryResponseRunTimeframe `json:"timeframe" api:"required"`
 	// ID of the user who initiated the query run.
 	UserID string `json:"userId" api:"required"`
@@ -326,16 +331,16 @@ func (r observabilityTelemetryQueryResponseRunJSON) RawJSON() string {
 type ObservabilityTelemetryQueryResponseRunQuery struct {
 	ID string `json:"id" api:"required"`
 	// If the query wasn't explcitly saved
-	Adhoc       bool   `json:"adhoc" api:"required"`
-	Created     string `json:"created" api:"required"`
-	CreatedBy   string `json:"createdBy" api:"required"`
-	Description string `json:"description" api:"required,nullable"`
+	Adhoc       bool                                                    `json:"adhoc" api:"required"`
+	Created     ObservabilityTelemetryQueryResponseRunQueryCreatedUnion `json:"created" api:"required" format:"date-time"`
+	CreatedBy   string                                                  `json:"createdBy" api:"required"`
+	Description string                                                  `json:"description" api:"required,nullable"`
 	// Query name
-	Name       string                                                `json:"name" api:"required"`
-	Parameters ObservabilityTelemetryQueryResponseRunQueryParameters `json:"parameters" api:"required"`
-	Updated    string                                                `json:"updated" api:"required"`
-	UpdatedBy  string                                                `json:"updatedBy" api:"required"`
-	JSON       observabilityTelemetryQueryResponseRunQueryJSON       `json:"-"`
+	Name       string                                                  `json:"name" api:"required"`
+	Parameters ObservabilityTelemetryQueryResponseRunQueryParameters   `json:"parameters" api:"required"`
+	Updated    ObservabilityTelemetryQueryResponseRunQueryUpdatedUnion `json:"updated" api:"required" format:"date-time"`
+	UpdatedBy  string                                                  `json:"updatedBy" api:"required"`
+	JSON       observabilityTelemetryQueryResponseRunQueryJSON         `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseRunQueryJSON contains the JSON metadata for
@@ -360,6 +365,26 @@ func (r *ObservabilityTelemetryQueryResponseRunQuery) UnmarshalJSON(data []byte)
 
 func (r observabilityTelemetryQueryResponseRunQueryJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString] or [shared.UnionTime].
+type ObservabilityTelemetryQueryResponseRunQueryCreatedUnion interface {
+	ImplementsObservabilityTelemetryQueryResponseRunQueryCreatedUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilityTelemetryQueryResponseRunQueryCreatedUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionTime(shared.UnionTime{})),
+		},
+	)
 }
 
 type ObservabilityTelemetryQueryResponseRunQueryParameters struct {
@@ -415,6 +440,7 @@ type ObservabilityTelemetryQueryResponseRunQueryParametersCalculation struct {
 	Key      string                                                                    `json:"key"`
 	KeyType  ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsKeyType  `json:"keyType"`
 	JSON     observabilityTelemetryQueryResponseRunQueryParametersCalculationJSON      `json:"-"`
+	union    ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsUnion
 }
 
 // observabilityTelemetryQueryResponseRunQueryParametersCalculationJSON contains
@@ -429,19 +455,302 @@ type observabilityTelemetryQueryResponseRunQueryParametersCalculationJSON struct
 	ExtraFields map[string]apijson.Field
 }
 
+func (r observabilityTelemetryQueryResponseRunQueryParametersCalculationJSON) RawJSON() string {
+	return r.raw
+}
+
 func (r *ObservabilityTelemetryQueryResponseRunQueryParametersCalculation) UnmarshalJSON(data []byte) (err error) {
+	*r = ObservabilityTelemetryQueryResponseRunQueryParametersCalculation{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsUnion]
+// interface which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject],
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject].
+func (r ObservabilityTelemetryQueryResponseRunQueryParametersCalculation) AsUnion() ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsUnion {
+	return r.union
+}
+
+// Union satisfied by
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject] or
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject].
+type ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsUnion interface {
+	implementsObservabilityTelemetryQueryResponseRunQueryParametersCalculation()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsUnion)(nil)).Elem(),
+		"operator",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "count",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "COUNT",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "uniq",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "max",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "min",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "sum",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "avg",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "median",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p001",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p01",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p05",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p10",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p25",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p75",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p90",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p95",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p99",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p999",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "stddev",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "variance",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "COUNT_DISTINCT",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MAX",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MIN",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "SUM",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "AVG",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MEDIAN",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P001",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P01",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P05",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P10",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P25",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P75",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P90",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P95",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P99",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P999",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "STDDEV",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "VARIANCE",
+		},
+	)
+}
+
+type ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject struct {
+	Operator ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperator `json:"operator" api:"required"`
+	Alias    string                                                                          `json:"alias"`
+	Key      string                                                                          `json:"key"`
+	KeyType  ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType  `json:"keyType"`
+	JSON     observabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectJSON     `json:"-"`
+}
+
+// observabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectJSON
+// contains the JSON metadata for the struct
+// [ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject]
+type observabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectJSON struct {
+	Operator    apijson.Field
+	Alias       apijson.Field
+	Key         apijson.Field
+	KeyType     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r observabilityTelemetryQueryResponseRunQueryParametersCalculationJSON) RawJSON() string {
+func (r observabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectJSON) RawJSON() string {
 	return r.raw
+}
+
+func (r ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObject) implementsObservabilityTelemetryQueryResponseRunQueryParametersCalculation() {
+}
+
+type ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperator string
+
+const (
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperatorCount          ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperator = "count"
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperatorCountUppercase ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperator = "COUNT"
+)
+
+func (r ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperator) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperatorCount, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectOperatorCountUppercase:
+		return true
+	}
+	return false
+}
+
+type ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType string
+
+const (
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeString  ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType = "string"
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeNumber  ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType = "number"
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeBoolean ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType = "boolean"
+)
+
+func (r ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyType) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeString, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeNumber, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsObjectKeyTypeBoolean:
+		return true
+	}
+	return false
 }
 
 type ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator string
 
 const (
-	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorUniq              ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "uniq"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCount             ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "count"
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountUppercase    ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "COUNT"
+	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorUniq              ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "uniq"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMax               ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "max"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMin               ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "min"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSum               ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "sum"
@@ -460,7 +769,6 @@ const (
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorStddev            ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "stddev"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorVariance          ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "variance"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountDistinct     ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "COUNT_DISTINCT"
-	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountUppercase    ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "COUNT"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMaxUppercase      ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "MAX"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMinUppercase      ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "MIN"
 	ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSumUppercase      ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator = "SUM"
@@ -482,7 +790,7 @@ const (
 
 func (r ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperator) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorUniq, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCount, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMax, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMin, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSum, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorAvg, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMedian, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP001, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP01, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP05, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP10, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP25, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP75, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP90, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP95, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP99, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP999, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorStddev, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorVariance, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountDistinct, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMaxUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMinUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSumUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorAvgUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMedianUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP001Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP01Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP05Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP10Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP25Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP75Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP90Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP95Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP99Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP999Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorStddevUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorVarianceUppercase:
+	case ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCount, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorUniq, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMax, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMin, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSum, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorAvg, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMedian, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP001, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP01, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP05, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP10, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP25, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP75, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP90, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP95, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP99, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP999, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorStddev, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorVariance, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorCountDistinct, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMaxUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMinUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorSumUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorAvgUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorMedianUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP001Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP01Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP05Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP10Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP25Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP75Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP90Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP95Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP99Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorP999Uppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorStddevUppercase, ObservabilityTelemetryQueryResponseRunQueryParametersCalculationsOperatorVarianceUppercase:
 		return true
 	}
 	return false
@@ -1103,6 +1411,26 @@ func (r ObservabilityTelemetryQueryResponseRunQueryParametersOrderByOrder) IsKno
 	return false
 }
 
+// Union satisfied by [shared.UnionString] or [shared.UnionTime].
+type ObservabilityTelemetryQueryResponseRunQueryUpdatedUnion interface {
+	ImplementsObservabilityTelemetryQueryResponseRunQueryUpdatedUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilityTelemetryQueryResponseRunQueryUpdatedUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionTime(shared.UnionTime{})),
+		},
+	)
+}
+
 // Current execution status of the query run.
 type ObservabilityTelemetryQueryResponseRunStatus string
 
@@ -1119,12 +1447,13 @@ func (r ObservabilityTelemetryQueryResponseRunStatus) IsKnown() bool {
 	return false
 }
 
-// Time range for the query execution
+// Time range for the query execution. 'from' must be earlier than 'to'. No
+// fractional milliseconds.
 type ObservabilityTelemetryQueryResponseRunTimeframe struct {
-	// Start timestamp for the query timeframe (Unix timestamp in milliseconds)
-	From float64 `json:"from" api:"required"`
-	// End timestamp for the query timeframe (Unix timestamp in milliseconds)
-	To   float64                                             `json:"to" api:"required"`
+	// Start timestamp for the query timeframe. Unix timestamp in milliseconds
+	From int64 `json:"from" api:"required"`
+	// End timestamp for the query timeframe. Unix timestamp in milliseconds
+	To   int64                                               `json:"to" api:"required"`
 	JSON observabilityTelemetryQueryResponseRunTimeframeJSON `json:"-"`
 }
 
@@ -1214,37 +1543,62 @@ func (r observabilityTelemetryQueryResponseStatisticsJSON) RawJSON() string {
 }
 
 type ObservabilityTelemetryQueryResponseAgent struct {
-	// Class name of the Durable Object agent.
-	AgentClass string `json:"agentClass" api:"required"`
-	// Breakdown of event counts by event type.
-	EventTypeCounts map[string]float64 `json:"eventTypeCounts" api:"required"`
-	// Timestamp of the earliest event from this agent in the queried window (Unix
-	// epoch ms).
-	FirstEventMs float64 `json:"firstEventMs" api:"required"`
-	// Whether the agent emitted any error events in the queried window.
-	HasErrors bool `json:"hasErrors" api:"required"`
-	// Timestamp of the most recent event from this agent (Unix epoch ms).
-	LastEventMs float64 `json:"lastEventMs" api:"required"`
-	// Durable Object namespace the agent belongs to.
-	Namespace string `json:"namespace" api:"required"`
-	// Worker service name that hosts this agent.
-	Service string `json:"service" api:"required"`
-	// Total number of events emitted by this agent in the queried window.
-	TotalEvents float64                                      `json:"totalEvents" api:"required"`
-	JSON        observabilityTelemetryQueryResponseAgentJSON `json:"-"`
+	// Stable pagination cursor for this agent run.
+	ID string `json:"id" api:"required"`
+	// Distinct errors reported by spans in the run.
+	Errors []string `json:"errors" api:"required"`
+	// Distinct models reported by chat spans across the run's trace.
+	Models []string `json:"models" api:"required"`
+	// Distinct GenAI providers reported by chat spans in the run.
+	Providers []string `json:"providers" api:"required"`
+	// Worker services represented in the run's trace.
+	Services []string `json:"services" api:"required"`
+	// Number of spans in the run's trace.
+	Spans float64 `json:"spans" api:"required"`
+	// Observed run status.
+	Status ObservabilityTelemetryQueryResponseAgentsStatus `json:"status" api:"required"`
+	// Total trace duration in milliseconds.
+	TraceDurationMs float64 `json:"traceDurationMs" api:"required"`
+	// End of the run's trace as a Unix epoch in milliseconds.
+	TraceEndMs float64 `json:"traceEndMs" api:"required"`
+	// Trace identifier for this agent run.
+	TraceID string `json:"traceId" api:"required"`
+	// Start of the run's trace as a Unix epoch in milliseconds.
+	TraceStartMs float64 `json:"traceStartMs" api:"required"`
+	// ID from the earliest agent invocation that provides one.
+	AgentID string `json:"agentId"`
+	// Name from the earliest agent invocation that provides one.
+	AgentName string `json:"agentName"`
+	// Conversation ID from the earliest invocation that provides one.
+	ConversationID string `json:"conversationId"`
+	// Input tokens summed across chat spans in the run's trace; informational, not
+	// billing data.
+	InputTokens float64 `json:"inputTokens"`
+	// Output tokens summed across chat spans in the run's trace; informational, not
+	// billing data.
+	OutputTokens float64                                      `json:"outputTokens"`
+	JSON         observabilityTelemetryQueryResponseAgentJSON `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseAgentJSON contains the JSON metadata for the
 // struct [ObservabilityTelemetryQueryResponseAgent]
 type observabilityTelemetryQueryResponseAgentJSON struct {
-	AgentClass      apijson.Field
-	EventTypeCounts apijson.Field
-	FirstEventMs    apijson.Field
-	HasErrors       apijson.Field
-	LastEventMs     apijson.Field
-	Namespace       apijson.Field
-	Service         apijson.Field
-	TotalEvents     apijson.Field
+	ID              apijson.Field
+	Errors          apijson.Field
+	Models          apijson.Field
+	Providers       apijson.Field
+	Services        apijson.Field
+	Spans           apijson.Field
+	Status          apijson.Field
+	TraceDurationMs apijson.Field
+	TraceEndMs      apijson.Field
+	TraceID         apijson.Field
+	TraceStartMs    apijson.Field
+	AgentID         apijson.Field
+	AgentName       apijson.Field
+	ConversationID  apijson.Field
+	InputTokens     apijson.Field
+	OutputTokens    apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1255,6 +1609,22 @@ func (r *ObservabilityTelemetryQueryResponseAgent) UnmarshalJSON(data []byte) (e
 
 func (r observabilityTelemetryQueryResponseAgentJSON) RawJSON() string {
 	return r.raw
+}
+
+// Observed run status.
+type ObservabilityTelemetryQueryResponseAgentsStatus string
+
+const (
+	ObservabilityTelemetryQueryResponseAgentsStatusCompleted ObservabilityTelemetryQueryResponseAgentsStatus = "completed"
+	ObservabilityTelemetryQueryResponseAgentsStatusError     ObservabilityTelemetryQueryResponseAgentsStatus = "error"
+)
+
+func (r ObservabilityTelemetryQueryResponseAgentsStatus) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryResponseAgentsStatusCompleted, ObservabilityTelemetryQueryResponseAgentsStatusError:
+		return true
+	}
+	return false
 }
 
 type ObservabilityTelemetryQueryResponseCalculation struct {
@@ -1285,12 +1655,26 @@ func (r observabilityTelemetryQueryResponseCalculationJSON) RawJSON() string {
 }
 
 type ObservabilityTelemetryQueryResponseCalculationsAggregate struct {
-	Count          float64                                                          `json:"count" api:"required"`
-	Interval       float64                                                          `json:"interval" api:"required"`
-	SampleInterval float64                                                          `json:"sampleInterval" api:"required"`
-	Value          float64                                                          `json:"value" api:"required"`
-	Groups         []ObservabilityTelemetryQueryResponseCalculationsAggregatesGroup `json:"groups"`
-	JSON           observabilityTelemetryQueryResponseCalculationsAggregateJSON     `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value  float64                                                          `json:"value" api:"required"`
+	Groups []ObservabilityTelemetryQueryResponseCalculationsAggregatesGroup `json:"groups"`
+	JSON   observabilityTelemetryQueryResponseCalculationsAggregateJSON     `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseCalculationsAggregateJSON contains the JSON
@@ -1391,14 +1775,28 @@ func (r observabilityTelemetryQueryResponseCalculationsSeriesJSON) RawJSON() str
 }
 
 type ObservabilityTelemetryQueryResponseCalculationsSeriesData struct {
-	Count          float64                                                          `json:"count" api:"required"`
-	Interval       float64                                                          `json:"interval" api:"required"`
-	SampleInterval float64                                                          `json:"sampleInterval" api:"required"`
-	Value          float64                                                          `json:"value" api:"required"`
-	FirstSeen      string                                                           `json:"firstSeen"`
-	Groups         []ObservabilityTelemetryQueryResponseCalculationsSeriesDataGroup `json:"groups"`
-	LastSeen       string                                                           `json:"lastSeen"`
-	JSON           observabilityTelemetryQueryResponseCalculationsSeriesDataJSON    `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value     float64                                                          `json:"value" api:"required"`
+	FirstSeen string                                                           `json:"firstSeen"`
+	Groups    []ObservabilityTelemetryQueryResponseCalculationsSeriesDataGroup `json:"groups"`
+	LastSeen  string                                                           `json:"lastSeen"`
+	JSON      observabilityTelemetryQueryResponseCalculationsSeriesDataJSON    `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseCalculationsSeriesDataJSON contains the JSON
@@ -1505,12 +1903,26 @@ func (r observabilityTelemetryQueryResponseCompareJSON) RawJSON() string {
 }
 
 type ObservabilityTelemetryQueryResponseCompareAggregate struct {
-	Count          float64                                                     `json:"count" api:"required"`
-	Interval       float64                                                     `json:"interval" api:"required"`
-	SampleInterval float64                                                     `json:"sampleInterval" api:"required"`
-	Value          float64                                                     `json:"value" api:"required"`
-	Groups         []ObservabilityTelemetryQueryResponseCompareAggregatesGroup `json:"groups"`
-	JSON           observabilityTelemetryQueryResponseCompareAggregateJSON     `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value  float64                                                     `json:"value" api:"required"`
+	Groups []ObservabilityTelemetryQueryResponseCompareAggregatesGroup `json:"groups"`
+	JSON   observabilityTelemetryQueryResponseCompareAggregateJSON     `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseCompareAggregateJSON contains the JSON
@@ -1610,14 +2022,28 @@ func (r observabilityTelemetryQueryResponseCompareSeriesJSON) RawJSON() string {
 }
 
 type ObservabilityTelemetryQueryResponseCompareSeriesData struct {
-	Count          float64                                                     `json:"count" api:"required"`
-	Interval       float64                                                     `json:"interval" api:"required"`
-	SampleInterval float64                                                     `json:"sampleInterval" api:"required"`
-	Value          float64                                                     `json:"value" api:"required"`
-	FirstSeen      string                                                      `json:"firstSeen"`
-	Groups         []ObservabilityTelemetryQueryResponseCompareSeriesDataGroup `json:"groups"`
-	LastSeen       string                                                      `json:"lastSeen"`
-	JSON           observabilityTelemetryQueryResponseCompareSeriesDataJSON    `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value     float64                                                     `json:"value" api:"required"`
+	FirstSeen string                                                      `json:"firstSeen"`
+	Groups    []ObservabilityTelemetryQueryResponseCompareSeriesDataGroup `json:"groups"`
+	LastSeen  string                                                      `json:"lastSeen"`
+	JSON      observabilityTelemetryQueryResponseCompareSeriesDataJSON    `json:"-"`
 }
 
 // observabilityTelemetryQueryResponseCompareSeriesDataJSON contains the JSON
@@ -1693,6 +2119,62 @@ func init() {
 			Type:       reflect.TypeOf(shared.UnionBool(false)),
 		},
 	)
+}
+
+// Bucketed 2D histogram of a numeric field over time. Present when chartType is
+// 'distribution'.
+type ObservabilityTelemetryQueryResponseDistribution struct {
+	// Time-bucket labels (ISO-8601 strings), one per matrix column.
+	Bins []string `json:"bins" api:"required"`
+	// Raw bucket edges in the value's native unit, length buckets.length + 1. Used for
+	// the colour scale and percentile mapping.
+	BucketBoundaries []float64 `json:"bucketBoundaries" api:"required"`
+	// Bucketing scheme used to derive the boundaries. 'log' produces geometric edges;
+	// 'linear' produces fixed-width edges.
+	BucketMode ObservabilityTelemetryQueryResponseDistributionBucketMode `json:"bucketMode" api:"required"`
+	// Value-range labels, one per matrix row (e.g. '50–100ms').
+	Buckets []string `json:"buckets" api:"required"`
+	// Sampling-corrected counts. matrix[bucketIdx][binIdx] is the estimated number of
+	// events in value-bucket 'bucketIdx' during time-bin 'binIdx'.
+	Matrix [][]float64                                         `json:"matrix" api:"required"`
+	JSON   observabilityTelemetryQueryResponseDistributionJSON `json:"-"`
+}
+
+// observabilityTelemetryQueryResponseDistributionJSON contains the JSON metadata
+// for the struct [ObservabilityTelemetryQueryResponseDistribution]
+type observabilityTelemetryQueryResponseDistributionJSON struct {
+	Bins             apijson.Field
+	BucketBoundaries apijson.Field
+	BucketMode       apijson.Field
+	Buckets          apijson.Field
+	Matrix           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *ObservabilityTelemetryQueryResponseDistribution) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r observabilityTelemetryQueryResponseDistributionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Bucketing scheme used to derive the boundaries. 'log' produces geometric edges;
+// 'linear' produces fixed-width edges.
+type ObservabilityTelemetryQueryResponseDistributionBucketMode string
+
+const (
+	ObservabilityTelemetryQueryResponseDistributionBucketModeLog    ObservabilityTelemetryQueryResponseDistributionBucketMode = "log"
+	ObservabilityTelemetryQueryResponseDistributionBucketModeLinear ObservabilityTelemetryQueryResponseDistributionBucketMode = "linear"
+)
+
+func (r ObservabilityTelemetryQueryResponseDistributionBucketMode) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryResponseDistributionBucketModeLog, ObservabilityTelemetryQueryResponseDistributionBucketModeLinear:
+		return true
+	}
+	return false
 }
 
 // Individual event results. Present when the query view is 'events'. Contains the
@@ -1789,10 +2271,14 @@ type ObservabilityTelemetryQueryResponseEventsEventsMetadata struct {
 	Duration int64 `json:"duration"`
 	// Span end time as a Unix epoch in milliseconds.
 	EndTime int64 `json:"endTime"`
+	// Span end time as a Unix epoch in nanoseconds.
+	EndTimeNS string `json:"endTimeNs"`
 	// Error message, present when the log represents an error.
 	Error string `json:"error"`
 	// Templatized version of the error message used for grouping similar errors.
 	ErrorTemplate string `json:"errorTemplate"`
+	// Size of the stored telemetry event in bytes.
+	EventSize int64 `json:"eventSize"`
 	// Content-based fingerprint used to group similar events.
 	Fingerprint string `json:"fingerprint"`
 	// Log level (e.g. log, debug, info, warn, error).
@@ -1809,6 +2295,9 @@ type ObservabilityTelemetryQueryResponseEventsEventsMetadata struct {
 	ParentSpanID string `json:"parentSpanId"`
 	// Infrastructure provider identifier.
 	Provider string `json:"provider"`
+	// Cloudflare Ray ID from the `cf-ray` header of the request that triggered the
+	// invocation.
+	RayID string `json:"rayId"`
 	// Cloudflare data center / region that handled the request.
 	Region string `json:"region"`
 	// Cloudflare request ID that ties all logs from a single invocation together.
@@ -1823,8 +2312,12 @@ type ObservabilityTelemetryQueryResponseEventsEventsMetadata struct {
 	StackID string `json:"stackId"`
 	// Span start time as a Unix epoch in milliseconds.
 	StartTime int64 `json:"startTime"`
+	// Span start time as a Unix epoch in nanoseconds.
+	StartTimeNS string `json:"startTimeNs"`
 	// HTTP response status code returned by the Worker.
 	StatusCode int64 `json:"statusCode"`
+	// Event time as a Unix epoch in nanoseconds.
+	TimestampNS string `json:"timestampNs"`
 	// Total duration of the entire trace in milliseconds.
 	TraceDuration int64 `json:"traceDuration"`
 	// Distributed trace ID linking spans across services.
@@ -1851,8 +2344,10 @@ type observabilityTelemetryQueryResponseEventsEventsMetadataJSON struct {
 	Cost            apijson.Field
 	Duration        apijson.Field
 	EndTime         apijson.Field
+	EndTimeNS       apijson.Field
 	Error           apijson.Field
 	ErrorTemplate   apijson.Field
+	EventSize       apijson.Field
 	Fingerprint     apijson.Field
 	Level           apijson.Field
 	Message         apijson.Field
@@ -1861,6 +2356,7 @@ type observabilityTelemetryQueryResponseEventsEventsMetadataJSON struct {
 	Origin          apijson.Field
 	ParentSpanID    apijson.Field
 	Provider        apijson.Field
+	RayID           apijson.Field
 	Region          apijson.Field
 	RequestID       apijson.Field
 	Service         apijson.Field
@@ -1868,7 +2364,9 @@ type observabilityTelemetryQueryResponseEventsEventsMetadataJSON struct {
 	SpanName        apijson.Field
 	StackID         apijson.Field
 	StartTime       apijson.Field
+	StartTimeNS     apijson.Field
 	StatusCode      apijson.Field
+	TimestampNS     apijson.Field
 	TraceDuration   apijson.Field
 	TraceID         apijson.Field
 	TransactionName apijson.Field
@@ -1920,7 +2418,6 @@ func (r ObservabilityTelemetryQueryResponseEventsEventsSourceMap) ImplementsObse
 // debugging issues.
 type ObservabilityTelemetryQueryResponseEventsEventsWorkers struct {
 	EventType  ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType `json:"eventType" api:"required"`
-	RequestID  string                                                          `json:"requestId" api:"required"`
 	ScriptName string                                                          `json:"scriptName" api:"required"`
 	CPUTimeMs  float64                                                         `json:"cpuTimeMs"`
 	// This field can have the runtime type of
@@ -1935,7 +2432,8 @@ type ObservabilityTelemetryQueryResponseEventsEventsWorkers struct {
 	Outcome        string                                                               `json:"outcome"`
 	// This field can have the runtime type of
 	// [ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectPreview].
-	Preview interface{} `json:"preview"`
+	Preview   interface{} `json:"preview"`
+	RequestID string      `json:"requestId"`
 	// This field can have the runtime type of
 	// [ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectScriptVersion].
 	ScriptVersion interface{}                                                `json:"scriptVersion"`
@@ -1951,7 +2449,6 @@ type ObservabilityTelemetryQueryResponseEventsEventsWorkers struct {
 // metadata for the struct [ObservabilityTelemetryQueryResponseEventsEventsWorkers]
 type observabilityTelemetryQueryResponseEventsEventsWorkersJSON struct {
 	EventType                apijson.Field
-	RequestID                apijson.Field
 	ScriptName               apijson.Field
 	CPUTimeMs                apijson.Field
 	DiagnosticsChannelEvents apijson.Field
@@ -1962,6 +2459,7 @@ type observabilityTelemetryQueryResponseEventsEventsWorkersJSON struct {
 	ExecutionModel           apijson.Field
 	Outcome                  apijson.Field
 	Preview                  apijson.Field
+	RequestID                apijson.Field
 	ScriptVersion            apijson.Field
 	SpanID                   apijson.Field
 	TraceID                  apijson.Field
@@ -2021,7 +2519,6 @@ func init() {
 
 type ObservabilityTelemetryQueryResponseEventsEventsWorkersObject struct {
 	EventType       ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType      `json:"eventType" api:"required"`
-	RequestID       string                                                                     `json:"requestId" api:"required"`
 	ScriptName      string                                                                     `json:"scriptName" api:"required"`
 	DurableObjectID string                                                                     `json:"durableObjectId"`
 	Entrypoint      string                                                                     `json:"entrypoint"`
@@ -2029,6 +2526,7 @@ type ObservabilityTelemetryQueryResponseEventsEventsWorkersObject struct {
 	ExecutionModel  ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectExecutionModel `json:"executionModel"`
 	Outcome         string                                                                     `json:"outcome"`
 	Preview         ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectPreview        `json:"preview"`
+	RequestID       string                                                                     `json:"requestId"`
 	ScriptVersion   ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectScriptVersion  `json:"scriptVersion"`
 	SpanID          string                                                                     `json:"spanId"`
 	TraceID         string                                                                     `json:"traceId"`
@@ -2041,7 +2539,6 @@ type ObservabilityTelemetryQueryResponseEventsEventsWorkersObject struct {
 // [ObservabilityTelemetryQueryResponseEventsEventsWorkersObject]
 type observabilityTelemetryQueryResponseEventsEventsWorkersObjectJSON struct {
 	EventType       apijson.Field
-	RequestID       apijson.Field
 	ScriptName      apijson.Field
 	DurableObjectID apijson.Field
 	Entrypoint      apijson.Field
@@ -2049,6 +2546,7 @@ type observabilityTelemetryQueryResponseEventsEventsWorkersObjectJSON struct {
 	ExecutionModel  apijson.Field
 	Outcome         apijson.Field
 	Preview         apijson.Field
+	RequestID       apijson.Field
 	ScriptVersion   apijson.Field
 	SpanID          apijson.Field
 	TraceID         apijson.Field
@@ -2079,6 +2577,7 @@ const (
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeEmail     ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "email"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeTail      ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "tail"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeRpc       ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "rpc"
+	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeJsrpc     ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "jsrpc"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWebsocket ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "websocket"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWorkflow  ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "workflow"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeUnknown   ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType = "unknown"
@@ -2086,7 +2585,7 @@ const (
 
 func (r ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventType) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeFetch, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeScheduled, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeAlarm, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeCron, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeQueue, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeEmail, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeTail, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeRpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWebsocket, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWorkflow, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeUnknown:
+	case ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeFetch, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeScheduled, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeAlarm, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeCron, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeQueue, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeEmail, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeTail, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeRpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeJsrpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWebsocket, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeWorkflow, ObservabilityTelemetryQueryResponseEventsEventsWorkersObjectEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2170,6 +2669,7 @@ const (
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeEmail     ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "email"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeTail      ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "tail"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeRpc       ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "rpc"
+	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeJsrpc     ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "jsrpc"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWebsocket ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "websocket"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWorkflow  ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "workflow"
 	ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeUnknown   ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType = "unknown"
@@ -2177,7 +2677,7 @@ const (
 
 func (r ObservabilityTelemetryQueryResponseEventsEventsWorkersEventType) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeFetch, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeScheduled, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeAlarm, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeCron, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeQueue, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeEmail, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeTail, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeRpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWebsocket, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWorkflow, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeUnknown:
+	case ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeFetch, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeScheduled, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeAlarm, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeCron, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeQueue, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeEmail, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeTail, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeRpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeJsrpc, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWebsocket, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeWorkflow, ObservabilityTelemetryQueryResponseEventsEventsWorkersEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2247,11 +2747,23 @@ func (r observabilityTelemetryQueryResponseEventsSeriesJSON) RawJSON() string {
 }
 
 type ObservabilityTelemetryQueryResponseEventsSeriesData struct {
-	Aggregates     ObservabilityTelemetryQueryResponseEventsSeriesDataAggregates `json:"aggregates" api:"required"`
-	Count          float64                                                       `json:"count" api:"required"`
-	Interval       float64                                                       `json:"interval" api:"required"`
-	SampleInterval float64                                                       `json:"sampleInterval" api:"required"`
-	Errors         float64                                                       `json:"errors"`
+	Aggregates ObservabilityTelemetryQueryResponseEventsSeriesDataAggregates `json:"aggregates" api:"required"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	Errors         float64 `json:"errors"`
 	// Groups in the query results.
 	Groups map[string]ObservabilityTelemetryQueryResponseEventsSeriesDataGroupsUnion `json:"groups"`
 	JSON   observabilityTelemetryQueryResponseEventsSeriesDataJSON                   `json:"-"`
@@ -2401,10 +2913,14 @@ type ObservabilityTelemetryQueryResponseInvocationsMetadata struct {
 	Duration int64 `json:"duration"`
 	// Span end time as a Unix epoch in milliseconds.
 	EndTime int64 `json:"endTime"`
+	// Span end time as a Unix epoch in nanoseconds.
+	EndTimeNS string `json:"endTimeNs"`
 	// Error message, present when the log represents an error.
 	Error string `json:"error"`
 	// Templatized version of the error message used for grouping similar errors.
 	ErrorTemplate string `json:"errorTemplate"`
+	// Size of the stored telemetry event in bytes.
+	EventSize int64 `json:"eventSize"`
 	// Content-based fingerprint used to group similar events.
 	Fingerprint string `json:"fingerprint"`
 	// Log level (e.g. log, debug, info, warn, error).
@@ -2421,6 +2937,9 @@ type ObservabilityTelemetryQueryResponseInvocationsMetadata struct {
 	ParentSpanID string `json:"parentSpanId"`
 	// Infrastructure provider identifier.
 	Provider string `json:"provider"`
+	// Cloudflare Ray ID from the `cf-ray` header of the request that triggered the
+	// invocation.
+	RayID string `json:"rayId"`
 	// Cloudflare data center / region that handled the request.
 	Region string `json:"region"`
 	// Cloudflare request ID that ties all logs from a single invocation together.
@@ -2435,8 +2954,12 @@ type ObservabilityTelemetryQueryResponseInvocationsMetadata struct {
 	StackID string `json:"stackId"`
 	// Span start time as a Unix epoch in milliseconds.
 	StartTime int64 `json:"startTime"`
+	// Span start time as a Unix epoch in nanoseconds.
+	StartTimeNS string `json:"startTimeNs"`
 	// HTTP response status code returned by the Worker.
 	StatusCode int64 `json:"statusCode"`
+	// Event time as a Unix epoch in nanoseconds.
+	TimestampNS string `json:"timestampNs"`
 	// Total duration of the entire trace in milliseconds.
 	TraceDuration int64 `json:"traceDuration"`
 	// Distributed trace ID linking spans across services.
@@ -2462,8 +2985,10 @@ type observabilityTelemetryQueryResponseInvocationsMetadataJSON struct {
 	Cost            apijson.Field
 	Duration        apijson.Field
 	EndTime         apijson.Field
+	EndTimeNS       apijson.Field
 	Error           apijson.Field
 	ErrorTemplate   apijson.Field
+	EventSize       apijson.Field
 	Fingerprint     apijson.Field
 	Level           apijson.Field
 	Message         apijson.Field
@@ -2472,6 +2997,7 @@ type observabilityTelemetryQueryResponseInvocationsMetadataJSON struct {
 	Origin          apijson.Field
 	ParentSpanID    apijson.Field
 	Provider        apijson.Field
+	RayID           apijson.Field
 	Region          apijson.Field
 	RequestID       apijson.Field
 	Service         apijson.Field
@@ -2479,7 +3005,9 @@ type observabilityTelemetryQueryResponseInvocationsMetadataJSON struct {
 	SpanName        apijson.Field
 	StackID         apijson.Field
 	StartTime       apijson.Field
+	StartTimeNS     apijson.Field
 	StatusCode      apijson.Field
+	TimestampNS     apijson.Field
 	TraceDuration   apijson.Field
 	TraceID         apijson.Field
 	TransactionName apijson.Field
@@ -2531,7 +3059,6 @@ func (r ObservabilityTelemetryQueryResponseInvocationsSourceMap) ImplementsObser
 // debugging issues.
 type ObservabilityTelemetryQueryResponseInvocationsWorkers struct {
 	EventType  ObservabilityTelemetryQueryResponseInvocationsWorkersEventType `json:"eventType" api:"required"`
-	RequestID  string                                                         `json:"requestId" api:"required"`
 	ScriptName string                                                         `json:"scriptName" api:"required"`
 	CPUTimeMs  float64                                                        `json:"cpuTimeMs"`
 	// This field can have the runtime type of
@@ -2546,7 +3073,8 @@ type ObservabilityTelemetryQueryResponseInvocationsWorkers struct {
 	Outcome        string                                                              `json:"outcome"`
 	// This field can have the runtime type of
 	// [ObservabilityTelemetryQueryResponseInvocationsWorkersObjectPreview].
-	Preview interface{} `json:"preview"`
+	Preview   interface{} `json:"preview"`
+	RequestID string      `json:"requestId"`
 	// This field can have the runtime type of
 	// [ObservabilityTelemetryQueryResponseInvocationsWorkersObjectScriptVersion].
 	ScriptVersion interface{}                                               `json:"scriptVersion"`
@@ -2562,7 +3090,6 @@ type ObservabilityTelemetryQueryResponseInvocationsWorkers struct {
 // metadata for the struct [ObservabilityTelemetryQueryResponseInvocationsWorkers]
 type observabilityTelemetryQueryResponseInvocationsWorkersJSON struct {
 	EventType                apijson.Field
-	RequestID                apijson.Field
 	ScriptName               apijson.Field
 	CPUTimeMs                apijson.Field
 	DiagnosticsChannelEvents apijson.Field
@@ -2573,6 +3100,7 @@ type observabilityTelemetryQueryResponseInvocationsWorkersJSON struct {
 	ExecutionModel           apijson.Field
 	Outcome                  apijson.Field
 	Preview                  apijson.Field
+	RequestID                apijson.Field
 	ScriptVersion            apijson.Field
 	SpanID                   apijson.Field
 	TraceID                  apijson.Field
@@ -2631,7 +3159,6 @@ func init() {
 
 type ObservabilityTelemetryQueryResponseInvocationsWorkersObject struct {
 	EventType       ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType      `json:"eventType" api:"required"`
-	RequestID       string                                                                    `json:"requestId" api:"required"`
 	ScriptName      string                                                                    `json:"scriptName" api:"required"`
 	DurableObjectID string                                                                    `json:"durableObjectId"`
 	Entrypoint      string                                                                    `json:"entrypoint"`
@@ -2639,6 +3166,7 @@ type ObservabilityTelemetryQueryResponseInvocationsWorkersObject struct {
 	ExecutionModel  ObservabilityTelemetryQueryResponseInvocationsWorkersObjectExecutionModel `json:"executionModel"`
 	Outcome         string                                                                    `json:"outcome"`
 	Preview         ObservabilityTelemetryQueryResponseInvocationsWorkersObjectPreview        `json:"preview"`
+	RequestID       string                                                                    `json:"requestId"`
 	ScriptVersion   ObservabilityTelemetryQueryResponseInvocationsWorkersObjectScriptVersion  `json:"scriptVersion"`
 	SpanID          string                                                                    `json:"spanId"`
 	TraceID         string                                                                    `json:"traceId"`
@@ -2651,7 +3179,6 @@ type ObservabilityTelemetryQueryResponseInvocationsWorkersObject struct {
 // [ObservabilityTelemetryQueryResponseInvocationsWorkersObject]
 type observabilityTelemetryQueryResponseInvocationsWorkersObjectJSON struct {
 	EventType       apijson.Field
-	RequestID       apijson.Field
 	ScriptName      apijson.Field
 	DurableObjectID apijson.Field
 	Entrypoint      apijson.Field
@@ -2659,6 +3186,7 @@ type observabilityTelemetryQueryResponseInvocationsWorkersObjectJSON struct {
 	ExecutionModel  apijson.Field
 	Outcome         apijson.Field
 	Preview         apijson.Field
+	RequestID       apijson.Field
 	ScriptVersion   apijson.Field
 	SpanID          apijson.Field
 	TraceID         apijson.Field
@@ -2689,6 +3217,7 @@ const (
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeEmail     ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "email"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeTail      ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "tail"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeRpc       ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "rpc"
+	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeJsrpc     ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "jsrpc"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWebsocket ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "websocket"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWorkflow  ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "workflow"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeUnknown   ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType = "unknown"
@@ -2696,7 +3225,7 @@ const (
 
 func (r ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventType) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeFetch, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeScheduled, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeAlarm, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeCron, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeQueue, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeEmail, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeTail, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeRpc, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWebsocket, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWorkflow, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeUnknown:
+	case ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeFetch, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeScheduled, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeAlarm, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeCron, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeQueue, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeEmail, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeTail, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeRpc, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeJsrpc, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWebsocket, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeWorkflow, ObservabilityTelemetryQueryResponseInvocationsWorkersObjectEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2780,6 +3309,7 @@ const (
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeEmail     ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "email"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeTail      ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "tail"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeRpc       ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "rpc"
+	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeJsrpc     ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "jsrpc"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWebsocket ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "websocket"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWorkflow  ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "workflow"
 	ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeUnknown   ObservabilityTelemetryQueryResponseInvocationsWorkersEventType = "unknown"
@@ -2787,7 +3317,7 @@ const (
 
 func (r ObservabilityTelemetryQueryResponseInvocationsWorkersEventType) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeFetch, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeScheduled, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeAlarm, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeCron, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeQueue, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeEmail, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeTail, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeRpc, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWebsocket, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWorkflow, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeUnknown:
+	case ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeFetch, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeScheduled, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeAlarm, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeCron, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeQueue, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeEmail, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeTail, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeRpc, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeJsrpc, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWebsocket, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeWorkflow, ObservabilityTelemetryQueryResponseInvocationsWorkersEventTypeUnknown:
 		return true
 	}
 	return false
@@ -4421,14 +4951,27 @@ type ObservabilityTelemetryQueryParams struct {
 	// previously saved query's parameters. When providing parameters inline, pass any
 	// identifier (e.g. an ad-hoc ID).
 	QueryID param.Field[string] `json:"queryId" api:"required"`
-	// Timeframe for the query using Unix timestamps in milliseconds. Narrower
-	// timeframes produce faster responses and more specific results.
+	// Timeframe for the query using Unix timestamps in milliseconds. 'from' must be
+	// earlier than 'to'. Narrower timeframes produce faster responses and more
+	// specific results.
 	Timeframe param.Field[ObservabilityTelemetryQueryParamsTimeframe] `json:"timeframe" api:"required"`
 	// When true, includes time-series data in the response.
 	Chart param.Field[bool] `json:"chart"`
+	// Controls the SQL shape and response payload for the 'calculations' view. Omitted
+	// or 'timeseries_and_aggregate': current behaviour — both the time-series and
+	// aggregate queries. 'timeseries': time-series only. 'aggregate': aggregate only.
+	// 'distribution': a bucketed 2D histogram (time × value buckets) returned in
+	// 'distribution' instead of 'calculations'. 'distribution' is not compatible with
+	// 'compare' — combining them returns a 400.
+	ChartType param.Field[ObservabilityTelemetryQueryParamsChartType] `json:"chartType"`
 	// When true, includes a comparison dataset from the previous time period of equal
 	// length.
 	Compare param.Field[bool] `json:"compare"`
+	// Value-axis bucketing for chartType 'distribution'. Omitted or 'log': geometric
+	// buckets, best for heavy-tailed latency. 'linear': fixed-width buckets, clearer
+	// for narrow or additive ranges. Ignored for other chartTypes. The response echoes
+	// the scheme used in distribution.bucketMode.
+	DistributionScale param.Field[ObservabilityTelemetryQueryParamsDistributionScale] `json:"distributionScale"`
 	// When true, executes the query without persisting the results. Useful for
 	// validation or previewing.
 	Dry param.Field[bool] `json:"dry"`
@@ -4441,8 +4984,9 @@ type ObservabilityTelemetryQueryParams struct {
 	// Maximum number of events to return when view is 'events'. Also controls the
 	// number of group-by rows when view is 'calculations'.
 	Limit param.Field[float64] `json:"limit"`
-	// Cursor for pagination in event, trace, and invocation views. Pass the
-	// $metadata.id of the last returned item to fetch the next page.
+	// Cursor for pagination in event, trace, invocation, and agent views. Pass the
+	// $metadata.id of the last event, the trace cursor, or AgentRun.id to fetch the
+	// next page.
 	Offset param.Field[string] `json:"offset"`
 	// Numeric offset for paginating grouped/pattern results (top-N lists). Use
 	// together with limit. Not used by cursor-based pagination.
@@ -4457,7 +5001,7 @@ type ObservabilityTelemetryQueryParams struct {
 	// Controls the shape of the response. 'events': individual log lines matching the
 	// query. 'calculations': aggregated metrics (count, avg, p99, etc.) with optional
 	// group-by breakdowns and time-series. 'invocations': events grouped by request
-	// ID. 'traces': distributed trace summaries. 'agents': Durable Object agent
+	// ID. 'traces': distributed trace summaries. 'agents': agent-specific trace
 	// summaries.
 	View param.Field[ObservabilityTelemetryQueryParamsView] `json:"view"`
 }
@@ -4466,17 +5010,60 @@ func (r ObservabilityTelemetryQueryParams) MarshalJSON() (data []byte, err error
 	return apijson.MarshalRoot(r)
 }
 
-// Timeframe for the query using Unix timestamps in milliseconds. Narrower
-// timeframes produce faster responses and more specific results.
+// Timeframe for the query using Unix timestamps in milliseconds. 'from' must be
+// earlier than 'to'. Narrower timeframes produce faster responses and more
+// specific results.
 type ObservabilityTelemetryQueryParamsTimeframe struct {
-	// Start timestamp for the query timeframe (Unix timestamp in milliseconds)
-	From param.Field[float64] `json:"from" api:"required"`
-	// End timestamp for the query timeframe (Unix timestamp in milliseconds)
-	To param.Field[float64] `json:"to" api:"required"`
+	// Start timestamp for the query timeframe. Unix timestamp in milliseconds
+	From param.Field[int64] `json:"from" api:"required"`
+	// End timestamp for the query timeframe. Unix timestamp in milliseconds
+	To param.Field[int64] `json:"to" api:"required"`
 }
 
 func (r ObservabilityTelemetryQueryParamsTimeframe) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Controls the SQL shape and response payload for the 'calculations' view. Omitted
+// or 'timeseries_and_aggregate': current behaviour — both the time-series and
+// aggregate queries. 'timeseries': time-series only. 'aggregate': aggregate only.
+// 'distribution': a bucketed 2D histogram (time × value buckets) returned in
+// 'distribution' instead of 'calculations'. 'distribution' is not compatible with
+// 'compare' — combining them returns a 400.
+type ObservabilityTelemetryQueryParamsChartType string
+
+const (
+	ObservabilityTelemetryQueryParamsChartTypeTimeseriesAndAggregate ObservabilityTelemetryQueryParamsChartType = "timeseries_and_aggregate"
+	ObservabilityTelemetryQueryParamsChartTypeTimeseries             ObservabilityTelemetryQueryParamsChartType = "timeseries"
+	ObservabilityTelemetryQueryParamsChartTypeAggregate              ObservabilityTelemetryQueryParamsChartType = "aggregate"
+	ObservabilityTelemetryQueryParamsChartTypeDistribution           ObservabilityTelemetryQueryParamsChartType = "distribution"
+)
+
+func (r ObservabilityTelemetryQueryParamsChartType) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryParamsChartTypeTimeseriesAndAggregate, ObservabilityTelemetryQueryParamsChartTypeTimeseries, ObservabilityTelemetryQueryParamsChartTypeAggregate, ObservabilityTelemetryQueryParamsChartTypeDistribution:
+		return true
+	}
+	return false
+}
+
+// Value-axis bucketing for chartType 'distribution'. Omitted or 'log': geometric
+// buckets, best for heavy-tailed latency. 'linear': fixed-width buckets, clearer
+// for narrow or additive ranges. Ignored for other chartTypes. The response echoes
+// the scheme used in distribution.bucketMode.
+type ObservabilityTelemetryQueryParamsDistributionScale string
+
+const (
+	ObservabilityTelemetryQueryParamsDistributionScaleLog    ObservabilityTelemetryQueryParamsDistributionScale = "log"
+	ObservabilityTelemetryQueryParamsDistributionScaleLinear ObservabilityTelemetryQueryParamsDistributionScale = "linear"
+)
+
+func (r ObservabilityTelemetryQueryParamsDistributionScale) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryParamsDistributionScaleLog, ObservabilityTelemetryQueryParamsDistributionScaleLinear:
+		return true
+	}
+	return false
 }
 
 // Query parameters defining what data to retrieve — filters, calculations,
@@ -4486,7 +5073,7 @@ func (r ObservabilityTelemetryQueryParamsTimeframe) MarshalJSON() (data []byte, 
 type ObservabilityTelemetryQueryParamsParameters struct {
 	// Aggregation calculations to compute (e.g. count, avg, p99). Each calculation
 	// produces aggregate values and optional time-series data.
-	Calculations param.Field[[]ObservabilityTelemetryQueryParamsParametersCalculation] `json:"calculations"`
+	Calculations param.Field[[]ObservabilityTelemetryQueryParamsParametersCalculationUnion] `json:"calculations"`
 	// Datasets to query. Leave empty to query all available datasets.
 	Datasets param.Field[[]string] `json:"datasets"`
 	// Logical operator for combining top-level filters: 'and' (all must match) or 'or'
@@ -4524,8 +5111,9 @@ type ObservabilityTelemetryQueryParamsParametersCalculation struct {
 	// Custom label for this calculation in the results. Useful for distinguishing
 	// multiple calculations.
 	Alias param.Field[string] `json:"alias"`
-	// Field name to calculate over. Must exist in the data — verify with the keys
-	// endpoint. Omit for operators that don't require a key (e.g. count).
+	// Field name to calculate over. Must exist in the data. Verify with the keys
+	// endpoint. Required for every operator except `count`, which aggregates whole
+	// rows and may omit it.
 	Key param.Field[string] `json:"key"`
 	// Data type of the key. Required when key is provided to ensure correct
 	// aggregation.
@@ -4536,13 +5124,83 @@ func (r ObservabilityTelemetryQueryParamsParametersCalculation) MarshalJSON() (d
 	return apijson.MarshalRoot(r)
 }
 
+func (r ObservabilityTelemetryQueryParamsParametersCalculation) implementsObservabilityTelemetryQueryParamsParametersCalculationUnion() {
+}
+
+// Satisfied by
+// [workers.ObservabilityTelemetryQueryParamsParametersCalculationsObject],
+// [workers.ObservabilityTelemetryQueryParamsParametersCalculationsObject],
+// [ObservabilityTelemetryQueryParamsParametersCalculation].
+type ObservabilityTelemetryQueryParamsParametersCalculationUnion interface {
+	implementsObservabilityTelemetryQueryParamsParametersCalculationUnion()
+}
+
+type ObservabilityTelemetryQueryParamsParametersCalculationsObject struct {
+	// Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
+	// p95, p99, uniq, stddev, variance.
+	Operator param.Field[ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperator] `json:"operator" api:"required"`
+	// Custom label for this calculation in the results. Useful for distinguishing
+	// multiple calculations.
+	Alias param.Field[string] `json:"alias"`
+	// Field name to calculate over. Must exist in the data. Verify with the keys
+	// endpoint. Required for every operator except `count`, which aggregates whole
+	// rows and may omit it.
+	Key param.Field[string] `json:"key"`
+	// Data type of the key. Required when key is provided to ensure correct
+	// aggregation.
+	KeyType param.Field[ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType] `json:"keyType"`
+}
+
+func (r ObservabilityTelemetryQueryParamsParametersCalculationsObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ObservabilityTelemetryQueryParamsParametersCalculationsObject) implementsObservabilityTelemetryQueryParamsParametersCalculationUnion() {
+}
+
+// Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
+// p95, p99, uniq, stddev, variance.
+type ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperator string
+
+const (
+	ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperatorCount          ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperator = "count"
+	ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperatorCountUppercase ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperator = "COUNT"
+)
+
+func (r ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperator) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperatorCount, ObservabilityTelemetryQueryParamsParametersCalculationsObjectOperatorCountUppercase:
+		return true
+	}
+	return false
+}
+
+// Data type of the key. Required when key is provided to ensure correct
+// aggregation.
+type ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType string
+
+const (
+	ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeString  ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType = "string"
+	ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeNumber  ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType = "number"
+	ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeBoolean ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType = "boolean"
+)
+
+func (r ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyType) IsKnown() bool {
+	switch r {
+	case ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeString, ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeNumber, ObservabilityTelemetryQueryParamsParametersCalculationsObjectKeyTypeBoolean:
+		return true
+	}
+	return false
+}
+
 // Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
 // p95, p99, uniq, stddev, variance.
 type ObservabilityTelemetryQueryParamsParametersCalculationsOperator string
 
 const (
-	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorUniq              ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "uniq"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCount             ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "count"
+	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountUppercase    ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "COUNT"
+	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorUniq              ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "uniq"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMax               ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "max"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMin               ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "min"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSum               ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "sum"
@@ -4561,7 +5219,6 @@ const (
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorStddev            ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "stddev"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorVariance          ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "variance"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountDistinct     ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "COUNT_DISTINCT"
-	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountUppercase    ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "COUNT"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMaxUppercase      ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "MAX"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMinUppercase      ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "MIN"
 	ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSumUppercase      ObservabilityTelemetryQueryParamsParametersCalculationsOperator = "SUM"
@@ -4583,7 +5240,7 @@ const (
 
 func (r ObservabilityTelemetryQueryParamsParametersCalculationsOperator) IsKnown() bool {
 	switch r {
-	case ObservabilityTelemetryQueryParamsParametersCalculationsOperatorUniq, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCount, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMax, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMin, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSum, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorAvg, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMedian, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP001, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP01, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP05, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP10, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP25, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP75, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP90, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP95, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP99, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP999, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorStddev, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorVariance, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountDistinct, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMaxUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMinUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSumUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorAvgUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMedianUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP001Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP01Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP05Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP10Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP25Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP75Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP90Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP95Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP99Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP999Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorStddevUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorVarianceUppercase:
+	case ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCount, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorUniq, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMax, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMin, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSum, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorAvg, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMedian, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP001, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP01, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP05, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP10, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP25, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP75, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP90, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP95, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP99, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP999, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorStddev, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorVariance, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorCountDistinct, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMaxUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMinUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorSumUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorAvgUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorMedianUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP001Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP01Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP05Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP10Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP25Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP75Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP90Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP95Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP99Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorP999Uppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorStddevUppercase, ObservabilityTelemetryQueryParamsParametersCalculationsOperatorVarianceUppercase:
 		return true
 	}
 	return false
@@ -5335,7 +5992,7 @@ func (r ObservabilityTelemetryQueryParamsParametersOrderByOrder) IsKnown() bool 
 // Controls the shape of the response. 'events': individual log lines matching the
 // query. 'calculations': aggregated metrics (count, avg, p99, etc.) with optional
 // group-by breakdowns and time-series. 'invocations': events grouped by request
-// ID. 'traces': distributed trace summaries. 'agents': Durable Object agent
+// ID. 'traces': distributed trace summaries. 'agents': agent-specific trace
 // summaries.
 type ObservabilityTelemetryQueryParamsView string
 

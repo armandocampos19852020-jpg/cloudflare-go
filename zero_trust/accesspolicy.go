@@ -190,6 +190,8 @@ func (r ApprovalGroupParam) MarshalJSON() (data []byte, err error) {
 type AccessPolicyNewResponse struct {
 	// The UUID of the policy
 	ID string `json:"id"`
+	// Identifier.
+	AccountID string `json:"account_id"`
 	// Number of access applications currently using this policy.
 	AppCount int64 `json:"app_count"`
 	// Administrators who can approve a temporary authentication request.
@@ -229,7 +231,7 @@ type AccessPolicyNewResponse struct {
 	// The amount of time that tokens issued for the application will be valid. Must be
 	// in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
 	// m, h.
-	SessionDuration string                      `json:"session_duration"`
+	SessionDuration string                      `json:"session_duration" api:"nullable"`
 	UpdatedAt       time.Time                   `json:"updated_at" format:"date-time"`
 	JSON            accessPolicyNewResponseJSON `json:"-"`
 }
@@ -238,6 +240,7 @@ type AccessPolicyNewResponse struct {
 // [AccessPolicyNewResponse]
 type accessPolicyNewResponseJSON struct {
 	ID                           apijson.Field
+	AccountID                    apijson.Field
 	AppCount                     apijson.Field
 	ApprovalGroups               apijson.Field
 	ApprovalRequired             apijson.Field
@@ -322,11 +325,12 @@ type AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteForma
 
 const (
 	AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -337,11 +341,12 @@ type AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalForma
 
 const (
 	AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyNewResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false
@@ -411,6 +416,8 @@ func (r AccessPolicyNewResponseReusable) IsKnown() bool {
 type AccessPolicyUpdateResponse struct {
 	// The UUID of the policy
 	ID string `json:"id"`
+	// Identifier.
+	AccountID string `json:"account_id"`
 	// Number of access applications currently using this policy.
 	AppCount int64 `json:"app_count"`
 	// Administrators who can approve a temporary authentication request.
@@ -450,7 +457,7 @@ type AccessPolicyUpdateResponse struct {
 	// The amount of time that tokens issued for the application will be valid. Must be
 	// in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
 	// m, h.
-	SessionDuration string                         `json:"session_duration"`
+	SessionDuration string                         `json:"session_duration" api:"nullable"`
 	UpdatedAt       time.Time                      `json:"updated_at" format:"date-time"`
 	JSON            accessPolicyUpdateResponseJSON `json:"-"`
 }
@@ -459,6 +466,7 @@ type AccessPolicyUpdateResponse struct {
 // [AccessPolicyUpdateResponse]
 type accessPolicyUpdateResponseJSON struct {
 	ID                           apijson.Field
+	AccountID                    apijson.Field
 	AppCount                     apijson.Field
 	ApprovalGroups               apijson.Field
 	ApprovalRequired             apijson.Field
@@ -543,11 +551,12 @@ type AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFo
 
 const (
 	AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -558,11 +567,12 @@ type AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFo
 
 const (
 	AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyUpdateResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false
@@ -632,6 +642,8 @@ func (r AccessPolicyUpdateResponseReusable) IsKnown() bool {
 type AccessPolicyListResponse struct {
 	// The UUID of the policy
 	ID string `json:"id"`
+	// Identifier.
+	AccountID string `json:"account_id"`
 	// Number of access applications currently using this policy.
 	AppCount int64 `json:"app_count"`
 	// Administrators who can approve a temporary authentication request.
@@ -671,7 +683,7 @@ type AccessPolicyListResponse struct {
 	// The amount of time that tokens issued for the application will be valid. Must be
 	// in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
 	// m, h.
-	SessionDuration string                       `json:"session_duration"`
+	SessionDuration string                       `json:"session_duration" api:"nullable"`
 	UpdatedAt       time.Time                    `json:"updated_at" format:"date-time"`
 	JSON            accessPolicyListResponseJSON `json:"-"`
 }
@@ -680,6 +692,7 @@ type AccessPolicyListResponse struct {
 // [AccessPolicyListResponse]
 type accessPolicyListResponseJSON struct {
 	ID                           apijson.Field
+	AccountID                    apijson.Field
 	AppCount                     apijson.Field
 	ApprovalGroups               apijson.Field
 	ApprovalRequired             apijson.Field
@@ -764,11 +777,12 @@ type AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteForm
 
 const (
 	AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyListResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -779,11 +793,12 @@ type AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalForm
 
 const (
 	AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyListResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false
@@ -875,6 +890,8 @@ func (r accessPolicyDeleteResponseJSON) RawJSON() string {
 type AccessPolicyGetResponse struct {
 	// The UUID of the policy
 	ID string `json:"id"`
+	// Identifier.
+	AccountID string `json:"account_id"`
 	// Number of access applications currently using this policy.
 	AppCount int64 `json:"app_count"`
 	// Administrators who can approve a temporary authentication request.
@@ -914,7 +931,7 @@ type AccessPolicyGetResponse struct {
 	// The amount of time that tokens issued for the application will be valid. Must be
 	// in the format `300ms` or `2h45m`. Valid time units are: ns, us (or µs), ms, s,
 	// m, h.
-	SessionDuration string                      `json:"session_duration"`
+	SessionDuration string                      `json:"session_duration" api:"nullable"`
 	UpdatedAt       time.Time                   `json:"updated_at" format:"date-time"`
 	JSON            accessPolicyGetResponseJSON `json:"-"`
 }
@@ -923,6 +940,7 @@ type AccessPolicyGetResponse struct {
 // [AccessPolicyGetResponse]
 type accessPolicyGetResponseJSON struct {
 	ID                           apijson.Field
+	AccountID                    apijson.Field
 	AppCount                     apijson.Field
 	ApprovalGroups               apijson.Field
 	ApprovalRequired             apijson.Field
@@ -1007,11 +1025,12 @@ type AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteForma
 
 const (
 	AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -1022,11 +1041,12 @@ type AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalForma
 
 const (
 	AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyGetResponseConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false
@@ -1166,11 +1186,12 @@ type AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat 
 
 const (
 	AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -1181,11 +1202,12 @@ type AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat 
 
 const (
 	AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyNewParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false
@@ -1435,11 +1457,12 @@ type AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteForm
 
 const (
 	AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "text"
+	AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat = "file"
 )
 
 func (r AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText:
+	case AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatText, AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardLocalToRemoteFormatFile:
 		return true
 	}
 	return false
@@ -1450,11 +1473,12 @@ type AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalForm
 
 const (
 	AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "text"
+	AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat = "file"
 )
 
 func (r AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormat) IsKnown() bool {
 	switch r {
-	case AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText:
+	case AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatText, AccessPolicyUpdateParamsConnectionRulesRDPAllowedClipboardRemoteToLocalFormatFile:
 		return true
 	}
 	return false

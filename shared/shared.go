@@ -321,6 +321,9 @@ type CloudflareTunnelConnection struct {
 	// disconnect. This is an optimization to improve latency and reliability of
 	// reconnecting. If `true`, the connection has disconnected but is still being
 	// tracked. If `false`, the connection is actively serving traffic.
+	//
+	// Deprecated: This functionality has been removed. The is_pending_reconnect field
+	// will now always report false.
 	IsPendingReconnect bool `json:"is_pending_reconnect"`
 	// Timestamp of when the connection was established.
 	OpenedAt time.Time `json:"opened_at" format:"date-time"`
@@ -556,16 +559,36 @@ func (r memberPoliciesPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type MemberPoliciesPermissionGroupsMeta struct {
-	Key   string                                 `json:"key"`
-	Value string                                 `json:"value"`
-	JSON  memberPoliciesPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                                 `json:"visibility"`
+	JSON       memberPoliciesPermissionGroupsMetaJSON `json:"-"`
 }
 
 // memberPoliciesPermissionGroupsMetaJSON contains the JSON metadata for the struct
 // [MemberPoliciesPermissionGroupsMeta]
 type memberPoliciesPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -582,8 +605,8 @@ func (r memberPoliciesPermissionGroupsMetaJSON) RawJSON() string {
 type MemberPoliciesResourceGroup struct {
 	// Identifier of the resource group.
 	ID string `json:"id" api:"required"`
-	// The scope associated to the resource group
-	Scope []MemberPoliciesResourceGroupsScope `json:"scope" api:"required"`
+	// A scope is a combination of scope objects which provides additional context.
+	Scope MemberPoliciesResourceGroupsScope `json:"scope" api:"required"`
 	// Attributes associated to the resource group.
 	Meta MemberPoliciesResourceGroupsMeta `json:"meta"`
 	// Name of the resource group.
@@ -1115,6 +1138,9 @@ type Token struct {
 	// Token identifier tag.
 	ID        string         `json:"id"`
 	Condition TokenCondition `json:"condition"`
+	// The email address of the user who created the token at the time of creation.
+	// Only present for Account Owned API Tokens when a creator email was available.
+	CreatorEmailAtCreation string `json:"creator_email_at_creation"`
 	// The expiration time on or after which the JWT MUST NOT be accepted for
 	// processing.
 	ExpiresOn time.Time `json:"expires_on" format:"date-time"`
@@ -1130,6 +1156,13 @@ type Token struct {
 	NotBefore time.Time `json:"not_before" format:"date-time"`
 	// List of access policies assigned to the token.
 	Policies []TokenPolicy `json:"policies"`
+	// The identifier of the service that provisioned the token. For an
+	// OAuth-provisioned token, this is the OAuth client identifier. Present when
+	// `provisioner_type` is present and null when the identifier is unavailable.
+	ProvisionerID string `json:"provisioner_id" api:"nullable"`
+	// The type of service that provisioned the token. Only present for provisioned
+	// Account Owned API Tokens.
+	ProvisionerType string `json:"provisioner_type"`
 	// Status of the token.
 	Status TokenStatus `json:"status"`
 	JSON   tokenJSON   `json:"-"`
@@ -1137,18 +1170,21 @@ type Token struct {
 
 // tokenJSON contains the JSON metadata for the struct [Token]
 type tokenJSON struct {
-	ID          apijson.Field
-	Condition   apijson.Field
-	ExpiresOn   apijson.Field
-	IssuedOn    apijson.Field
-	LastUsedOn  apijson.Field
-	ModifiedOn  apijson.Field
-	Name        apijson.Field
-	NotBefore   apijson.Field
-	Policies    apijson.Field
-	Status      apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID                     apijson.Field
+	Condition              apijson.Field
+	CreatorEmailAtCreation apijson.Field
+	ExpiresOn              apijson.Field
+	IssuedOn               apijson.Field
+	LastUsedOn             apijson.Field
+	ModifiedOn             apijson.Field
+	Name                   apijson.Field
+	NotBefore              apijson.Field
+	Policies               apijson.Field
+	ProvisionerID          apijson.Field
+	ProvisionerType        apijson.Field
+	Status                 apijson.Field
+	raw                    string
+	ExtraFields            map[string]apijson.Field
 }
 
 func (r *Token) UnmarshalJSON(data []byte) (err error) {
@@ -1345,16 +1381,36 @@ func (r tokenPolicyPermissionGroupJSON) RawJSON() string {
 
 // Attributes associated to the permission group.
 type TokenPolicyPermissionGroupsMeta struct {
-	Key   string                              `json:"key"`
-	Value string                              `json:"value"`
-	JSON  tokenPolicyPermissionGroupsMetaJSON `json:"-"`
+	// A category used to group permission groups.
+	Category string `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated string `json:"deprecated"`
+	// Additional information about the permission group.
+	Description string `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable string `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt time.Time `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label string `json:"label"`
+	// The scope associated with the permission group.
+	Scopes string `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility string                              `json:"visibility"`
+	JSON       tokenPolicyPermissionGroupsMetaJSON `json:"-"`
 }
 
 // tokenPolicyPermissionGroupsMetaJSON contains the JSON metadata for the struct
 // [TokenPolicyPermissionGroupsMeta]
 type tokenPolicyPermissionGroupsMetaJSON struct {
-	Key         apijson.Field
-	Value       apijson.Field
+	Category    apijson.Field
+	Deprecated  apijson.Field
+	Description apijson.Field
+	Editable    apijson.Field
+	EolAt       apijson.Field
+	Label       apijson.Field
+	Scopes      apijson.Field
+	Visibility  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -1426,8 +1482,22 @@ func (r TokenPolicyPermissionGroupParam) MarshalJSON() (data []byte, err error) 
 
 // Attributes associated to the permission group.
 type TokenPolicyPermissionGroupsMetaParam struct {
-	Key   param.Field[string] `json:"key"`
-	Value param.Field[string] `json:"value"`
+	// A category used to group permission groups.
+	Category param.Field[string] `json:"category"`
+	// Indicates whether the permission group is deprecated.
+	Deprecated param.Field[string] `json:"deprecated"`
+	// Additional information about the permission group.
+	Description param.Field[string] `json:"description"`
+	// Indicates whether the permission group can be edited.
+	Editable param.Field[string] `json:"editable"`
+	// The planned end-of-life date and time, when provided.
+	EolAt param.Field[time.Time] `json:"eol_at" format:"date-time"`
+	// A label identifying the permission group.
+	Label param.Field[string] `json:"label"`
+	// The scope associated with the permission group.
+	Scopes param.Field[string] `json:"scopes"`
+	// Indicates the permission group's availability or visibility.
+	Visibility param.Field[string] `json:"visibility"`
 }
 
 func (r TokenPolicyPermissionGroupsMetaParam) MarshalJSON() (data []byte, err error) {

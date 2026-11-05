@@ -302,6 +302,7 @@ type DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                       `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                     `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                  `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                   `json:"tags"`
 	JSON            dnsSummaryCacheHitResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -315,6 +316,7 @@ type dnsSummaryCacheHitResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -370,7 +372,6 @@ func (r DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsDataSource) IsKno
 type DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -380,7 +381,7 @@ const (
 
 func (r DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryCacheHitResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -576,6 +577,7 @@ type DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                     `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                   `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                 `json:"tags"`
 	JSON            dnsSummaryDNSSECResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -589,6 +591,7 @@ type dnsSummaryDNSSECResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -644,7 +647,6 @@ func (r DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown
 type DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -654,7 +656,7 @@ const (
 
 func (r DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -856,6 +858,7 @@ type DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            dnsSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -870,6 +873,7 @@ type dnsSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -925,7 +929,6 @@ func (r DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -935,7 +938,7 @@ const (
 
 func (r DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDNSSECAwareResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1131,6 +1134,7 @@ type DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            dnsSummaryDnssece2EResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1145,6 +1149,7 @@ type dnsSummaryDnssece2EResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1200,7 +1205,6 @@ func (r DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1210,7 +1214,7 @@ const (
 
 func (r DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryDnssece2EResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1406,6 +1410,7 @@ type DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            dnsSummaryIPVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1420,6 +1425,7 @@ type dnsSummaryIPVersionResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1475,7 +1481,6 @@ func (r DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1485,7 +1490,7 @@ const (
 
 func (r DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1681,6 +1686,7 @@ type DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                             `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                           `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                        `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                         `json:"tags"`
 	JSON            dnsSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1695,6 +1701,7 @@ type dnsSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1750,7 +1757,6 @@ func (r DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsDataSource)
 type DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1760,7 +1766,7 @@ const (
 
 func (r DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryMatchingAnswerResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1956,6 +1962,7 @@ type DNSSummaryProtocolResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                       `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                     `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                  `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                   `json:"tags"`
 	JSON            dnsSummaryProtocolResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1969,6 +1976,7 @@ type dnsSummaryProtocolResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2024,7 +2032,6 @@ func (r DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsDataSource) IsKno
 type DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2034,7 +2041,7 @@ const (
 
 func (r DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2236,6 +2243,7 @@ type DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            dnsSummaryQueryTypeResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2250,6 +2258,7 @@ type dnsSummaryQueryTypeResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2305,7 +2314,6 @@ func (r DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2315,7 +2323,7 @@ const (
 
 func (r DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryQueryTypeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2486,6 +2494,7 @@ type DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                           `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                         `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                      `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                       `json:"tags"`
 	JSON            dnsSummaryResponseCodeResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2500,6 +2509,7 @@ type dnsSummaryResponseCodeResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2555,7 +2565,6 @@ func (r DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsDataSource) I
 type DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2565,7 +2574,7 @@ const (
 
 func (r DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryResponseCodeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2736,6 +2745,7 @@ type DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            dnsSummaryResponseTTLResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2750,6 +2760,7 @@ type dnsSummaryResponseTTLResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2805,7 +2816,6 @@ func (r DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2815,7 +2825,7 @@ const (
 
 func (r DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSSummaryResponseTTLResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2942,13 +2952,29 @@ type DNSSummaryCacheHitParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryCacheHitParamsFormat] `query:"format"`
@@ -2966,7 +2992,10 @@ type DNSSummaryCacheHitParams struct {
 	QueryType param.Field[[]DNSSummaryCacheHitParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryCacheHitParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -3178,13 +3207,29 @@ type DNSSummaryDNSSECParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryDNSSECParamsFormat] `query:"format"`
@@ -3202,7 +3247,10 @@ type DNSSummaryDNSSECParams struct {
 	QueryType param.Field[[]DNSSummaryDNSSECParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryDNSSECParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -3413,13 +3461,29 @@ type DNSSummaryDNSSECAwareParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryDNSSECAwareParamsFormat] `query:"format"`
@@ -3437,7 +3501,10 @@ type DNSSummaryDNSSECAwareParams struct {
 	QueryType param.Field[[]DNSSummaryDNSSECAwareParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryDNSSECAwareParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -3649,13 +3716,29 @@ type DNSSummaryDNSSECE2EParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryDnssece2EParamsFormat] `query:"format"`
@@ -3673,7 +3756,10 @@ type DNSSummaryDNSSECE2EParams struct {
 	QueryType param.Field[[]DNSSummaryDnssece2EParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryDnssece2EParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -3885,13 +3971,29 @@ type DNSSummaryIPVersionParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryIPVersionParamsFormat] `query:"format"`
@@ -3909,7 +4011,10 @@ type DNSSummaryIPVersionParams struct {
 	QueryType param.Field[[]DNSSummaryIPVersionParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryIPVersionParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -4121,13 +4226,29 @@ type DNSSummaryMatchingAnswerParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryMatchingAnswerParamsFormat] `query:"format"`
@@ -4145,7 +4266,10 @@ type DNSSummaryMatchingAnswerParams struct {
 	QueryType param.Field[[]DNSSummaryMatchingAnswerParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryMatchingAnswerParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -4357,13 +4481,29 @@ type DNSSummaryProtocolParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryProtocolParamsFormat] `query:"format"`
@@ -4379,7 +4519,10 @@ type DNSSummaryProtocolParams struct {
 	QueryType param.Field[[]DNSSummaryProtocolParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryProtocolParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -4574,19 +4717,36 @@ type DNSSummaryQueryTypeParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryQueryTypeParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -4600,7 +4760,10 @@ type DNSSummaryQueryTypeParams struct {
 	Protocol param.Field[[]DNSSummaryQueryTypeParamsProtocol] `query:"protocol"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryQueryTypeParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -4711,19 +4874,36 @@ type DNSSummaryResponseCodeParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryResponseCodeParamsFormat] `query:"format"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -4737,7 +4917,10 @@ type DNSSummaryResponseCodeParams struct {
 	Protocol param.Field[[]DNSSummaryResponseCodeParamsProtocol] `query:"protocol"`
 	// Filters results by DNS query type.
 	QueryType param.Field[[]DNSSummaryResponseCodeParamsQueryType] `query:"queryType"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 
@@ -4917,13 +5100,29 @@ type DNSSummaryResponseTTLParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[DNSSummaryResponseTTLParamsFormat] `query:"format"`
@@ -4941,7 +5140,10 @@ type DNSSummaryResponseTTLParams struct {
 	QueryType param.Field[[]DNSSummaryResponseTTLParamsQueryType] `query:"queryType"`
 	// Filters results by DNS response code.
 	ResponseCode param.Field[[]DNSSummaryResponseTTLParamsResponseCode] `query:"responseCode"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 

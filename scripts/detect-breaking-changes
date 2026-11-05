@@ -14,16 +14,32 @@ TEST_PATHS=(
 	accounts/member_test.go
 	accounts/role_test.go
 	accounts/subscription_test.go
+	accounts/subscriptioncancelreason_test.go
+	accounts/subscriptionaction_test.go
+	accounts/subscriptionbulk_test.go
 	accounts/token_test.go
 	accounts/tokenpermissiongroup_test.go
 	accounts/tokenvalue_test.go
 	accounts/logaudit_test.go
+	accounts/entitlement_test.go
+	accounts/speedsettingtransformation_test.go
+	accounts/paymentmethod_test.go
+	accounts/payinvoice_test.go
+	accounts/paybaddebt_test.go
+	accounts/receipt_test.go
+	accounts/invoice_test.go
+	accounts/clientsecret_test.go
 	organizations/organization_test.go
 	organizations/organizationaccount_test.go
 	organizations/organizationprofile_test.go
 	organizations/member_test.go
 	organizations/logaudit_test.go
 	organizations/billingusage_test.go
+	tenants/tenant_test.go
+	tenants/accounttype_test.go
+	tenants/account_test.go
+	tenants/entitlement_test.go
+	tenants/membership_test.go
 	origin_ca_certificates/origincacertificate_test.go
 	ips/ip_test.go
 	memberships/membership_test.go
@@ -33,19 +49,28 @@ TEST_PATHS=(
 	user/billingprofile_test.go
 	user/invite_test.go
 	user/organization_test.go
+	user/spectrumanalyticszonereport_test.go
 	user/subscription_test.go
+	user/tenant_test.go
 	user/token_test.go
 	user/tokenpermissiongroup_test.go
 	user/tokenvalue_test.go
 	zones/zone_test.go
 	zones/activationcheck_test.go
+	zones/observabilitytracingsetting_test.go
+	zones/observabilitytracingrule_test.go
 	zones/setting_test.go
+	zones/transformationsallowedorigin_test.go
+	zones/transformationsc2pa_test.go
+	zones/nel_test.go
 	zones/environment_test.go
 	zones/customnameserver_test.go
 	zones/hold_test.go
 	zones/subscription_test.go
 	zones/plan_test.go
 	zones/rateplan_test.go
+	zones/entitlement_test.go
+	zones/ctalerting_test.go
 	load_balancers/loadbalancer_test.go
 	load_balancers/monitor_test.go
 	load_balancers/monitorpreview_test.go
@@ -68,10 +93,14 @@ TEST_PATHS=(
 	ssl/certificatepack_test.go
 	ssl/certificatepackquota_test.go
 	ssl/recommendation_test.go
+	ssl/autoorigintlskex_test.go
 	ssl/universalsetting_test.go
 	ssl/verification_test.go
 	acm/totaltls_test.go
 	acm/customtruststore_test.go
+	analyticsquery_test.go
+	analyticsquerydatasecuritycontentfinding_test.go
+	analyticsquerydatasecurityfinding_test.go
 	argo/smartrouting_test.go
 	argo/tieredcaching_test.go
 	certificate_authorities/hostnameassociation_test.go
@@ -82,15 +111,21 @@ TEST_PATHS=(
 	custom_hostnames/customhostname_test.go
 	custom_hostnames/fallbackorigin_test.go
 	custom_hostnames/certificatepackcertificate_test.go
+	custom_hostnames/quota_test.go
 	custom_nameservers/customnameserver_test.go
+	tenant_custom_nameservers/tenantcustomnameserver_test.go
 	dns_firewall/dnsfirewall_test.go
 	dns_firewall/analyticsreport_test.go
 	dns_firewall/analyticsreportbytime_test.go
 	dns_firewall/reversedns_test.go
 	dns/dnssec_test.go
+	dns/dnsseczsk_test.go
 	dns/record_test.go
+	dns/usagezone_test.go
+	dns/usageaccount_test.go
 	dns/settingzone_test.go
 	dns/settingaccount_test.go
+	dns/settingaccountnameserverset_test.go
 	dns/settingaccountview_test.go
 	dns/analyticsreport_test.go
 	dns/analyticsreportbytime_test.go
@@ -109,21 +144,29 @@ TEST_PATHS=(
 	email_security/investigatemove_test.go
 	email_security/investigatereclassify_test.go
 	email_security/investigaterelease_test.go
+	email_security/investigatebulk_test.go
+	email_security/investigatebulkcancel_test.go
+	email_security/investigatebulkmessage_test.go
 	email_security/phishguardreport_test.go
 	email_security/settingallowpolicy_test.go
 	email_security/settingblocksender_test.go
+	email_security/settingcontentpolicy_test.go
 	email_security/settingdomain_test.go
 	email_security/settingimpersonationregistry_test.go
 	email_security/settingsendingdomainrestriction_test.go
 	email_security/settingtrusteddomain_test.go
 	email_security/settingurlignorepattern_test.go
 	email_security/submission_test.go
+	email_auth/dmarcreport_test.go
+	email_auth/spfinspect_test.go
 	email_routing/emailrouting_test.go
 	email_routing/dns_test.go
 	email_routing/rule_test.go
 	email_routing/rulecatchall_test.go
+	email_routing/accountrule_test.go
 	email_routing/address_test.go
 	email_sending/emailsending_test.go
+	email_sending/suppression_test.go
 	email_sending/subdomain_test.go
 	email_sending/subdomaindns_test.go
 	filters/filter_test.go
@@ -143,7 +186,13 @@ TEST_PATHS=(
 	logpush/edge_test.go
 	logpush/job_test.go
 	logpush/ownership_test.go
+	logpush/transformer_test.go
+	logpush/transformercontent_test.go
+	logpush/transformerversion_test.go
 	logpush/validate_test.go
+	logs/logexplorerquery_test.go
+	logs/logexplorerdataset_test.go
+	logs/logexplorerdatasetavailable_test.go
 	logs/controlretention_test.go
 	logs/controlcmbconfig_test.go
 	logs/rayid_test.go
@@ -194,6 +243,13 @@ TEST_PATHS=(
 	kv/namespacevalue_test.go
 	durable_objects/namespace_test.go
 	durable_objects/namespaceobject_test.go
+	containers/application_test.go
+	containers/applicationinstance_test.go
+	containers/applicationrollout_test.go
+	containers/applicationversion_test.go
+	containers/image_test.go
+	containers/registry_test.go
+	containers/registrycredential_test.go
 	queues/queue_test.go
 	queues/message_test.go
 	queues/purge_test.go
@@ -232,11 +288,13 @@ TEST_PATHS=(
 	spectrum/analyticseventbytime_test.go
 	spectrum/analyticseventsummary_test.go
 	spectrum/app_test.go
+	spectrum/protocol_test.go
+	addressing/regionalhostname_test.go
+	addressing/regionalhostnameregion_test.go
 	addressing/service_test.go
 	addressing/addressmap_test.go
 	addressing/addressmapaccount_test.go
 	addressing/addressmapip_test.go
-	addressing/addressmapzone_test.go
 	addressing/loadocument_test.go
 	addressing/prefix_test.go
 	addressing/prefixservicebinding_test.go
@@ -246,8 +304,15 @@ TEST_PATHS=(
 	dls/region_test.go
 	dls/regionalserviceprefixbinding_test.go
 	audit_logs/auditlog_test.go
+	billing/billing_test.go
 	billing/profile_test.go
+	billing/profilepaymentmethod_test.go
 	billing/usage_test.go
+	billing/credit_test.go
+	billing/history_test.go
+	billing/baddebt_test.go
+	billing/unpaidinvoice_test.go
+	billing/rateplan_test.go
 	brand_protection/brandprotection_test.go
 	brand_protection/query_test.go
 	brand_protection/match_test.go
@@ -275,10 +340,12 @@ TEST_PATHS=(
 	intel/ip_test.go
 	intel/miscategorization_test.go
 	intel/whois_test.go
+	intel/url_test.go
 	intel/indicatorfeed_test.go
 	intel/indicatorfeedsnapshot_test.go
 	intel/indicatorfeedpermission_test.go
 	intel/sinkhole_test.go
+	intel/sinkholeingress_test.go
 	intel/attacksurfacereportissuetype_test.go
 	intel/attacksurfacereportissue_test.go
 	magic_transit/app_test.go
@@ -286,15 +353,19 @@ TEST_PATHS=(
 	magic_transit/gretunnel_test.go
 	magic_transit/ipsectunnel_test.go
 	magic_transit/route_test.go
+	magic_transit/bgpfilterprofile_test.go
 	magic_transit/site_test.go
 	magic_transit/siteacl_test.go
 	magic_transit/sitelan_test.go
 	magic_transit/sitewan_test.go
 	magic_transit/connector_test.go
+	magic_transit/connectorinterrupt_test.go
 	magic_transit/connectorevent_test.go
 	magic_transit/connectoreventlatest_test.go
 	magic_transit/connectorsnapshot_test.go
 	magic_transit/connectorsnapshotlatest_test.go
+	magic_transit/cf1site_test.go
+	magic_transit/cf1siteramp_test.go
 	magic_transit/pcap_test.go
 	magic_transit/pcapownership_test.go
 	magic_transit/pcapdownload_test.go
@@ -322,6 +393,7 @@ TEST_PATHS=(
 	magic_cloud_networking/onrampaddressspace_test.go
 	magic_cloud_networking/cloudintegration_test.go
 	magic_cloud_networking/resource_test.go
+	monetization/rule_test.go
 	network_interconnects/cni_test.go
 	network_interconnects/interconnect_test.go
 	network_interconnects/setting_test.go
@@ -331,12 +403,21 @@ TEST_PATHS=(
 	pages/project_test.go
 	pages/projectdeployment_test.go
 	pages/projectdeploymenthistorylog_test.go
+	pages/projectdeploymenttail_test.go
 	pages/projectdomain_test.go
+	pages/asset_test.go
 	registrar/registrar_test.go
-	registrar/domain_test.go
 	registrar/registration_test.go
 	registrar/registrationstatus_test.go
 	registrar/updatestatus_test.go
+	registrar/extension_test.go
+	registrar/transferin_test.go
+	registrar/transferinstatus_test.go
+	registrar_sandbox/registrarsandbox_test.go
+	registrar_sandbox/registration_test.go
+	registrar_sandbox/registrationstatus_test.go
+	registrar_sandbox/updatestatus_test.go
+	registrar_sandbox/extension_test.go
 	request_tracers/trace_test.go
 	rules/list_test.go
 	rules/listbulkoperation_test.go
@@ -387,6 +468,12 @@ TEST_PATHS=(
 	r2_data_catalog/namespace_test.go
 	r2_data_catalog/namespacetable_test.go
 	r2_data_catalog/namespacetablemaintenanceconfig_test.go
+	basin_catalog/basincatalog_test.go
+	basin_catalog/maintenanceconfig_test.go
+	basin_catalog/credential_test.go
+	basin_catalog/namespace_test.go
+	basin_catalog/namespacetable_test.go
+	basin_catalog/namespacetablemaintenanceconfig_test.go
 	workers_for_platforms/dispatchnamespace_test.go
 	workers_for_platforms/dispatchnamespacescript_test.go
 	workers_for_platforms/dispatchnamespacescriptassetupload_test.go
@@ -429,6 +516,7 @@ TEST_PATHS=(
 	zero_trust/accessaicontrolmcpportal_test.go
 	zero_trust/accessaicontrolmcpserver_test.go
 	zero_trust/accessgatewayca_test.go
+	zero_trust/accessidpfederationgrant_test.go
 	zero_trust/accesssamlcertificate_test.go
 	zero_trust/accessinfrastructuretarget_test.go
 	zero_trust/accessapplication_test.go
@@ -453,6 +541,19 @@ TEST_PATHS=(
 	zero_trust/accesscustompage_test.go
 	zero_trust/accesstag_test.go
 	zero_trust/accesspolicy_test.go
+	zero_trust/casbapplication_test.go
+	zero_trust/casbapplicationauthmethod_test.go
+	zero_trust/casbintegration_test.go
+	zero_trust/casbposturefinding_test.go
+	zero_trust/casbposturefindinginstance_test.go
+	zero_trust/casbpostureexport_test.go
+	zero_trust/casbposturefindingtype_test.go
+	zero_trust/casbposturefindingtyperemediationtype_test.go
+	zero_trust/casbposturecontent_test.go
+	zero_trust/casbpostureremediationjob_test.go
+	zero_trust/casbposturepolicy_test.go
+	zero_trust/casbposturewebhook_test.go
+	zero_trust/casbposturewebhookjob_test.go
 	zero_trust/dexwarpchangeevent_test.go
 	zero_trust/dexcommand_test.go
 	zero_trust/dexcommanddevice_test.go
@@ -468,6 +569,7 @@ TEST_PATHS=(
 	zero_trust/dextraceroutetestresultnetworkpath_test.go
 	zero_trust/dextraceroutetest_test.go
 	zero_trust/dexrule_test.go
+	zero_trust/dexdeviceisp_test.go
 	zero_trust/tunnel_test.go
 	zero_trust/tunnelcloudflared_test.go
 	zero_trust/tunnelcloudflaredconfiguration_test.go
@@ -480,7 +582,9 @@ TEST_PATHS=(
 	zero_trust/tunnelwarpconnectorconnection_test.go
 	zero_trust/tunnelwarpconnectorconnector_test.go
 	zero_trust/tunnelwarpconnectorfailover_test.go
+	zero_trust/tunnelwarpconnectorconfiguration_test.go
 	zero_trust/connectivitysetting_test.go
+	zero_trust/dlpcustomprompttopic_test.go
 	zero_trust/dlpdataset_test.go
 	zero_trust/dlpdatasetupload_test.go
 	zero_trust/dlpdatasetversion_test.go
@@ -498,6 +602,12 @@ TEST_PATHS=(
 	zero_trust/dlpentrycustom_test.go
 	zero_trust/dlpentrypredefined_test.go
 	zero_trust/dlpentryintegration_test.go
+	zero_trust/dlpsensitivitygroup_test.go
+	zero_trust/dlpsensitivitygrouplevel_test.go
+	zero_trust/dlpsensitivitygrouplevelorder_test.go
+	zero_trust/dlpdatatagcategory_test.go
+	zero_trust/dlpdatatagcategorydatatag_test.go
+	zero_trust/dlpdataclass_test.go
 	zero_trust/gateway_test.go
 	zero_trust/gatewayauditsshsetting_test.go
 	zero_trust/gatewaycategory_test.go
@@ -519,6 +629,7 @@ TEST_PATHS=(
 	zero_trust/networksubnet_test.go
 	zero_trust/networksubnetwarp_test.go
 	zero_trust/networksubnetcloudflaresource_test.go
+	zero_trust/networksubnetinitialresolvedip_test.go
 	zero_trust/networkhostnameroute_test.go
 	zero_trust/riskscoring_test.go
 	zero_trust/riskscoringbehaviour_test.go
@@ -560,6 +671,8 @@ TEST_PATHS=(
 	radar/bgptopase_test.go
 	radar/bgphijackevent_test.go
 	radar/bgproute_test.go
+	radar/bgprouteupstream_test.go
+	radar/bgproutepath_test.go
 	radar/bgpip_test.go
 	radar/bgpiptop_test.go
 	radar/bgprpkiaspa_test.go
@@ -644,7 +757,9 @@ TEST_PATHS=(
 	radar/leakedcredentialtimeseriesgroup_test.go
 	bot_management/botmanagement_test.go
 	fraud/fraud_test.go
+	precursor/precursor_test.go
 	origin_post_quantum_encryption/originpostquantumencryption_test.go
+	origin_tls_compliance_modes/origintlscompliancemode_test.go
 	google_tag_gateway/config_test.go
 	zaraz/zaraz_test.go
 	zaraz/config_test.go
@@ -674,26 +789,60 @@ TEST_PATHS=(
 	realtime_kit/analytics_test.go
 	calls/sfu_test.go
 	calls/turn_test.go
-	cloudforce_one/scanresult_test.go
-	cloudforce_one/scanconfig_test.go
+	moq/relay_test.go
+	moq/relaytoken_test.go
+	managed_defense/vulnerabilitydiscoveryrepository_test.go
+	managed_defense/vulnerabilitydiscoveryscan_test.go
+	managed_defense/vulnerabilitydiscoveryreport_test.go
 	cloudforce_one/binarystorage_test.go
 	cloudforce_one/request_test.go
 	cloudforce_one/requestmessage_test.go
 	cloudforce_one/requestpriority_test.go
 	cloudforce_one/requestasset_test.go
+	cloudforce_one/scanresult_test.go
+	cloudforce_one/scanconfig_test.go
 	cloudforce_one/threatevent_test.go
+	cloudforce_one/threateventaggregate_test.go
+	cloudforce_one/threateventgraphql_test.go
+	cloudforce_one/threateventgraph_test.go
+	cloudforce_one/threateventquery_test.go
+	cloudforce_one/threateventrelationship_test.go
+	cloudforce_one/threateventindicator_test.go
+	cloudforce_one/threateventindicatoraggregate_test.go
+	cloudforce_one/threateventindicatortype_test.go
+	cloudforce_one/threateventindicatorbydataset_test.go
+	cloudforce_one/threateventindicatorbydatasettag_test.go
 	cloudforce_one/threateventattacker_test.go
 	cloudforce_one/threateventcategory_test.go
+	cloudforce_one/threateventcategorycatalog_test.go
 	cloudforce_one/threateventcountry_test.go
 	cloudforce_one/threateventdataset_test.go
-	cloudforce_one/threateventindicatortype_test.go
+	cloudforce_one/threateventdatasetevent_test.go
 	cloudforce_one/threateventraw_test.go
 	cloudforce_one/threateventrelate_test.go
 	cloudforce_one/threateventtag_test.go
+	cloudforce_one/threateventtagcategory_test.go
+	cloudforce_one/threateventtagindicator_test.go
+	cloudforce_one/threateventtagindicatorbydataset_test.go
 	cloudforce_one/threateventeventtag_test.go
 	cloudforce_one/threateventtargetindustry_test.go
+	cloudforce_one/threateventtargetindustrybydataset_test.go
+	cloudforce_one/threateventtargetindustrycatalog_test.go
+	cloudforce_one/threatsignalsearch_test.go
+	cloudforce_one/threatsignalcategory_test.go
+	cloudforce_one/threatsignalfeed_test.go
+	cloudforce_one/threatsignalfeedraw_test.go
+	cloudforce_one/threatsignalfeedskill_test.go
+	cloudforce_one/threatsignalarticle_test.go
+	cloudforce_one/threatsignalarticlecontent_test.go
+	cloudforce_one/threatsignalarticletag_test.go
+	cloudforce_one/threatsignalarticleskilloutput_test.go
+	cloudforce_one/threatsignalindicator_test.go
+	cloudforce_one/threatsignalskill_test.go
+	cloudforce_one/threatsignalskilltagcategory_test.go
 	ai_gateway/aigateway_test.go
 	ai_gateway/evaluationtype_test.go
+	ai_gateway/customprovider_test.go
 	ai_gateway/log_test.go
 	ai_gateway/dataset_test.go
 	ai_gateway/evaluation_test.go
@@ -704,11 +853,17 @@ TEST_PATHS=(
 	ai_gateway/billingtopup_test.go
 	ai_gateway/billingtopupconfig_test.go
 	ai_gateway/billingspendinglimit_test.go
+	flagship/app_test.go
+	flagship/appflag_test.go
+	flagship/appflagchangelog_test.go
+	flagship/appevaluate_test.go
 	iam/permissiongroup_test.go
 	iam/resourcegroup_test.go
 	iam/usergroup_test.go
 	iam/usergroupmember_test.go
 	iam/sso_test.go
+	iam/oauthclient_test.go
+	iam/oauthscope_test.go
 	cloud_connector/rule_test.go
 	botnet_feed/asn_test.go
 	botnet_feed/configasn_test.go
@@ -726,6 +881,7 @@ TEST_PATHS=(
 	resource_tagging/zonetag_test.go
 	resource_tagging/key_test.go
 	resource_tagging/value_test.go
+	resource_tagging/summary_test.go
 	leaked_credential_checks/leakedcredentialcheck_test.go
 	leaked_credential_checks/detection_test.go
 	content_scanning/contentscanning_test.go
@@ -733,7 +889,10 @@ TEST_PATHS=(
 	content_scanning/setting_test.go
 	ai_security/aisecurity_test.go
 	ai_security/customtopic_test.go
+	csam_scanner/csamscanner_test.go
 	abuse_reports/abusereport_test.go
+	abuse_reports/submitted_test.go
+	abuse_reports/submittedemail_test.go
 	abuse_reports/mitigation_test.go
 	ai/ai_test.go
 	ai/finetune_test.go
@@ -744,6 +903,7 @@ TEST_PATHS=(
 	ai/model_test.go
 	ai/modelschema_test.go
 	ai/tomarkdown_test.go
+	ai_audit/robot_test.go
 	ai_search/namespace_test.go
 	ai_search/namespaceinstance_test.go
 	ai_search/namespaceinstancejob_test.go
@@ -766,10 +926,11 @@ TEST_PATHS=(
 	browser_rendering/json_test.go
 	browser_rendering/link_test.go
 	browser_rendering/markdown_test.go
+	browser_rendering/accessibilitytree_test.go
 	browser_rendering/crawl_test.go
 	browser_rendering/devtoolsession_test.go
 	browser_rendering/devtoolbrowser_test.go
-	browser_rendering/devtoolbrowserpage_test.go
+	browser_rendering/devtoolbrowserliveview_test.go
 	browser_rendering/devtoolbrowsertarget_test.go
 	custom_pages/custompage_test.go
 	custom_pages/asset_test.go
@@ -779,12 +940,15 @@ TEST_PATHS=(
 	pipelines/pipeline_test.go
 	pipelines/sink_test.go
 	pipelines/stream_test.go
+	k2/stream_test.go
+	k2/streamsubscription_test.go
 	schema_validation/schema_test.go
 	schema_validation/setting_test.go
 	schema_validation/settingoperation_test.go
 	token_validation/configuration_test.go
 	token_validation/configurationcredential_test.go
 	token_validation/rule_test.go
+	field_extractors/fieldextractor_test.go
 	usage_test.go
 	paginationauto_test.go
 	paginationmanual_test.go

@@ -184,6 +184,7 @@ type AS112TopDNSSECResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                   `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                 `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                              `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                               `json:"tags"`
 	JSON            as112TopDNSSECResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -197,6 +198,7 @@ type as112TopDNSSECResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -252,7 +254,6 @@ func (r AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown()
 type AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -262,7 +263,7 @@ const (
 
 func (r AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopDNSSECResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -459,6 +460,7 @@ type AS112TopEdnsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                 `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                               `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                            `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                             `json:"tags"`
 	JSON            as112TopEdnsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -472,6 +474,7 @@ type as112TopEdnsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -527,7 +530,6 @@ func (r AS112TopEdnsResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() b
 type AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -537,7 +539,7 @@ const (
 
 func (r AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopEdnsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -734,6 +736,7 @@ type AS112TopIPVersionResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                  `json:"tags"`
 	JSON            as112TopIPVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -747,6 +750,7 @@ type as112TopIPVersionResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -802,7 +806,6 @@ func (r AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsDataSource) IsKnow
 type AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -812,7 +815,7 @@ const (
 
 func (r AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1009,6 +1012,7 @@ type AS112TopLocationsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                      `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                    `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                 `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                  `json:"tags"`
 	JSON            as112TopLocationsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1022,6 +1026,7 @@ type as112TopLocationsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1077,7 +1082,6 @@ func (r AS112TopLocationsResponseMetaConfidenceInfoAnnotationsDataSource) IsKnow
 type AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1087,7 +1091,7 @@ const (
 
 func (r AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AS112TopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1195,13 +1199,29 @@ type AS112TopDNSSECParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AS112TopDNSSECParamsFormat] `query:"format"`
@@ -1283,13 +1303,29 @@ type AS112TopEdnsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AS112TopEdnsParamsFormat] `query:"format"`
@@ -1371,13 +1407,29 @@ type AS112TopIPVersionParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AS112TopIPVersionParamsFormat] `query:"format"`
@@ -1460,13 +1512,29 @@ type AS112TopLocationsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AS112TopLocationsParamsFormat] `query:"format"`

@@ -156,6 +156,7 @@ type DNSTopAsesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                               `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                             `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                          `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                           `json:"tags"`
 	JSON            dnsTopAsesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -169,6 +170,7 @@ type dnsTopAsesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -224,7 +226,6 @@ func (r DNSTopAsesResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() boo
 type DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -234,7 +235,7 @@ const (
 
 func (r DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSTopAsesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -431,6 +432,7 @@ type DNSTopLocationsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                    `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                  `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                               `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                `json:"tags"`
 	JSON            dnsTopLocationsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -444,6 +446,7 @@ type dnsTopLocationsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -499,7 +502,6 @@ func (r DNSTopLocationsResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown(
 type DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -509,7 +511,7 @@ const (
 
 func (r DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, DNSTopLocationsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -624,13 +626,29 @@ type DNSTopAsesParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results based on DNSSEC (DNS Security Extensions) support.
 	DNSSEC param.Field[[]DNSTopAsesParamsDNSSEC] `query:"dnssec"`
@@ -638,7 +656,9 @@ type DNSTopAsesParams struct {
 	DNSSECAware param.Field[[]DNSTopAsesParamsDNSSECAware] `query:"dnssecAware"`
 	// Filters results based on DNSSEC-validated answers by end-to-end security status.
 	DNSSECE2E param.Field[[]bool] `query:"dnssecE2e"`
-	// Filters results by domain name.
+	// Filters results by domain name. When set, no other DNS filter may be used — only
+	// date filtering (`dateRange`, or `dateStart`/`dateEnd`) is allowed — and the date
+	// range cannot exceed 31 days.
 	Domain param.Field[[]string] `query:"domain"`
 	// Format in which results will be returned.
 	Format param.Field[DNSTopAsesParamsFormat] `query:"format"`
@@ -942,13 +962,29 @@ type DNSTopLocationsParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results based on DNSSEC (DNS Security Extensions) support.
 	DNSSEC param.Field[[]DNSTopLocationsParamsDNSSEC] `query:"dnssec"`
@@ -956,7 +992,9 @@ type DNSTopLocationsParams struct {
 	DNSSECAware param.Field[[]DNSTopLocationsParamsDNSSECAware] `query:"dnssecAware"`
 	// Filters results based on DNSSEC-validated answers by end-to-end security status.
 	DNSSECE2E param.Field[[]bool] `query:"dnssecE2e"`
-	// Filters results by domain name.
+	// Filters results by domain name. When set, no other DNS filter may be used — only
+	// date filtering (`dateRange`, or `dateStart`/`dateEnd`) is allowed — and the date
+	// range cannot exceed 31 days.
 	Domain param.Field[[]string] `query:"domain"`
 	// Format in which results will be returned.
 	Format param.Field[DNSTopLocationsParamsFormat] `query:"format"`
@@ -982,7 +1020,10 @@ type DNSTopLocationsParams struct {
 	ResponseCode param.Field[[]DNSTopLocationsParamsResponseCode] `query:"responseCode"`
 	// Filters results by DNS response TTL.
 	ResponseTTL param.Field[[]DNSTopLocationsParamsResponseTTL] `query:"responseTtl"`
-	// Filters results by top-level domain.
+	// Filters results by top-level domain. Incompatible with the `ipVersion`,
+	// `protocol`, `dnssecE2e`, `dnssecAware`, `responseTtl`, and `cacheHit`
+	// filters/dimensions; this restriction does not apply to country-code TLDs
+	// (2-letter, e.g. `uk`).
 	TLD param.Field[[]string] `query:"tld"`
 }
 

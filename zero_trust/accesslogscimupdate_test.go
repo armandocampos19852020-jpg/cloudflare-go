@@ -25,6 +25,7 @@ func TestAccessLogSCIMUpdateListWithOptionalParams(t *testing.T) {
 	}
 	client := cloudflare.NewClient(
 		option.WithBaseURL(baseURL),
+		option.WithAPIToken("Sn3lZJTBX6kkg7OdcBUAxOO963GEIyGQqnFTOFYY"),
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
@@ -36,7 +37,7 @@ func TestAccessLogSCIMUpdateListWithOptionalParams(t *testing.T) {
 		IdPResourceID:     cloudflare.F([]string{"all_employees"}),
 		Limit:             cloudflare.F(int64(10)),
 		Page:              cloudflare.F(int64(0)),
-		PerPage:           cloudflare.F(int64(0)),
+		PerPage:           cloudflare.F(int64(1000)),
 		RequestMethod:     cloudflare.F([]zero_trust.AccessLogSCIMUpdateListParamsRequestMethod{zero_trust.AccessLogSCIMUpdateListParamsRequestMethodDelete, zero_trust.AccessLogSCIMUpdateListParamsRequestMethodPatch}),
 		ResourceGroupName: cloudflare.F([]string{"ALL_EMPLOYEES"}),
 		ResourceType:      cloudflare.F([]zero_trust.AccessLogSCIMUpdateListParamsResourceType{zero_trust.AccessLogSCIMUpdateListParamsResourceTypeUser, zero_trust.AccessLogSCIMUpdateListParamsResourceTypeGroup}),

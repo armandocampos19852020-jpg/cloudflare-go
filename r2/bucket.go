@@ -53,11 +53,12 @@ func NewBucketService(opts ...option.RequestOption) (r *BucketService) {
 	return
 }
 
-// Creates a new R2 bucket.
+// Creates an R2 bucket in the account and selected jurisdiction, with an optional
+// location hint and default storage class.
 func (r *BucketService) New(ctx context.Context, params BucketNewParams, opts ...option.RequestOption) (res *Bucket, err error) {
 	var env BucketNewResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -73,11 +74,12 @@ func (r *BucketService) New(ctx context.Context, params BucketNewParams, opts ..
 	return res, nil
 }
 
-// Lists all R2 buckets on your account.
+// Lists a page of R2 buckets in the account and selected jurisdiction. Use the
+// returned cursor to retrieve the next page.
 func (r *BucketService) List(ctx context.Context, params BucketListParams, opts ...option.RequestOption) (res *BucketListResponse, err error) {
 	var env BucketListResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -93,11 +95,13 @@ func (r *BucketService) List(ctx context.Context, params BucketListParams, opts 
 	return res, nil
 }
 
-// Deletes an existing R2 bucket.
+// Deletes an empty R2 bucket and its configuration. The bucket must have no
+// objects, no in-progress multipart uploads, and no event notification rules;
+// otherwise the request fails.
 func (r *BucketService) Delete(ctx context.Context, bucketName string, params BucketDeleteParams, opts ...option.RequestOption) (res *BucketDeleteResponse, err error) {
 	var env BucketDeleteResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -117,14 +121,16 @@ func (r *BucketService) Delete(ctx context.Context, bucketName string, params Bu
 	return res, nil
 }
 
-// Updates properties of an existing R2 bucket.
+// Changes the default storage class for newly uploaded objects in an existing R2
+// bucket. Existing objects retain their storage class, and individual uploads can
+// override the bucket default.
 func (r *BucketService) Edit(ctx context.Context, bucketName string, params BucketEditParams, opts ...option.RequestOption) (res *Bucket, err error) {
 	var env BucketEditResponseEnvelope
 	if params.StorageClass.Present {
 		opts = append(opts, option.WithHeader("cf-r2-storage-class", fmt.Sprintf("%v", params.StorageClass)))
 	}
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -147,8 +153,8 @@ func (r *BucketService) Edit(ctx context.Context, bucketName string, params Buck
 // Gets properties of an existing R2 bucket.
 func (r *BucketService) Get(ctx context.Context, bucketName string, params BucketGetParams, opts ...option.RequestOption) (res *Bucket, err error) {
 	var env BucketGetResponseEnvelope
-	if params.Jurisdiction.Present {
-		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.Jurisdiction)))
+	if params.CfR2Jurisdiction.Present {
+		opts = append(opts, option.WithHeader("cf-r2-jurisdiction", fmt.Sprintf("%v", params.CfR2Jurisdiction)))
 	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
@@ -206,14 +212,16 @@ func (r bucketJSON) RawJSON() string {
 type BucketJurisdiction string
 
 const (
-	BucketJurisdictionDefault BucketJurisdiction = "default"
-	BucketJurisdictionEu      BucketJurisdiction = "eu"
-	BucketJurisdictionFedramp BucketJurisdiction = "fedramp"
+	BucketJurisdictionDefault     BucketJurisdiction = "default"
+	BucketJurisdictionEu          BucketJurisdiction = "eu"
+	BucketJurisdictionUs          BucketJurisdiction = "us"
+	BucketJurisdictionFedramp     BucketJurisdiction = "fedramp"
+	BucketJurisdictionFedrampHigh BucketJurisdiction = "fedramp-high"
 )
 
 func (r BucketJurisdiction) IsKnown() bool {
 	switch r {
-	case BucketJurisdictionDefault, BucketJurisdictionEu, BucketJurisdictionFedramp:
+	case BucketJurisdictionDefault, BucketJurisdictionEu, BucketJurisdictionUs, BucketJurisdictionFedramp, BucketJurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -279,16 +287,15 @@ func (r bucketListResponseJSON) RawJSON() string {
 type BucketDeleteResponse = interface{}
 
 type BucketNewParams struct {
-	// Account ID.
+	// Cloudflare account ID that owns the R2 resource.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Name of the bucket.
 	Name param.Field[string] `json:"name" api:"required"`
 	// Location of the bucket.
 	LocationHint param.Field[BucketNewParamsLocationHint] `json:"locationHint"`
 	// Storage class for newly uploaded objects, unless specified otherwise.
-	StorageClass param.Field[BucketNewParamsStorageClass] `json:"storageClass"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketNewParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	StorageClass     param.Field[BucketNewParamsStorageClass]     `json:"storageClass"`
+	CfR2Jurisdiction param.Field[BucketNewParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 func (r BucketNewParams) MarshalJSON() (data []byte, err error) {
@@ -331,18 +338,19 @@ func (r BucketNewParamsStorageClass) IsKnown() bool {
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketNewParamsCfR2Jurisdiction string
 
 const (
-	BucketNewParamsCfR2JurisdictionDefault BucketNewParamsCfR2Jurisdiction = "default"
-	BucketNewParamsCfR2JurisdictionEu      BucketNewParamsCfR2Jurisdiction = "eu"
-	BucketNewParamsCfR2JurisdictionFedramp BucketNewParamsCfR2Jurisdiction = "fedramp"
+	BucketNewParamsCfR2JurisdictionDefault     BucketNewParamsCfR2Jurisdiction = "default"
+	BucketNewParamsCfR2JurisdictionEu          BucketNewParamsCfR2Jurisdiction = "eu"
+	BucketNewParamsCfR2JurisdictionUs          BucketNewParamsCfR2Jurisdiction = "us"
+	BucketNewParamsCfR2JurisdictionFedramp     BucketNewParamsCfR2Jurisdiction = "fedramp"
+	BucketNewParamsCfR2JurisdictionFedrampHigh BucketNewParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketNewParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketNewParamsCfR2JurisdictionDefault, BucketNewParamsCfR2JurisdictionEu, BucketNewParamsCfR2JurisdictionFedramp:
+	case BucketNewParamsCfR2JurisdictionDefault, BucketNewParamsCfR2JurisdictionEu, BucketNewParamsCfR2JurisdictionUs, BucketNewParamsCfR2JurisdictionFedramp, BucketNewParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -393,7 +401,7 @@ func (r BucketNewResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketListParams struct {
-	// Account ID.
+	// Cloudflare account ID that owns the R2 resource.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Pagination cursor received during the last List Buckets call. R2 buckets are
 	// paginated using cursors instead of page numbers.
@@ -408,9 +416,8 @@ type BucketListParams struct {
 	// Maximum number of buckets to return in a single call.
 	PerPage param.Field[float64] `query:"per_page"`
 	// Bucket name to start searching after. Buckets are ordered lexicographically.
-	StartAfter param.Field[string] `query:"start_after"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketListParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	StartAfter       param.Field[string]                           `query:"start_after"`
+	CfR2Jurisdiction param.Field[BucketListParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 // URLQuery serializes [BucketListParams]'s query parameters as `url.Values`.
@@ -452,18 +459,19 @@ func (r BucketListParamsOrder) IsKnown() bool {
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketListParamsCfR2Jurisdiction string
 
 const (
-	BucketListParamsCfR2JurisdictionDefault BucketListParamsCfR2Jurisdiction = "default"
-	BucketListParamsCfR2JurisdictionEu      BucketListParamsCfR2Jurisdiction = "eu"
-	BucketListParamsCfR2JurisdictionFedramp BucketListParamsCfR2Jurisdiction = "fedramp"
+	BucketListParamsCfR2JurisdictionDefault     BucketListParamsCfR2Jurisdiction = "default"
+	BucketListParamsCfR2JurisdictionEu          BucketListParamsCfR2Jurisdiction = "eu"
+	BucketListParamsCfR2JurisdictionUs          BucketListParamsCfR2Jurisdiction = "us"
+	BucketListParamsCfR2JurisdictionFedramp     BucketListParamsCfR2Jurisdiction = "fedramp"
+	BucketListParamsCfR2JurisdictionFedrampHigh BucketListParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketListParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketListParamsCfR2JurisdictionDefault, BucketListParamsCfR2JurisdictionEu, BucketListParamsCfR2JurisdictionFedramp:
+	case BucketListParamsCfR2JurisdictionDefault, BucketListParamsCfR2JurisdictionEu, BucketListParamsCfR2JurisdictionUs, BucketListParamsCfR2JurisdictionFedramp, BucketListParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -540,24 +548,24 @@ func (r bucketListResponseEnvelopeResultInfoJSON) RawJSON() string {
 }
 
 type BucketDeleteParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                             `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketDeleteParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketDeleteParamsCfR2Jurisdiction string
 
 const (
-	BucketDeleteParamsCfR2JurisdictionDefault BucketDeleteParamsCfR2Jurisdiction = "default"
-	BucketDeleteParamsCfR2JurisdictionEu      BucketDeleteParamsCfR2Jurisdiction = "eu"
-	BucketDeleteParamsCfR2JurisdictionFedramp BucketDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketDeleteParamsCfR2JurisdictionDefault     BucketDeleteParamsCfR2Jurisdiction = "default"
+	BucketDeleteParamsCfR2JurisdictionEu          BucketDeleteParamsCfR2Jurisdiction = "eu"
+	BucketDeleteParamsCfR2JurisdictionUs          BucketDeleteParamsCfR2Jurisdiction = "us"
+	BucketDeleteParamsCfR2JurisdictionFedramp     BucketDeleteParamsCfR2Jurisdiction = "fedramp"
+	BucketDeleteParamsCfR2JurisdictionFedrampHigh BucketDeleteParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketDeleteParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketDeleteParamsCfR2JurisdictionDefault, BucketDeleteParamsCfR2JurisdictionEu, BucketDeleteParamsCfR2JurisdictionFedramp:
+	case BucketDeleteParamsCfR2JurisdictionDefault, BucketDeleteParamsCfR2JurisdictionEu, BucketDeleteParamsCfR2JurisdictionUs, BucketDeleteParamsCfR2JurisdictionFedramp, BucketDeleteParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -607,12 +615,11 @@ func (r BucketDeleteResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketEditParams struct {
-	// Account ID.
+	// Cloudflare account ID that owns the R2 resource.
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Storage class for newly uploaded objects, unless specified otherwise.
-	StorageClass param.Field[BucketEditParamsCfR2StorageClass] `header:"cf-r2-storage-class" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketEditParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	StorageClass     param.Field[BucketEditParamsCfR2StorageClass] `header:"cf-r2-storage-class" api:"required"`
+	CfR2Jurisdiction param.Field[BucketEditParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
 // Storage class for newly uploaded objects, unless specified otherwise.
@@ -631,18 +638,19 @@ func (r BucketEditParamsCfR2StorageClass) IsKnown() bool {
 	return false
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketEditParamsCfR2Jurisdiction string
 
 const (
-	BucketEditParamsCfR2JurisdictionDefault BucketEditParamsCfR2Jurisdiction = "default"
-	BucketEditParamsCfR2JurisdictionEu      BucketEditParamsCfR2Jurisdiction = "eu"
-	BucketEditParamsCfR2JurisdictionFedramp BucketEditParamsCfR2Jurisdiction = "fedramp"
+	BucketEditParamsCfR2JurisdictionDefault     BucketEditParamsCfR2Jurisdiction = "default"
+	BucketEditParamsCfR2JurisdictionEu          BucketEditParamsCfR2Jurisdiction = "eu"
+	BucketEditParamsCfR2JurisdictionUs          BucketEditParamsCfR2Jurisdiction = "us"
+	BucketEditParamsCfR2JurisdictionFedramp     BucketEditParamsCfR2Jurisdiction = "fedramp"
+	BucketEditParamsCfR2JurisdictionFedrampHigh BucketEditParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketEditParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketEditParamsCfR2JurisdictionDefault, BucketEditParamsCfR2JurisdictionEu, BucketEditParamsCfR2JurisdictionFedramp:
+	case BucketEditParamsCfR2JurisdictionDefault, BucketEditParamsCfR2JurisdictionEu, BucketEditParamsCfR2JurisdictionUs, BucketEditParamsCfR2JurisdictionFedramp, BucketEditParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false
@@ -693,24 +701,24 @@ func (r BucketEditResponseEnvelopeSuccess) IsKnown() bool {
 }
 
 type BucketGetParams struct {
-	// Account ID.
-	AccountID param.Field[string] `path:"account_id" api:"required"`
-	// Jurisdiction where objects in this bucket are guaranteed to be stored.
-	Jurisdiction param.Field[BucketGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
+	// Cloudflare account ID that owns the R2 resource.
+	AccountID        param.Field[string]                          `path:"account_id" api:"required"`
+	CfR2Jurisdiction param.Field[BucketGetParamsCfR2Jurisdiction] `header:"cf-r2-jurisdiction"`
 }
 
-// Jurisdiction where objects in this bucket are guaranteed to be stored.
 type BucketGetParamsCfR2Jurisdiction string
 
 const (
-	BucketGetParamsCfR2JurisdictionDefault BucketGetParamsCfR2Jurisdiction = "default"
-	BucketGetParamsCfR2JurisdictionEu      BucketGetParamsCfR2Jurisdiction = "eu"
-	BucketGetParamsCfR2JurisdictionFedramp BucketGetParamsCfR2Jurisdiction = "fedramp"
+	BucketGetParamsCfR2JurisdictionDefault     BucketGetParamsCfR2Jurisdiction = "default"
+	BucketGetParamsCfR2JurisdictionEu          BucketGetParamsCfR2Jurisdiction = "eu"
+	BucketGetParamsCfR2JurisdictionUs          BucketGetParamsCfR2Jurisdiction = "us"
+	BucketGetParamsCfR2JurisdictionFedramp     BucketGetParamsCfR2Jurisdiction = "fedramp"
+	BucketGetParamsCfR2JurisdictionFedrampHigh BucketGetParamsCfR2Jurisdiction = "fedramp-high"
 )
 
 func (r BucketGetParamsCfR2Jurisdiction) IsKnown() bool {
 	switch r {
-	case BucketGetParamsCfR2JurisdictionDefault, BucketGetParamsCfR2JurisdictionEu, BucketGetParamsCfR2JurisdictionFedramp:
+	case BucketGetParamsCfR2JurisdictionDefault, BucketGetParamsCfR2JurisdictionEu, BucketGetParamsCfR2JurisdictionUs, BucketGetParamsCfR2JurisdictionFedramp, BucketGetParamsCfR2JurisdictionFedrampHigh:
 		return true
 	}
 	return false

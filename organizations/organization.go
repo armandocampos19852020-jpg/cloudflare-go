@@ -50,8 +50,11 @@ func NewOrganizationService(opts ...option.RequestOption) (r *OrganizationServic
 	return
 }
 
-// Create a new organization for a user. (Currently in Public Beta - see
-// https://developers.cloudflare.com/fundamentals/organizations/)
+// Create a new organization for a user. Sub-organization creation availability
+// depends on the organization's capabilities.
+//
+// Authentication: Use a Global API key, or a User API Token with the
+// `User Details Write` permission.
 func (r *OrganizationService) New(ctx context.Context, body OrganizationNewParams, opts ...option.RequestOption) (res *Organization, err error) {
 	var env OrganizationNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -64,8 +67,11 @@ func (r *OrganizationService) New(ctx context.Context, body OrganizationNewParam
 	return res, nil
 }
 
-// Modify organization. (Currently in Public Beta - see
-// https://developers.cloudflare.com/fundamentals/organizations/)
+// Update an organization's name.
+//
+// Authentication: A Global API key for a user with
+// `com.cloudflare.api.tenant.unit.update` is required. User API Tokens are not
+// currently supported.
 func (r *OrganizationService) Update(ctx context.Context, organizationID string, body OrganizationUpdateParams, opts ...option.RequestOption) (res *Organization, err error) {
 	var env OrganizationUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -82,8 +88,10 @@ func (r *OrganizationService) Update(ctx context.Context, organizationID string,
 	return res, nil
 }
 
-// Retrieve a list of organizations a particular user has access to. (Currently in
-// Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+// Retrieve a list of organizations a particular user has access to.
+//
+// Authentication: Use a Global API key, or a User API Token with the
+// `User Details Read` or `User Details Write` permission.
 func (r *OrganizationService) List(ctx context.Context, query OrganizationListParams, opts ...option.RequestOption) (res *pagination.SinglePage[Organization], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -101,18 +109,23 @@ func (r *OrganizationService) List(ctx context.Context, query OrganizationListPa
 	return res, nil
 }
 
-// Retrieve a list of organizations a particular user has access to. (Currently in
-// Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+// Retrieve a list of organizations a particular user has access to.
+//
+// Authentication: Use a Global API key, or a User API Token with the
+// `User Details Read` or `User Details Write` permission.
 func (r *OrganizationService) ListAutoPaging(ctx context.Context, query OrganizationListParams, opts ...option.RequestOption) *pagination.SinglePageAutoPager[Organization] {
 	return pagination.NewSinglePageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Delete an organization. The organization MUST be empty before deleting. It must
-// not contain any sub-organizations, accounts, members or users. (Currently in
-// Public Beta - see https://developers.cloudflare.com/fundamentals/organizations/)
+// not contain any sub-organizations, accounts, members or users. Sub-organization
+// deletion availability depends on the organization's capabilities.
 //
-// **Access Control:** Restricted to enterprise organizations. Non-admin callers
-// also require the `account_deletion` tenant flag.
+// **Access Control:** Restricted to enterprise organizations.
+//
+// Authentication: A Global API key for a user with
+// `com.cloudflare.api.tenant.unit.update` is required. User API Tokens are not
+// currently supported.
 func (r *OrganizationService) Delete(ctx context.Context, organizationID string, opts ...option.RequestOption) (res *OrganizationDeleteResponse, err error) {
 	var env OrganizationDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -129,8 +142,11 @@ func (r *OrganizationService) Delete(ctx context.Context, organizationID string,
 	return res, nil
 }
 
-// Retrieve the details of a certain organization. (Currently in Public Beta - see
-// https://developers.cloudflare.com/fundamentals/organizations/)
+// Retrieve the details of a certain organization.
+//
+// Authentication: A Global API key for a user with
+// `com.cloudflare.api.tenant.unit.read` is required. User API Tokens are not
+// currently supported and return HTTP `403` with error code `10000`.
 func (r *OrganizationService) Get(ctx context.Context, organizationID string, opts ...option.RequestOption) (res *Organization, err error) {
 	var env OrganizationGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -179,20 +195,27 @@ func (r organizationJSON) RawJSON() string {
 }
 
 type OrganizationMeta struct {
+	// Ordered chain of organization tags from the root organization down to (and
+	// including) this organization itself. Root organizations return a single-element
+	// array containing their own tag; sub-organizations return
+	// `[rootTag, ...intermediateTags, parentTag, selfTag]`. Useful for constructing
+	// authorization scopes that need to cover every ancestor in the hierarchy.
+	HierarchyTags []string `json:"hierarchy_tags"`
+	ManagedBy     string   `json:"managed_by"`
 	// Enable features for Organizations.
-	Flags       OrganizationMetaFlags  `json:"flags"`
-	ManagedBy   string                 `json:"managed_by"`
-	ExtraFields map[string]interface{} `json:"-" api:"extrafields"`
-	JSON        organizationMetaJSON   `json:"-"`
+	TenantFlags OrganizationMetaTenantFlags `json:"tenant_flags"`
+	ExtraFields map[string]interface{}      `json:"-" api:"extrafields"`
+	JSON        organizationMetaJSON        `json:"-"`
 }
 
 // organizationMetaJSON contains the JSON metadata for the struct
 // [OrganizationMeta]
 type organizationMetaJSON struct {
-	Flags       apijson.Field
-	ManagedBy   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	HierarchyTags apijson.Field
+	ManagedBy     apijson.Field
+	TenantFlags   apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *OrganizationMeta) UnmarshalJSON(data []byte) (err error) {
@@ -204,32 +227,38 @@ func (r organizationMetaJSON) RawJSON() string {
 }
 
 // Enable features for Organizations.
-type OrganizationMetaFlags struct {
-	AccountCreation  string                    `json:"account_creation" api:"required"`
-	AccountDeletion  string                    `json:"account_deletion" api:"required"`
-	AccountMigration string                    `json:"account_migration" api:"required"`
-	AccountMobility  string                    `json:"account_mobility" api:"required"`
-	SubOrgCreation   string                    `json:"sub_org_creation" api:"required"`
-	JSON             organizationMetaFlagsJSON `json:"-"`
+type OrganizationMetaTenantFlags struct {
+	AccountCreation                      string                          `json:"account_creation" api:"required"`
+	AccountCreationAppliesTenantDefaults string                          `json:"account_creation_applies_tenant_defaults" api:"required"`
+	AccountDeletion                      string                          `json:"account_deletion" api:"required"`
+	AccountMigration                     string                          `json:"account_migration" api:"required"`
+	AccountMobility                      string                          `json:"account_mobility" api:"required"`
+	EnterpriseCapability                 string                          `json:"enterprise_capability" api:"required"`
+	MemberManagement                     string                          `json:"member_management" api:"required"`
+	SubOrgCreation                       string                          `json:"sub_org_creation" api:"required"`
+	JSON                                 organizationMetaTenantFlagsJSON `json:"-"`
 }
 
-// organizationMetaFlagsJSON contains the JSON metadata for the struct
-// [OrganizationMetaFlags]
-type organizationMetaFlagsJSON struct {
-	AccountCreation  apijson.Field
-	AccountDeletion  apijson.Field
-	AccountMigration apijson.Field
-	AccountMobility  apijson.Field
-	SubOrgCreation   apijson.Field
-	raw              string
-	ExtraFields      map[string]apijson.Field
+// organizationMetaTenantFlagsJSON contains the JSON metadata for the struct
+// [OrganizationMetaTenantFlags]
+type organizationMetaTenantFlagsJSON struct {
+	AccountCreation                      apijson.Field
+	AccountCreationAppliesTenantDefaults apijson.Field
+	AccountDeletion                      apijson.Field
+	AccountMigration                     apijson.Field
+	AccountMobility                      apijson.Field
+	EnterpriseCapability                 apijson.Field
+	MemberManagement                     apijson.Field
+	SubOrgCreation                       apijson.Field
+	raw                                  string
+	ExtraFields                          map[string]apijson.Field
 }
 
-func (r *OrganizationMetaFlags) UnmarshalJSON(data []byte) (err error) {
+func (r *OrganizationMetaTenantFlags) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r organizationMetaFlagsJSON) RawJSON() string {
+func (r organizationMetaTenantFlagsJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -268,10 +297,16 @@ func (r OrganizationParam) MarshalJSON() (data []byte, err error) {
 }
 
 type OrganizationMetaParam struct {
+	// Ordered chain of organization tags from the root organization down to (and
+	// including) this organization itself. Root organizations return a single-element
+	// array containing their own tag; sub-organizations return
+	// `[rootTag, ...intermediateTags, parentTag, selfTag]`. Useful for constructing
+	// authorization scopes that need to cover every ancestor in the hierarchy.
+	HierarchyTags param.Field[[]string] `json:"hierarchy_tags"`
+	ManagedBy     param.Field[string]   `json:"managed_by"`
 	// Enable features for Organizations.
-	Flags       param.Field[OrganizationMetaFlagsParam] `json:"flags"`
-	ManagedBy   param.Field[string]                     `json:"managed_by"`
-	ExtraFields map[string]interface{}                  `json:"-,extras"`
+	TenantFlags param.Field[OrganizationMetaTenantFlagsParam] `json:"tenant_flags"`
+	ExtraFields map[string]interface{}                        `json:"-,extras"`
 }
 
 func (r OrganizationMetaParam) MarshalJSON() (data []byte, err error) {
@@ -279,15 +314,18 @@ func (r OrganizationMetaParam) MarshalJSON() (data []byte, err error) {
 }
 
 // Enable features for Organizations.
-type OrganizationMetaFlagsParam struct {
-	AccountCreation  param.Field[string] `json:"account_creation" api:"required"`
-	AccountDeletion  param.Field[string] `json:"account_deletion" api:"required"`
-	AccountMigration param.Field[string] `json:"account_migration" api:"required"`
-	AccountMobility  param.Field[string] `json:"account_mobility" api:"required"`
-	SubOrgCreation   param.Field[string] `json:"sub_org_creation" api:"required"`
+type OrganizationMetaTenantFlagsParam struct {
+	AccountCreation                      param.Field[string] `json:"account_creation" api:"required"`
+	AccountCreationAppliesTenantDefaults param.Field[string] `json:"account_creation_applies_tenant_defaults" api:"required"`
+	AccountDeletion                      param.Field[string] `json:"account_deletion" api:"required"`
+	AccountMigration                     param.Field[string] `json:"account_migration" api:"required"`
+	AccountMobility                      param.Field[string] `json:"account_mobility" api:"required"`
+	EnterpriseCapability                 param.Field[string] `json:"enterprise_capability" api:"required"`
+	MemberManagement                     param.Field[string] `json:"member_management" api:"required"`
+	SubOrgCreation                       param.Field[string] `json:"sub_org_creation" api:"required"`
 }
 
-func (r OrganizationMetaFlagsParam) MarshalJSON() (data []byte, err error) {
+func (r OrganizationMetaTenantFlagsParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 

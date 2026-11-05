@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"time"
 
 	"github.com/cloudflare/cloudflare-go/v7/internal/apijson"
 	"github.com/cloudflare/cloudflare-go/v7/internal/apiquery"
@@ -17,6 +16,7 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
 	"github.com/cloudflare/cloudflare-go/v7/shared"
+	"github.com/cloudflare/cloudflare-go/v7/tenants"
 )
 
 // OrganizationAccountService contains methods and other services that help with
@@ -38,10 +38,13 @@ func NewOrganizationAccountService(opts ...option.RequestOption) (r *Organizatio
 	return
 }
 
-// Retrieve a list of accounts that belong to a specific organization. (Currently
-// in Public Beta - see
-// https://developers.cloudflare.com/fundamentals/organizations/)
-func (r *OrganizationAccountService) Get(ctx context.Context, organizationID string, query OrganizationAccountGetParams, opts ...option.RequestOption) (res *[]OrganizationAccountGetResponse, err error) {
+// Retrieve the accounts immediately attached to a specific organization. Accounts
+// attached to sub-organizations are not included.
+//
+// Authentication: A Global API key for a user with
+// `com.cloudflare.api.tenant.unit.read` is required. User API Tokens are not
+// currently supported.
+func (r *OrganizationAccountService) Get(ctx context.Context, organizationID string, query OrganizationAccountGetParams, opts ...option.RequestOption) (res *[]tenants.TenantAccount, err error) {
 	var env OrganizationAccountGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
 	if organizationID == "" {
@@ -57,97 +60,21 @@ func (r *OrganizationAccountService) Get(ctx context.Context, organizationID str
 	return res, nil
 }
 
-type OrganizationAccountGetResponse struct {
-	ID        string                                 `json:"id" api:"required"`
-	CreatedOn time.Time                              `json:"created_on" api:"required" format:"date-time"`
-	Name      string                                 `json:"name" api:"required,nullable"`
-	Settings  OrganizationAccountGetResponseSettings `json:"settings" api:"required"`
-	Type      OrganizationAccountGetResponseType     `json:"type" api:"required"`
-	JSON      organizationAccountGetResponseJSON     `json:"-"`
-}
-
-// organizationAccountGetResponseJSON contains the JSON metadata for the struct
-// [OrganizationAccountGetResponse]
-type organizationAccountGetResponseJSON struct {
-	ID          apijson.Field
-	CreatedOn   apijson.Field
-	Name        apijson.Field
-	Settings    apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *OrganizationAccountGetResponse) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r organizationAccountGetResponseJSON) RawJSON() string {
-	return r.raw
-}
-
-type OrganizationAccountGetResponseSettings struct {
-	AbuseContactEmail    string    `json:"abuse_contact_email" api:"required,nullable"`
-	AccessApprovalExpiry time.Time `json:"access_approval_expiry" api:"required,nullable" format:"date-time"`
-	APIAccessEnabled     bool      `json:"api_access_enabled" api:"required,nullable"`
-	// Use
-	// [DNS Settings](https://developers.cloudflare.com/api/operations/dns-settings-for-an-account-list-dns-settings)
-	// instead. Deprecated.
-	//
-	// Deprecated: deprecated
-	DefaultNameservers string `json:"default_nameservers" api:"required,nullable"`
-	EnforceTwofactor   bool   `json:"enforce_twofactor" api:"required,nullable"`
-	// Use
-	// [DNS Settings](https://developers.cloudflare.com/api/operations/dns-settings-for-an-account-list-dns-settings)
-	// instead. Deprecated.
-	//
-	// Deprecated: deprecated
-	UseAccountCustomNSByDefault bool                                       `json:"use_account_custom_ns_by_default" api:"required,nullable"`
-	JSON                        organizationAccountGetResponseSettingsJSON `json:"-"`
-}
-
-// organizationAccountGetResponseSettingsJSON contains the JSON metadata for the
-// struct [OrganizationAccountGetResponseSettings]
-type organizationAccountGetResponseSettingsJSON struct {
-	AbuseContactEmail           apijson.Field
-	AccessApprovalExpiry        apijson.Field
-	APIAccessEnabled            apijson.Field
-	DefaultNameservers          apijson.Field
-	EnforceTwofactor            apijson.Field
-	UseAccountCustomNSByDefault apijson.Field
-	raw                         string
-	ExtraFields                 map[string]apijson.Field
-}
-
-func (r *OrganizationAccountGetResponseSettings) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r organizationAccountGetResponseSettingsJSON) RawJSON() string {
-	return r.raw
-}
-
-type OrganizationAccountGetResponseType string
-
-const (
-	OrganizationAccountGetResponseTypeStandard   OrganizationAccountGetResponseType = "standard"
-	OrganizationAccountGetResponseTypeEnterprise OrganizationAccountGetResponseType = "enterprise"
-)
-
-func (r OrganizationAccountGetResponseType) IsKnown() bool {
-	switch r {
-	case OrganizationAccountGetResponseTypeStandard, OrganizationAccountGetResponseTypeEnterprise:
-		return true
-	}
-	return false
-}
-
 type OrganizationAccountGetParams struct {
 	AccountPubname param.Field[OrganizationAccountGetParamsAccountPubname] `query:"account_pubname"`
 	// Sort direction for the order_by field. Valid values: `asc`, `desc`. Defaults to
 	// `asc` when order_by is specified.
 	Direction param.Field[OrganizationAccountGetParamsDirection] `query:"direction"`
-	Name      param.Field[OrganizationAccountGetParamsName]      `query:"name"`
+	// Include Account tags from the resource tag mirror. Omit this parameter to
+	// preserve the existing Account response shape.
+	IncludeTags param.Field[bool] `query:"include_tags"`
+	// Whether to calculate and return the exact result_info.total_size for cursor
+	// pagination. Defaults to true. When false, total_size is omitted. page_size and
+	// include_total may change between pages; next_page_token remains the
+	// authoritative continuation signal. Legacy page/per_page requests always
+	// calculate total_count.
+	IncludeTotal param.Field[bool]                             `query:"include_total"`
+	Name         param.Field[OrganizationAccountGetParamsName] `query:"name"`
 	// Field to order results by. Currently supported values: `account_name`. When not
 	// specified, results are ordered by internal account ID.
 	OrderBy param.Field[OrganizationAccountGetParamsOrderBy] `query:"order_by"`
@@ -248,7 +175,7 @@ func (r OrganizationAccountGetParamsOrderBy) IsKnown() bool {
 type OrganizationAccountGetResponseEnvelope struct {
 	Errors     []interface{}                                    `json:"errors" api:"required"`
 	Messages   []shared.ResponseInfo                            `json:"messages" api:"required"`
-	Result     []OrganizationAccountGetResponse                 `json:"result" api:"required"`
+	Result     []tenants.TenantAccount                          `json:"result" api:"required"`
 	ResultInfo OrganizationAccountGetResponseEnvelopeResultInfo `json:"result_info" api:"required"`
 	Success    OrganizationAccountGetResponseEnvelopeSuccess    `json:"success" api:"required"`
 	JSON       organizationAccountGetResponseEnvelopeJSON       `json:"-"`

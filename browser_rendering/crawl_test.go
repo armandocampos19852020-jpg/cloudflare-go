@@ -12,7 +12,6 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/browser_rendering"
 	"github.com/cloudflare/cloudflare-go/v7/internal/testutil"
 	"github.com/cloudflare/cloudflare-go/v7/option"
-	"github.com/cloudflare/cloudflare-go/v7/shared"
 )
 
 func TestCrawlNewWithOptionalParams(t *testing.T) {
@@ -38,11 +37,11 @@ func TestCrawlNewWithOptionalParams(t *testing.T) {
 				ID:      cloudflare.F("id"),
 				Content: cloudflare.F("content"),
 				Type:    cloudflare.F("type"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AddStyleTag: cloudflare.F([]browser_rendering.CrawlNewParamsBodyObjectAddStyleTag{{
 				Content: cloudflare.F("content"),
-				URL:     cloudflare.F("url"),
+				URL:     cloudflare.F("https://example.com"),
 			}}),
 			AllowRequestPattern: cloudflare.F([]string{"string"}),
 			AllowResourceTypes:  cloudflare.F([]browser_rendering.CrawlNewParamsBodyObjectAllowResourceType{browser_rendering.CrawlNewParamsBodyObjectAllowResourceTypeDocument}),
@@ -51,6 +50,8 @@ func TestCrawlNewWithOptionalParams(t *testing.T) {
 				Username: cloudflare.F("x"),
 			}),
 			BestAttempt: cloudflare.F(true),
+			Browser:     cloudflare.F(browser_rendering.CrawlNewParamsBodyObjectBrowserKitesurf),
+			ContentUse:  cloudflare.F(browser_rendering.CrawlNewParamsBodyObjectContentUseReference),
 			Cookies: cloudflare.F([]browser_rendering.CrawlNewParamsBodyObjectCookie{{
 				Name:         cloudflare.F("name"),
 				Value:        cloudflare.F("value"),
@@ -85,8 +86,8 @@ func TestCrawlNewWithOptionalParams(t *testing.T) {
 				Prompt: cloudflare.F("prompt"),
 				ResponseFormat: cloudflare.F(browser_rendering.CrawlNewParamsBodyObjectJsonOptionsResponseFormat{
 					Type: cloudflare.F("type"),
-					JsonSchema: cloudflare.F(map[string]browser_rendering.CrawlNewParamsBodyObjectJsonOptionsResponseFormatJsonSchemaUnion{
-						"foo": shared.UnionString("string"),
+					JsonSchema: cloudflare.F(map[string]interface{}{
+						"foo": "bar",
 					}),
 				}),
 			}),

@@ -173,6 +173,7 @@ type AIBotSummaryV2ResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                   `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                 `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                              `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                               `json:"tags"`
 	JSON            aiBotSummaryV2ResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -186,6 +187,7 @@ type aiBotSummaryV2ResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -241,7 +243,6 @@ func (r AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown()
 type AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -251,7 +252,7 @@ const (
 
 func (r AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotSummaryV2ResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -447,6 +448,7 @@ type AIBotTimeseriesResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                    `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                  `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                               `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                `json:"tags"`
 	JSON            aiBotTimeseriesResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -460,6 +462,7 @@ type aiBotTimeseriesResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -515,7 +518,6 @@ func (r AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown(
 type AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -525,7 +527,7 @@ const (
 
 func (r AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotTimeseriesResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -722,6 +724,7 @@ type AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            aiBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -736,6 +739,7 @@ type aiBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -791,7 +795,6 @@ func (r AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent             AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage            AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -801,7 +804,7 @@ const (
 
 func (r AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeEvent, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeOutage, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypePipeline, AIBotTimeseriesGroupsResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -906,7 +909,8 @@ type AIBotSummaryV2Params struct {
 	// results. For example, `-174, 3356` excludes results from AS174, but includes
 	// results from AS3356.
 	ASN param.Field[[]string] `query:"asn"`
-	// Filters results by content type category.
+	// Filters results by content type category. When set, results can only be further
+	// filtered by location, continent, or Autonomous System.
 	ContentType param.Field[[]AIBotSummaryV2ParamsContentType] `query:"contentType"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
@@ -914,13 +918,29 @@ type AIBotSummaryV2Params struct {
 	Continent param.Field[[]string] `query:"continent"`
 	// Filters results by bot crawl purpose.
 	CrawlPurpose param.Field[[]string] `query:"crawlPurpose"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIBotSummaryV2ParamsFormat] `query:"format"`
@@ -928,7 +948,8 @@ type AIBotSummaryV2Params struct {
 	Industry param.Field[[]string] `query:"industry"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -1067,13 +1088,17 @@ type AIBotTimeseriesParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AIBotTimeseriesParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
 	// results. For example, `-174, 3356` excludes results from AS174, but includes
 	// results from AS3356.
 	ASN param.Field[[]string] `query:"asn"`
-	// Filters results by content type category.
+	// Filters results by content type category. When set, results can only be further
+	// filtered by location, continent, or Autonomous System.
 	ContentType param.Field[[]AIBotTimeseriesParamsContentType] `query:"contentType"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
@@ -1081,13 +1106,29 @@ type AIBotTimeseriesParams struct {
 	Continent param.Field[[]string] `query:"continent"`
 	// Filters results by bot crawl purpose.
 	CrawlPurpose param.Field[[]string] `query:"crawlPurpose"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIBotTimeseriesParamsFormat] `query:"format"`
@@ -1095,7 +1136,8 @@ type AIBotTimeseriesParams struct {
 	Industry param.Field[[]string] `query:"industry"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -1126,6 +1168,9 @@ func (r AIBotTimeseriesParams) URLQuery() (v url.Values) {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AIBotTimeseriesParamsAggInterval string
 
 const (
@@ -1233,13 +1278,17 @@ type AIBotTimeseriesGroupsParams struct {
 	// Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 	// Refer to
 	// [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+	// When omitted, the interval is auto-selected from the requested date range; finer
+	// intervals are only available for shorter ranges. If the requested interval is
+	// too granular for the date range, the request is rejected.
 	AggInterval param.Field[AIBotTimeseriesGroupsParamsAggInterval] `query:"aggInterval"`
 	// Filters results by Autonomous System. Specify one or more Autonomous System
 	// Numbers (ASNs) as a comma-separated list. Prefix with `-` to exclude ASNs from
 	// results. For example, `-174, 3356` excludes results from AS174, but includes
 	// results from AS3356.
 	ASN param.Field[[]string] `query:"asn"`
-	// Filters results by content type category.
+	// Filters results by content type category. When set, results can only be further
+	// filtered by location, continent, or Autonomous System.
 	ContentType param.Field[[]AIBotTimeseriesGroupsParamsContentType] `query:"contentType"`
 	// Filters results by continent. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
@@ -1247,13 +1296,29 @@ type AIBotTimeseriesGroupsParams struct {
 	Continent param.Field[[]string] `query:"continent"`
 	// Filters results by bot crawl purpose.
 	CrawlPurpose param.Field[[]string] `query:"crawlPurpose"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[AIBotTimeseriesGroupsParamsFormat] `query:"format"`
@@ -1261,7 +1326,8 @@ type AIBotTimeseriesGroupsParams struct {
 	Industry param.Field[[]string] `query:"industry"`
 	// Limits the number of objects per group to the top items within the specified
 	// time range. When item count exceeds the limit, extra items appear grouped under
-	// an "other" category.
+	// an "other" category. Only supported on high-cardinality dimensions; otherwise
+	// the request is rejected. Minimum value is 2.
 	LimitPerGroup param.Field[int64] `query:"limitPerGroup"`
 	// Filters results by location. Specify a comma-separated list of alpha-2 codes.
 	// Prefix with `-` to exclude locations from results. For example, `-US,PT`
@@ -1271,6 +1337,8 @@ type AIBotTimeseriesGroupsParams struct {
 	Name param.Field[[]string] `query:"name"`
 	// Normalization method applied to the results. Refer to
 	// [Normalization methods](https://developers.cloudflare.com/radar/concepts/normalization/).
+	// `PERCENTAGE_CHANGE` requires exactly one comparison series (e.g. a `control`
+	// date range).
 	Normalization param.Field[AIBotTimeseriesGroupsParamsNormalization] `query:"normalization"`
 	// Filters results by HTTP response status code (e.g. 200, 403, 404). Only
 	// [IANA-registered codes](https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml)
@@ -1317,6 +1385,9 @@ func (r AIBotTimeseriesGroupsParamsDimension) IsKnown() bool {
 // Aggregation interval of the results (e.g., in 15 minutes or 1 hour intervals).
 // Refer to
 // [Aggregation intervals](https://developers.cloudflare.com/radar/concepts/aggregation-intervals/).
+// When omitted, the interval is auto-selected from the requested date range; finer
+// intervals are only available for shorter ranges. If the requested interval is
+// too granular for the date range, the request is rejected.
 type AIBotTimeseriesGroupsParamsAggInterval string
 
 const (
@@ -1381,6 +1452,8 @@ func (r AIBotTimeseriesGroupsParamsFormat) IsKnown() bool {
 
 // Normalization method applied to the results. Refer to
 // [Normalization methods](https://developers.cloudflare.com/radar/concepts/normalization/).
+// `PERCENTAGE_CHANGE` requires exactly one comparison series (e.g. a `control`
+// date range).
 type AIBotTimeseriesGroupsParamsNormalization string
 
 const (

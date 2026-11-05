@@ -43,6 +43,9 @@ func NewLiveInputService(opts ...option.RequestOption) (r *LiveInputService) {
 // stream live video to Cloudflare Stream.
 func (r *LiveInputService) New(ctx context.Context, params LiveInputNewParams, opts ...option.RequestOption) (res *LiveInput, err error) {
 	var env LiveInputNewResponseEnvelope
+	if params.IdempotencyKey.Present {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
+	}
 	opts = slices.Concat(r.Options, opts)
 	if params.AccountID.Value == "" {
 		err = errors.New("missing required account_id parameter")
@@ -96,8 +99,8 @@ func (r *LiveInputService) List(ctx context.Context, params LiveInputListParams,
 	return res, nil
 }
 
-// Prevents a live input from being streamed to and makes the live input
-// inaccessible to any future API calls.
+// Permanently delete a live input, making it inaccessible and blocking current and
+// future broadcasts to it. Existing recordings will be retained.
 func (r *LiveInputService) Delete(ctx context.Context, liveInputIdentifier string, body LiveInputDeleteParams, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
@@ -147,11 +150,21 @@ type LiveInput struct {
 	DeleteRecordingAfterDays float64 `json:"deleteRecordingAfterDays"`
 	// Indicates whether the live input is enabled and can accept streams.
 	Enabled bool `json:"enabled"`
+	// The date and time the live input keys were last rotated. Omitted for live inputs
+	// that have never had their keys rotated.
+	KeysRotatedAt time.Time `json:"keysRotatedAt" api:"nullable" format:"date-time"`
 	// A user modifiable key-value store used to reference other systems of record for
 	// managing live inputs.
 	Meta interface{} `json:"meta"`
 	// The date and time the live input was last modified.
 	Modified time.Time `json:"modified" format:"date-time"`
+	// Details for playing a live input's broadcast using the HLS or DASH manifests.
+	// URLs reference the live input ID.
+	Playback LiveInputPlayback `json:"playback"`
+	// When enabled, the live stream is delivered using Low-Latency HLS (LL-HLS),
+	// reducing glass-to-glass latency for viewers at the cost of reduced player
+	// compatibility.
+	PreferLowLatency bool `json:"preferLowLatency"`
 	// Records the input to a Cloudflare Stream video. Behavior depends on the mode. In
 	// most cases, the video will initially be viewable as a live video and transition
 	// to on-demand after a condition is satisfied.
@@ -180,8 +193,11 @@ type liveInputJSON struct {
 	Created                  apijson.Field
 	DeleteRecordingAfterDays apijson.Field
 	Enabled                  apijson.Field
+	KeysRotatedAt            apijson.Field
 	Meta                     apijson.Field
 	Modified                 apijson.Field
+	Playback                 apijson.Field
+	PreferLowLatency         apijson.Field
 	Recording                apijson.Field
 	Rtmps                    apijson.Field
 	RtmpsPlayback            apijson.Field
@@ -200,6 +216,33 @@ func (r *LiveInput) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r liveInputJSON) RawJSON() string {
+	return r.raw
+}
+
+// Details for playing a live input's broadcast using the HLS or DASH manifests.
+// URLs reference the live input ID.
+type LiveInputPlayback struct {
+	// The DASH manifest URL used to play live video, referencing the live input ID.
+	Dash string `json:"dash" api:"required"`
+	// The HLS manifest URL used to play live video, referencing the live input ID.
+	Hls  string                `json:"hls" api:"required"`
+	JSON liveInputPlaybackJSON `json:"-"`
+}
+
+// liveInputPlaybackJSON contains the JSON metadata for the struct
+// [LiveInputPlayback]
+type liveInputPlaybackJSON struct {
+	Dash        apijson.Field
+	Hls         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *LiveInputPlayback) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r liveInputPlaybackJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -527,10 +570,15 @@ type LiveInputNewParams struct {
 	// A user modifiable key-value store used to reference other systems of record for
 	// managing live inputs.
 	Meta param.Field[interface{}] `json:"meta"`
+	// When enabled, the live stream is delivered using Low-Latency HLS (LL-HLS),
+	// reducing glass-to-glass latency for viewers at the cost of reduced player
+	// compatibility.
+	PreferLowLatency param.Field[bool] `json:"preferLowLatency"`
 	// Records the input to a Cloudflare Stream video. Behavior depends on the mode. In
 	// most cases, the video will initially be viewable as a live video and transition
 	// to on-demand after a condition is satisfied.
-	Recording param.Field[LiveInputNewParamsRecording] `json:"recording"`
+	Recording      param.Field[LiveInputNewParamsRecording] `json:"recording"`
+	IdempotencyKey param.Field[string]                      `header:"Idempotency-Key"`
 }
 
 func (r LiveInputNewParams) MarshalJSON() (data []byte, err error) {
@@ -740,6 +788,10 @@ type LiveInputUpdateParams struct {
 	// A user modifiable key-value store used to reference other systems of record for
 	// managing live inputs.
 	Meta param.Field[interface{}] `json:"meta"`
+	// When enabled, the live stream is delivered using Low-Latency HLS (LL-HLS),
+	// reducing glass-to-glass latency for viewers at the cost of reduced player
+	// compatibility.
+	PreferLowLatency param.Field[bool] `json:"preferLowLatency"`
 	// Records the input to a Cloudflare Stream video. Behavior depends on the mode. In
 	// most cases, the video will initially be viewable as a live video and transition
 	// to on-demand after a condition is satisfied.

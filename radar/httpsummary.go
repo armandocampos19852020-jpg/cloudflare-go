@@ -270,6 +270,7 @@ type HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                        `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                      `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                   `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                    `json:"tags"`
 	JSON            httpSummaryBotClassResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -284,6 +285,7 @@ type httpSummaryBotClassResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -339,7 +341,6 @@ func (r HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsDataSource) IsKn
 type HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -349,7 +350,7 @@ const (
 
 func (r HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryBotClassResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -545,6 +546,7 @@ type HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            httpSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -559,6 +561,7 @@ type httpSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -614,7 +617,6 @@ func (r HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -624,7 +626,7 @@ const (
 
 func (r HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryDeviceTypeResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -823,6 +825,7 @@ type HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                            `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                          `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                       `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                        `json:"tags"`
 	JSON            httpSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -837,6 +840,7 @@ type httpSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -892,7 +896,6 @@ func (r HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsDataSource) 
 type HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -902,7 +905,7 @@ const (
 
 func (r HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryHTTPProtocolResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1098,6 +1101,7 @@ type HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                           `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                         `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                      `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                       `json:"tags"`
 	JSON            httpSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1112,6 +1116,7 @@ type httpSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1167,7 +1172,6 @@ func (r HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsDataSource) I
 type HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1177,7 +1181,7 @@ const (
 
 func (r HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryHTTPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1376,6 +1380,7 @@ type HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                         `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                       `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                    `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                     `json:"tags"`
 	JSON            httpSummaryIPVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1390,6 +1395,7 @@ type httpSummaryIPVersionResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1445,7 +1451,6 @@ func (r HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsDataSource) IsK
 type HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1455,7 +1460,7 @@ const (
 
 func (r HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryIPVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1651,6 +1656,7 @@ type HTTPSummaryOSResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                  `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                             `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                              `json:"tags"`
 	JSON            httpSummaryOSResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1664,6 +1670,7 @@ type httpSummaryOSResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1719,7 +1726,6 @@ func (r HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsDataSource) IsKnown() 
 type HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -1729,7 +1735,7 @@ const (
 
 func (r HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryOSResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -1925,6 +1931,7 @@ type HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                           `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                         `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                      `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                       `json:"tags"`
 	JSON            httpSummaryPostQuantumResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -1939,6 +1946,7 @@ type httpSummaryPostQuantumResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1994,7 +2002,6 @@ func (r HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsDataSource) I
 type HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2004,7 +2011,7 @@ const (
 
 func (r HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryPostQuantumResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2200,6 +2207,7 @@ type HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotation struct {
 	IsInstantaneous bool                                                          `json:"isInstantaneous" api:"required"`
 	LinkedURL       string                                                        `json:"linkedUrl" api:"required" format:"uri"`
 	StartDate       time.Time                                                     `json:"startDate" api:"required" format:"date-time"`
+	Tags            []string                                                      `json:"tags"`
 	JSON            httpSummaryTLSVersionResponseMetaConfidenceInfoAnnotationJSON `json:"-"`
 }
 
@@ -2214,6 +2222,7 @@ type httpSummaryTLSVersionResponseMetaConfidenceInfoAnnotationJSON struct {
 	IsInstantaneous apijson.Field
 	LinkedURL       apijson.Field
 	StartDate       apijson.Field
+	Tags            apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -2269,7 +2278,6 @@ func (r HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsDataSource) Is
 type HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType string
 
 const (
-	HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent             HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "EVENT"
 	HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral           HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "GENERAL"
 	HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage            HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "OUTAGE"
 	HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType = "PARTIAL_PROJECTION"
@@ -2279,7 +2287,7 @@ const (
 
 func (r HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventType) IsKnown() bool {
 	switch r {
-	case HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeEvent, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
+	case HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeGeneral, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeOutage, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePartialProjection, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypePipeline, HTTPSummaryTLSVersionResponseMetaConfidenceInfoAnnotationsEventTypeTrafficAnomaly:
 		return true
 	}
 	return false
@@ -2402,13 +2410,29 @@ type HTTPSummaryBotClassParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryBotClassParamsDeviceType] `query:"deviceType"`
@@ -2617,13 +2641,29 @@ type HTTPSummaryDeviceTypeParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Format in which results will be returned.
 	Format param.Field[HTTPSummaryDeviceTypeParamsFormat] `query:"format"`
@@ -2829,13 +2869,29 @@ type HTTPSummaryHTTPProtocolParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryHTTPProtocolParamsDeviceType] `query:"deviceType"`
@@ -3042,13 +3098,29 @@ type HTTPSummaryHTTPVersionParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryHTTPVersionParamsDeviceType] `query:"deviceType"`
@@ -3254,13 +3326,29 @@ type HTTPSummaryIPVersionParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryIPVersionParamsDeviceType] `query:"deviceType"`
@@ -3467,13 +3555,29 @@ type HTTPSummaryOSParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryOSParamsDeviceType] `query:"deviceType"`
@@ -3674,13 +3778,29 @@ type HTTPSummaryPostQuantumParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryPostQuantumParamsDeviceType] `query:"deviceType"`
@@ -3904,13 +4024,29 @@ type HTTPSummaryTLSVersionParams struct {
 	// Prefix with `-` to exclude continents from results. For example, `-EU,NA`
 	// excludes results from EU, but includes results from NA.
 	Continent param.Field[[]string] `query:"continent"`
-	// End of the date range (inclusive).
+	// End of the date range (inclusive). Alternative to `dateRange`; provide together
+	// with `dateStart`. When requesting comparison series, every series must resolve
+	// to the same duration as the main series. Each `dateStart`/`dateEnd` is floored
+	// to the nearest 15 minutes before evaluation, so windows whose durations match
+	// only before alignment may be rejected.
 	DateEnd param.Field[[]time.Time] `query:"dateEnd" format:"date-time"`
-	// Filters results by date range. For example, use `7d` and `7dcontrol` to compare
-	// this week with the previous week. Use this parameter or set specific start and
-	// end dates (`dateStart` and `dateEnd` parameters).
+	// Filters results by relative date range ending at the current time, with each
+	// value producing a separate series. Use `<n>d` for days (up to `364d`) or `<n>w`
+	// for weeks (up to `52w`). Append `control` to request the equivalent previous
+	// period for comparison: the comparison window is shifted back by the current
+	// window's length rounded up to a whole number of weeks, so it keeps the same
+	// weekday alignment and does not overlap the current window (e.g. `7dcontrol`
+	// covers days -14 to -7, `10dcontrol` covers days -24 to -14). For example, pass
+	// `7d` and `7dcontrol` to compare this week with the previous week. All series
+	// must resolve to the same duration as the main series; relative ranges (including
+	// `control`) satisfy this automatically. Use this parameter or set specific start
+	// and end dates (`dateStart` and `dateEnd` parameters).
 	DateRange param.Field[[]string] `query:"dateRange"`
-	// Start of the date range.
+	// Start of the date range. Alternative to `dateRange`; provide together with
+	// `dateEnd`. When requesting comparison series, every series must resolve to the
+	// same duration as the main series. Each `dateStart`/`dateEnd` is floored to the
+	// nearest 15 minutes before evaluation, so windows whose durations match only
+	// before alignment may be rejected.
 	DateStart param.Field[[]time.Time] `query:"dateStart" format:"date-time"`
 	// Filters results by device type.
 	DeviceType param.Field[[]HTTPSummaryTLSVersionParamsDeviceType] `query:"deviceType"`

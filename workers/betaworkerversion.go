@@ -41,7 +41,7 @@ func NewBetaWorkerVersionService(opts ...option.RequestOption) (r *BetaWorkerVer
 	return
 }
 
-// Create a new version.
+// Create a new version for a Worker.
 func (r *BetaWorkerVersionService) New(ctx context.Context, workerID string, params BetaWorkerVersionNewParams, opts ...option.RequestOption) (res *Version, err error) {
 	var env BetaWorkerVersionNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -93,7 +93,7 @@ func (r *BetaWorkerVersionService) ListAutoPaging(ctx context.Context, workerID 
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, workerID, params, opts...))
 }
 
-// Delete a version.
+// Delete a Worker version.
 func (r *BetaWorkerVersionService) Delete(ctx context.Context, workerID string, versionID string, body BetaWorkerVersionDeleteParams, opts ...option.RequestOption) (res *BetaWorkerVersionDeleteResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	if body.AccountID.Value == "" {
@@ -113,7 +113,7 @@ func (r *BetaWorkerVersionService) Delete(ctx context.Context, workerID string, 
 	return res, err
 }
 
-// Get details about a specific version.
+// Get details about a specific Worker version.
 func (r *BetaWorkerVersionService) Get(ctx context.Context, workerID string, versionID string, params BetaWorkerVersionGetParams, opts ...option.RequestOption) (res *Version, err error) {
 	var env BetaWorkerVersionGetResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -138,6 +138,29 @@ func (r *BetaWorkerVersionService) Get(ctx context.Context, workerID string, ver
 	return res, nil
 }
 
+// Captures a CPU or heap profile from a recently active isolate running the
+// specified Worker version. This endpoint requires the Worker profiling feature to
+// be enabled for the account.
+func (r *BetaWorkerVersionService) Profile(ctx context.Context, workerID string, versionID string, params BetaWorkerVersionProfileParams, opts ...option.RequestOption) (res *http.Response, err error) {
+	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "application/vnd.google.protobuf")}, opts...)
+	if params.AccountID.Value == "" {
+		err = errors.New("missing required account_id parameter")
+		return nil, err
+	}
+	if workerID == "" {
+		err = errors.New("missing required worker_id parameter")
+		return nil, err
+	}
+	if versionID == "" {
+		err = errors.New("missing required version_id parameter")
+		return nil, err
+	}
+	path := fmt.Sprintf("accounts/%s/workers/workers/%s/versions/%s/profile", params.AccountID, workerID, versionID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	return res, err
+}
+
 type Version struct {
 	// Version identifier.
 	ID string `json:"id" api:"required" format:"uuid"`
@@ -158,10 +181,18 @@ type Version struct {
 	// files should be included as modules named `_headers` and `_redirects` with
 	// content type `text/plain`.
 	Assets VersionAssets `json:"assets"`
+	// Email of the user who created the version.
+	AuthorEmail string `json:"author_email" format:"email"`
+	// Identifier of the user who created the version.
+	AuthorID string `json:"author_id"`
 	// List of bindings attached to a Worker. You can find more about bindings on our
 	// docs:
 	// https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/#bindings.
 	Bindings []VersionBinding `json:"bindings"`
+	// Global CacheW configuration for the Worker. When caching is on, the platform
+	// provisions a `cloudflare.app` zone for the Worker. A `type: worker` entry in the
+	// `exports` map can override this value for a single entrypoint.
+	CacheOptions VersionCacheOptions `json:"cache_options"`
 	// Date indicating targeted support in the Workers runtime. Backwards incompatible
 	// fixes to the runtime following this date will not affect this Worker.
 	CompatibilityDate string `json:"compatibility_date"`
@@ -172,6 +203,17 @@ type Version struct {
 	// List of containers attached to a Worker. Containers can only be attached to
 	// Durable Object classes of this Worker script.
 	Containers []VersionContainer `json:"containers"`
+	// Declarative exports for the version, including Durable Object classes (with
+	// their `storage` backend) and named Worker entrypoints. On reads, tombstoned
+	// lifecycle entries are omitted, so only live exports (`created` and
+	// `expecting-transfer`) are returned. `exports` and `migrations` are mutually
+	// exclusive on upload.
+	Exports map[string]VersionExport `json:"exports"`
+	// Summary of the declarative exports reconciliation that ran on this upload.
+	// Populated only when the uploaded metadata included an `exports` block. Durable
+	// Object entries drive reconciliation; `type: worker` entries do not contribute to
+	// this summary.
+	ExportsReconciliation VersionExportsReconciliation `json:"exports_reconciliation"`
 	// Resource limits enforced at runtime.
 	Limits VersionLimits `json:"limits"`
 	// The name of the main module in the `modules` array (e.g. the name of the module
@@ -194,6 +236,9 @@ type Version struct {
 	// `_headers` and `_redirects` files should be included as modules named `_headers`
 	// and `_redirects` with content type `text/plain`.
 	Modules []VersionModule `json:"modules"`
+	// The list of npm packages that were installed and used when this Worker version
+	// was built.
+	PackageDependencies []VersionPackageDependency `json:"package_dependencies"`
 	// Configuration for
 	// [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
 	// Specify mode='smart' for Smart Placement, or one of region/hostname/host.
@@ -212,27 +257,33 @@ type Version struct {
 
 // versionJSON contains the JSON metadata for the struct [Version]
 type versionJSON struct {
-	ID                 apijson.Field
-	CreatedOn          apijson.Field
-	Number             apijson.Field
-	URLs               apijson.Field
-	Annotations        apijson.Field
-	Assets             apijson.Field
-	Bindings           apijson.Field
-	CompatibilityDate  apijson.Field
-	CompatibilityFlags apijson.Field
-	Containers         apijson.Field
-	Limits             apijson.Field
-	MainModule         apijson.Field
-	MigrationTag       apijson.Field
-	Migrations         apijson.Field
-	Modules            apijson.Field
-	Placement          apijson.Field
-	Source             apijson.Field
-	StartupTimeMs      apijson.Field
-	UsageModel         apijson.Field
-	raw                string
-	ExtraFields        map[string]apijson.Field
+	ID                    apijson.Field
+	CreatedOn             apijson.Field
+	Number                apijson.Field
+	URLs                  apijson.Field
+	Annotations           apijson.Field
+	Assets                apijson.Field
+	AuthorEmail           apijson.Field
+	AuthorID              apijson.Field
+	Bindings              apijson.Field
+	CacheOptions          apijson.Field
+	CompatibilityDate     apijson.Field
+	CompatibilityFlags    apijson.Field
+	Containers            apijson.Field
+	Exports               apijson.Field
+	ExportsReconciliation apijson.Field
+	Limits                apijson.Field
+	MainModule            apijson.Field
+	MigrationTag          apijson.Field
+	Migrations            apijson.Field
+	Modules               apijson.Field
+	PackageDependencies   apijson.Field
+	Placement             apijson.Field
+	Source                apijson.Field
+	StartupTimeMs         apijson.Field
+	UsageModel            apijson.Field
+	raw                   string
+	ExtraFields           map[string]apijson.Field
 }
 
 func (r *Version) UnmarshalJSON(data []byte) (err error) {
@@ -305,6 +356,11 @@ func (r versionAssetsJSON) RawJSON() string {
 
 // Configuration for assets within a Worker.
 type VersionAssetsConfig struct {
+	// The public URL path prefix under which assets are served. A null request value
+	// resets it to `/`; responses represent the root as `/`. All versions in a gradual
+	// deployment must use the same canonical value. To change it, first deploy the
+	// version containing the change at 100%.
+	BasePath string `json:"base_path" api:"nullable"`
 	// Determines the redirects and rewrites of requests for HTML content.
 	HTMLHandling VersionAssetsConfigHTMLHandling `json:"html_handling"`
 	// Determines the response when a request does not match a static asset, and there
@@ -321,6 +377,7 @@ type VersionAssetsConfig struct {
 // versionAssetsConfigJSON contains the JSON metadata for the struct
 // [VersionAssetsConfig]
 type versionAssetsConfigJSON struct {
+	BasePath         apijson.Field
 	HTMLHandling     apijson.Field
 	NotFoundHandling apijson.Field
 	RunWorkerFirst   apijson.Field
@@ -445,6 +502,9 @@ type VersionBinding struct {
 	// Data format of the key.
 	// [Learn more](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#format).
 	Format VersionBindingsFormat `json:"format"`
+	// Enables Gateway identity for the binding. Requires network_id to be
+	// "cf1:network" and cannot be combined with tunnel_id.
+	Identity VersionBindingsIdentity `json:"identity"`
 	// Name of the Vectorize index to bind to.
 	IndexName string `json:"index_name"`
 	// The user-chosen instance name. Must exist at deploy time. The worker can search,
@@ -480,6 +540,9 @@ type VersionBinding struct {
 	Pipeline string `json:"pipeline"`
 	// Name of the Queue to bind to.
 	QueueName string `json:"queue_name"`
+	// This field can have the runtime type of
+	// [VersionBindingsWorkersBindingKindDurableObjectNamespaceRetry].
+	Retry interface{} `json:"retry"`
 	// The script where the Durable Object is defined, if it is external to this
 	// Worker.
 	ScriptName string `json:"script_name"`
@@ -494,6 +557,8 @@ type VersionBinding struct {
 	Simple interface{} `json:"simple"`
 	// ID of the store containing the secret.
 	StoreID string `json:"store_id"`
+	// ID of a K2 stream owned by the account deploying the Worker.
+	Stream string `json:"stream"`
 	// The text value to use.
 	Text string `json:"text"`
 	// UUID of the Cloudflare Tunnel to bind to. Mutually exclusive with network_id.
@@ -530,6 +595,7 @@ type versionBindingJSON struct {
 	Entrypoint                  apijson.Field
 	Environment                 apijson.Field
 	Format                      apijson.Field
+	Identity                    apijson.Field
 	IndexName                   apijson.Field
 	InstanceName                apijson.Field
 	Json                        apijson.Field
@@ -543,12 +609,14 @@ type versionBindingJSON struct {
 	Part                        apijson.Field
 	Pipeline                    apijson.Field
 	QueueName                   apijson.Field
+	Retry                       apijson.Field
 	ScriptName                  apijson.Field
 	SecretName                  apijson.Field
 	Service                     apijson.Field
 	ServiceID                   apijson.Field
 	Simple                      apijson.Field
 	StoreID                     apijson.Field
+	Stream                      apijson.Field
 	Text                        apijson.Field
 	TunnelID                    apijson.Field
 	Usages                      apijson.Field
@@ -577,7 +645,9 @@ func (r *VersionBinding) UnmarshalJSON(data []byte) (err error) {
 // Possible runtime types of the union are [VersionBindingsWorkersBindingKindAI],
 // [VersionBindingsWorkersBindingKindAISearch],
 // [VersionBindingsWorkersBindingKindAISearchNamespace],
+// [VersionBindingsWorkersBindingKindMessaging],
 // [VersionBindingsWorkersBindingKindAnalyticsEngine],
+// [VersionBindingsWorkersBindingKindArtifacts],
 // [VersionBindingsWorkersBindingKindAssets],
 // [VersionBindingsWorkersBindingKindBrowser],
 // [VersionBindingsWorkersBindingKindD1],
@@ -593,7 +663,7 @@ func (r *VersionBinding) UnmarshalJSON(data []byte) (err error) {
 // [VersionBindingsWorkersBindingKindMTLSCertificate],
 // [VersionBindingsWorkersBindingKindPlainText],
 // [VersionBindingsWorkersBindingKindPipelines],
-// [VersionBindingsWorkersBindingKindQueue],
+// [VersionBindingsWorkersBindingKindK2], [VersionBindingsWorkersBindingKindQueue],
 // [VersionBindingsWorkersBindingKindRatelimit],
 // [VersionBindingsWorkersBindingKindR2Bucket],
 // [VersionBindingsWorkersBindingKindSecretText],
@@ -618,7 +688,9 @@ func (r VersionBinding) AsUnion() VersionBindingsUnion {
 // Union satisfied by [VersionBindingsWorkersBindingKindAI],
 // [VersionBindingsWorkersBindingKindAISearch],
 // [VersionBindingsWorkersBindingKindAISearchNamespace],
+// [VersionBindingsWorkersBindingKindMessaging],
 // [VersionBindingsWorkersBindingKindAnalyticsEngine],
+// [VersionBindingsWorkersBindingKindArtifacts],
 // [VersionBindingsWorkersBindingKindAssets],
 // [VersionBindingsWorkersBindingKindBrowser],
 // [VersionBindingsWorkersBindingKindD1],
@@ -634,7 +706,7 @@ func (r VersionBinding) AsUnion() VersionBindingsUnion {
 // [VersionBindingsWorkersBindingKindMTLSCertificate],
 // [VersionBindingsWorkersBindingKindPlainText],
 // [VersionBindingsWorkersBindingKindPipelines],
-// [VersionBindingsWorkersBindingKindQueue],
+// [VersionBindingsWorkersBindingKindK2], [VersionBindingsWorkersBindingKindQueue],
 // [VersionBindingsWorkersBindingKindRatelimit],
 // [VersionBindingsWorkersBindingKindR2Bucket],
 // [VersionBindingsWorkersBindingKindSecretText],
@@ -675,8 +747,18 @@ func init() {
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionBindingsWorkersBindingKindMessaging{}),
+			DiscriminatorValue: "messaging",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(VersionBindingsWorkersBindingKindAnalyticsEngine{}),
 			DiscriminatorValue: "analytics_engine",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionBindingsWorkersBindingKindArtifacts{}),
+			DiscriminatorValue: "artifacts",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
@@ -752,6 +834,11 @@ func init() {
 			TypeFilter:         gjson.JSON,
 			Type:               reflect.TypeOf(VersionBindingsWorkersBindingKindPipelines{}),
 			DiscriminatorValue: "pipelines",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionBindingsWorkersBindingKindK2{}),
+			DiscriminatorValue: "k2",
 		},
 		apijson.UnionVariant{
 			TypeFilter:         gjson.JSON,
@@ -976,6 +1063,51 @@ func (r VersionBindingsWorkersBindingKindAISearchNamespaceType) IsKnown() bool {
 	return false
 }
 
+type VersionBindingsWorkersBindingKindMessaging struct {
+	// A JavaScript variable name for the binding.
+	Name string `json:"name" api:"required"`
+	// The Messaging namespace to bind to.
+	Namespace string `json:"namespace" api:"required"`
+	// The kind of resource that the binding provides.
+	Type VersionBindingsWorkersBindingKindMessagingType `json:"type" api:"required"`
+	JSON versionBindingsWorkersBindingKindMessagingJSON `json:"-"`
+}
+
+// versionBindingsWorkersBindingKindMessagingJSON contains the JSON metadata for
+// the struct [VersionBindingsWorkersBindingKindMessaging]
+type versionBindingsWorkersBindingKindMessagingJSON struct {
+	Name        apijson.Field
+	Namespace   apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionBindingsWorkersBindingKindMessaging) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionBindingsWorkersBindingKindMessagingJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionBindingsWorkersBindingKindMessaging) implementsVersionBinding() {}
+
+// The kind of resource that the binding provides.
+type VersionBindingsWorkersBindingKindMessagingType string
+
+const (
+	VersionBindingsWorkersBindingKindMessagingTypeMessaging VersionBindingsWorkersBindingKindMessagingType = "messaging"
+)
+
+func (r VersionBindingsWorkersBindingKindMessagingType) IsKnown() bool {
+	switch r {
+	case VersionBindingsWorkersBindingKindMessagingTypeMessaging:
+		return true
+	}
+	return false
+}
+
 type VersionBindingsWorkersBindingKindAnalyticsEngine struct {
 	// The name of the dataset to bind to.
 	Dataset string `json:"dataset" api:"required"`
@@ -1016,6 +1148,54 @@ const (
 func (r VersionBindingsWorkersBindingKindAnalyticsEngineType) IsKnown() bool {
 	switch r {
 	case VersionBindingsWorkersBindingKindAnalyticsEngineTypeAnalyticsEngine:
+		return true
+	}
+	return false
+}
+
+type VersionBindingsWorkersBindingKindArtifacts struct {
+	// A JavaScript variable name for the binding.
+	Name string `json:"name" api:"required"`
+	// The Artifacts namespace exposed to the Worker in the Worker's account. Must be
+	// 2-63 characters, start with an ASCII alphanumeric character, contain only ASCII
+	// alphanumeric characters, dots, underscores, and hyphens, and must not end with a
+	// hyphen. The namespace does not need to be created before binding it.
+	Namespace string `json:"namespace" api:"required"`
+	// The kind of resource that the binding provides.
+	Type VersionBindingsWorkersBindingKindArtifactsType `json:"type" api:"required"`
+	JSON versionBindingsWorkersBindingKindArtifactsJSON `json:"-"`
+}
+
+// versionBindingsWorkersBindingKindArtifactsJSON contains the JSON metadata for
+// the struct [VersionBindingsWorkersBindingKindArtifacts]
+type versionBindingsWorkersBindingKindArtifactsJSON struct {
+	Name        apijson.Field
+	Namespace   apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionBindingsWorkersBindingKindArtifacts) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionBindingsWorkersBindingKindArtifactsJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionBindingsWorkersBindingKindArtifacts) implementsVersionBinding() {}
+
+// The kind of resource that the binding provides.
+type VersionBindingsWorkersBindingKindArtifactsType string
+
+const (
+	VersionBindingsWorkersBindingKindArtifactsTypeArtifacts VersionBindingsWorkersBindingKindArtifactsType = "artifacts"
+)
+
+func (r VersionBindingsWorkersBindingKindArtifactsType) IsKnown() bool {
+	switch r {
+	case VersionBindingsWorkersBindingKindArtifactsTypeArtifacts:
 		return true
 	}
 	return false
@@ -1345,6 +1525,10 @@ type VersionBindingsWorkersBindingKindDurableObjectNamespace struct {
 	Environment string `json:"environment"`
 	// Namespace identifier tag.
 	NamespaceID string `json:"namespace_id"`
+	// Retry policy for calls made to the Durable Object through this binding. Omitted
+	// or null properties use the runtime defaults. These limits are upper bounds and
+	// do not enable retries for otherwise ineligible calls.
+	Retry VersionBindingsWorkersBindingKindDurableObjectNamespaceRetry `json:"retry" api:"nullable"`
 	// The script where the Durable Object is defined, if it is external to this
 	// Worker.
 	ScriptName string                                                      `json:"script_name"`
@@ -1361,6 +1545,7 @@ type versionBindingsWorkersBindingKindDurableObjectNamespaceJSON struct {
 	DispatchNamespace apijson.Field
 	Environment       apijson.Field
 	NamespaceID       apijson.Field
+	Retry             apijson.Field
 	ScriptName        apijson.Field
 	raw               string
 	ExtraFields       map[string]apijson.Field
@@ -1389,6 +1574,39 @@ func (r VersionBindingsWorkersBindingKindDurableObjectNamespaceType) IsKnown() b
 		return true
 	}
 	return false
+}
+
+// Retry policy for calls made to the Durable Object through this binding. Omitted
+// or null properties use the runtime defaults. These limits are upper bounds and
+// do not enable retries for otherwise ineligible calls.
+type VersionBindingsWorkersBindingKindDurableObjectNamespaceRetry struct {
+	// Maximum number of retries after the initial request, not the total number of
+	// attempts. Defaults to 4. Zero disables retries.
+	MaxAttempts int64 `json:"max_attempts" api:"nullable"`
+	// Retry timeout in milliseconds, measured from the start of the call. No retry
+	// starts after it expires, and a retry still running when it expires is cancelled.
+	// This is not a request timeout; it does not limit the initial request, which is
+	// still subject to any timeouts set by your Worker. Defaults to 10000.
+	TimeoutMs int64                                                            `json:"timeout_ms" api:"nullable"`
+	JSON      versionBindingsWorkersBindingKindDurableObjectNamespaceRetryJSON `json:"-"`
+}
+
+// versionBindingsWorkersBindingKindDurableObjectNamespaceRetryJSON contains the
+// JSON metadata for the struct
+// [VersionBindingsWorkersBindingKindDurableObjectNamespaceRetry]
+type versionBindingsWorkersBindingKindDurableObjectNamespaceRetryJSON struct {
+	MaxAttempts apijson.Field
+	TimeoutMs   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionBindingsWorkersBindingKindDurableObjectNamespaceRetry) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionBindingsWorkersBindingKindDurableObjectNamespaceRetryJSON) RawJSON() string {
+	return r.raw
 }
 
 type VersionBindingsWorkersBindingKindHyperdrive struct {
@@ -1797,6 +2015,52 @@ func (r VersionBindingsWorkersBindingKindPipelinesType) IsKnown() bool {
 	return false
 }
 
+// A K2 stream binding. Available only to accounts enabled for K2.
+type VersionBindingsWorkersBindingKindK2 struct {
+	// A JavaScript variable name for the binding.
+	Name string `json:"name" api:"required"`
+	// ID of a K2 stream owned by the account deploying the Worker.
+	Stream string `json:"stream" api:"required"`
+	// The kind of resource that the binding provides.
+	Type VersionBindingsWorkersBindingKindK2Type `json:"type" api:"required"`
+	JSON versionBindingsWorkersBindingKindK2JSON `json:"-"`
+}
+
+// versionBindingsWorkersBindingKindK2JSON contains the JSON metadata for the
+// struct [VersionBindingsWorkersBindingKindK2]
+type versionBindingsWorkersBindingKindK2JSON struct {
+	Name        apijson.Field
+	Stream      apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionBindingsWorkersBindingKindK2) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionBindingsWorkersBindingKindK2JSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionBindingsWorkersBindingKindK2) implementsVersionBinding() {}
+
+// The kind of resource that the binding provides.
+type VersionBindingsWorkersBindingKindK2Type string
+
+const (
+	VersionBindingsWorkersBindingKindK2TypeK2 VersionBindingsWorkersBindingKindK2Type = "k2"
+)
+
+func (r VersionBindingsWorkersBindingKindK2Type) IsKnown() bool {
+	switch r {
+	case VersionBindingsWorkersBindingKindK2TypeK2:
+		return true
+	}
+	return false
+}
+
 type VersionBindingsWorkersBindingKindQueue struct {
 	// A JavaScript variable name for the binding.
 	Name string `json:"name" api:"required"`
@@ -1980,11 +2244,12 @@ const (
 	VersionBindingsWorkersBindingKindR2BucketJurisdictionEu          VersionBindingsWorkersBindingKindR2BucketJurisdiction = "eu"
 	VersionBindingsWorkersBindingKindR2BucketJurisdictionFedramp     VersionBindingsWorkersBindingKindR2BucketJurisdiction = "fedramp"
 	VersionBindingsWorkersBindingKindR2BucketJurisdictionFedrampHigh VersionBindingsWorkersBindingKindR2BucketJurisdiction = "fedramp-high"
+	VersionBindingsWorkersBindingKindR2BucketJurisdictionUs          VersionBindingsWorkersBindingKindR2BucketJurisdiction = "us"
 )
 
 func (r VersionBindingsWorkersBindingKindR2BucketJurisdiction) IsKnown() bool {
 	switch r {
-	case VersionBindingsWorkersBindingKindR2BucketJurisdictionEu, VersionBindingsWorkersBindingKindR2BucketJurisdictionFedramp, VersionBindingsWorkersBindingKindR2BucketJurisdictionFedrampHigh:
+	case VersionBindingsWorkersBindingKindR2BucketJurisdictionEu, VersionBindingsWorkersBindingKindR2BucketJurisdictionFedramp, VersionBindingsWorkersBindingKindR2BucketJurisdictionFedrampHigh, VersionBindingsWorkersBindingKindR2BucketJurisdictionUs:
 		return true
 	}
 	return false
@@ -2607,6 +2872,9 @@ type VersionBindingsWorkersBindingKindVPCNetwork struct {
 	Name string `json:"name" api:"required"`
 	// The kind of resource that the binding provides.
 	Type VersionBindingsWorkersBindingKindVPCNetworkType `json:"type" api:"required"`
+	// Enables Gateway identity for the binding. Requires network_id to be
+	// "cf1:network" and cannot be combined with tunnel_id.
+	Identity VersionBindingsWorkersBindingKindVPCNetworkIdentity `json:"identity"`
 	// Identifier of the network to bind to. Only "cf1:network" is currently supported.
 	// Mutually exclusive with tunnel_id.
 	NetworkID string `json:"network_id"`
@@ -2620,6 +2888,7 @@ type VersionBindingsWorkersBindingKindVPCNetwork struct {
 type versionBindingsWorkersBindingKindVPCNetworkJSON struct {
 	Name        apijson.Field
 	Type        apijson.Field
+	Identity    apijson.Field
 	NetworkID   apijson.Field
 	TunnelID    apijson.Field
 	raw         string
@@ -2651,6 +2920,22 @@ func (r VersionBindingsWorkersBindingKindVPCNetworkType) IsKnown() bool {
 	return false
 }
 
+// Enables Gateway identity for the binding. Requires network_id to be
+// "cf1:network" and cannot be combined with tunnel_id.
+type VersionBindingsWorkersBindingKindVPCNetworkIdentity string
+
+const (
+	VersionBindingsWorkersBindingKindVPCNetworkIdentityRuntimeEmailAlpha VersionBindingsWorkersBindingKindVPCNetworkIdentity = "runtime-email-alpha"
+)
+
+func (r VersionBindingsWorkersBindingKindVPCNetworkIdentity) IsKnown() bool {
+	switch r {
+	case VersionBindingsWorkersBindingKindVPCNetworkIdentityRuntimeEmailAlpha:
+		return true
+	}
+	return false
+}
+
 // The kind of resource that the binding provides.
 type VersionBindingsType string
 
@@ -2658,7 +2943,9 @@ const (
 	VersionBindingsTypeAI                     VersionBindingsType = "ai"
 	VersionBindingsTypeAISearch               VersionBindingsType = "ai_search"
 	VersionBindingsTypeAISearchNamespace      VersionBindingsType = "ai_search_namespace"
+	VersionBindingsTypeMessaging              VersionBindingsType = "messaging"
 	VersionBindingsTypeAnalyticsEngine        VersionBindingsType = "analytics_engine"
+	VersionBindingsTypeArtifacts              VersionBindingsType = "artifacts"
 	VersionBindingsTypeAssets                 VersionBindingsType = "assets"
 	VersionBindingsTypeBrowser                VersionBindingsType = "browser"
 	VersionBindingsTypeD1                     VersionBindingsType = "d1"
@@ -2674,6 +2961,7 @@ const (
 	VersionBindingsTypeMTLSCertificate        VersionBindingsType = "mtls_certificate"
 	VersionBindingsTypePlainText              VersionBindingsType = "plain_text"
 	VersionBindingsTypePipelines              VersionBindingsType = "pipelines"
+	VersionBindingsTypeK2                     VersionBindingsType = "k2"
 	VersionBindingsTypeQueue                  VersionBindingsType = "queue"
 	VersionBindingsTypeRatelimit              VersionBindingsType = "ratelimit"
 	VersionBindingsTypeR2Bucket               VersionBindingsType = "r2_bucket"
@@ -2694,7 +2982,7 @@ const (
 
 func (r VersionBindingsType) IsKnown() bool {
 	switch r {
-	case VersionBindingsTypeAI, VersionBindingsTypeAISearch, VersionBindingsTypeAISearchNamespace, VersionBindingsTypeAnalyticsEngine, VersionBindingsTypeAssets, VersionBindingsTypeBrowser, VersionBindingsTypeD1, VersionBindingsTypeDataBlob, VersionBindingsTypeDispatchNamespace, VersionBindingsTypeDurableObjectNamespace, VersionBindingsTypeHyperdrive, VersionBindingsTypeInherit, VersionBindingsTypeImages, VersionBindingsTypeJson, VersionBindingsTypeKVNamespace, VersionBindingsTypeMedia, VersionBindingsTypeMTLSCertificate, VersionBindingsTypePlainText, VersionBindingsTypePipelines, VersionBindingsTypeQueue, VersionBindingsTypeRatelimit, VersionBindingsTypeR2Bucket, VersionBindingsTypeSecretText, VersionBindingsTypeSendEmail, VersionBindingsTypeService, VersionBindingsTypeTextBlob, VersionBindingsTypeVectorize, VersionBindingsTypeVersionMetadata, VersionBindingsTypeSecretsStoreSecret, VersionBindingsTypeFlagship, VersionBindingsTypeSecretKey, VersionBindingsTypeWorkflow, VersionBindingsTypeWasmModule, VersionBindingsTypeVPCService, VersionBindingsTypeVPCNetwork:
+	case VersionBindingsTypeAI, VersionBindingsTypeAISearch, VersionBindingsTypeAISearchNamespace, VersionBindingsTypeMessaging, VersionBindingsTypeAnalyticsEngine, VersionBindingsTypeArtifacts, VersionBindingsTypeAssets, VersionBindingsTypeBrowser, VersionBindingsTypeD1, VersionBindingsTypeDataBlob, VersionBindingsTypeDispatchNamespace, VersionBindingsTypeDurableObjectNamespace, VersionBindingsTypeHyperdrive, VersionBindingsTypeInherit, VersionBindingsTypeImages, VersionBindingsTypeJson, VersionBindingsTypeKVNamespace, VersionBindingsTypeMedia, VersionBindingsTypeMTLSCertificate, VersionBindingsTypePlainText, VersionBindingsTypePipelines, VersionBindingsTypeK2, VersionBindingsTypeQueue, VersionBindingsTypeRatelimit, VersionBindingsTypeR2Bucket, VersionBindingsTypeSecretText, VersionBindingsTypeSendEmail, VersionBindingsTypeService, VersionBindingsTypeTextBlob, VersionBindingsTypeVectorize, VersionBindingsTypeVersionMetadata, VersionBindingsTypeSecretsStoreSecret, VersionBindingsTypeFlagship, VersionBindingsTypeSecretKey, VersionBindingsTypeWorkflow, VersionBindingsTypeWasmModule, VersionBindingsTypeVPCService, VersionBindingsTypeVPCNetwork:
 		return true
 	}
 	return false
@@ -2719,6 +3007,22 @@ func (r VersionBindingsFormat) IsKnown() bool {
 	return false
 }
 
+// Enables Gateway identity for the binding. Requires network_id to be
+// "cf1:network" and cannot be combined with tunnel_id.
+type VersionBindingsIdentity string
+
+const (
+	VersionBindingsIdentityRuntimeEmailAlpha VersionBindingsIdentity = "runtime-email-alpha"
+)
+
+func (r VersionBindingsIdentity) IsKnown() bool {
+	switch r {
+	case VersionBindingsIdentityRuntimeEmailAlpha:
+		return true
+	}
+	return false
+}
+
 // The
 // [jurisdiction](https://developers.cloudflare.com/r2/reference/data-location/#jurisdictional-restrictions)
 // of the R2 bucket.
@@ -2728,14 +3032,45 @@ const (
 	VersionBindingsJurisdictionEu          VersionBindingsJurisdiction = "eu"
 	VersionBindingsJurisdictionFedramp     VersionBindingsJurisdiction = "fedramp"
 	VersionBindingsJurisdictionFedrampHigh VersionBindingsJurisdiction = "fedramp-high"
+	VersionBindingsJurisdictionUs          VersionBindingsJurisdiction = "us"
 )
 
 func (r VersionBindingsJurisdiction) IsKnown() bool {
 	switch r {
-	case VersionBindingsJurisdictionEu, VersionBindingsJurisdictionFedramp, VersionBindingsJurisdictionFedrampHigh:
+	case VersionBindingsJurisdictionEu, VersionBindingsJurisdictionFedramp, VersionBindingsJurisdictionFedrampHigh, VersionBindingsJurisdictionUs:
 		return true
 	}
 	return false
+}
+
+// Global CacheW configuration for the Worker. When caching is on, the platform
+// provisions a `cloudflare.app` zone for the Worker. A `type: worker` entry in the
+// `exports` map can override this value for a single entrypoint.
+type VersionCacheOptions struct {
+	// Whether caching is enabled for this Worker.
+	Enabled bool `json:"enabled" api:"required"`
+	// Whether cached responses are shared across Worker version uploads. This is
+	// independent of `enabled`. It can stay true while caching is off, so the
+	// preference survives turning caching off and back on.
+	CrossVersionCache bool                    `json:"cross_version_cache"`
+	JSON              versionCacheOptionsJSON `json:"-"`
+}
+
+// versionCacheOptionsJSON contains the JSON metadata for the struct
+// [VersionCacheOptions]
+type versionCacheOptionsJSON struct {
+	Enabled           apijson.Field
+	CrossVersionCache apijson.Field
+	raw               string
+	ExtraFields       map[string]apijson.Field
+}
+
+func (r *VersionCacheOptions) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionCacheOptionsJSON) RawJSON() string {
+	return r.raw
 }
 
 // Container configuration for a Worker.
@@ -2759,6 +3094,978 @@ func (r *VersionContainer) UnmarshalJSON(data []byte) (err error) {
 
 func (r versionContainerJSON) RawJSON() string {
 	return r.raw
+}
+
+// A single entry in the `exports` map, keyed by export name (a `WorkerEntrypoint`
+// class name, a Durable Object class name, or `default` for the Worker's default
+// export). The `type` discriminator selects the top-level shape: `worker`
+// entrypoint entries may carry `cache` configuration, while `durable-object`
+// entries are further refined by the optional `state` field (default `created`).
+// Tombstone states (`deleted`, `renamed`, `transferred`) express destructive
+// lifecycle operations declaratively; `expecting-transfer` is the live target side
+// of a transfer. The server validates the exact per-(type, state) field
+// combinations; fields not listed for a variant are rejected.
+type VersionExport struct {
+	// Marks this entry as a Worker entrypoint export.
+	Type VersionExportsType `json:"type" api:"required"`
+	// This field can have the runtime type of
+	// [VersionExportsWorkersWorkerExportCache].
+	Cache interface{} `json:"cache"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object. When set, the namespace is container-enabled. Valid
+	// only on live entries.
+	Container string `json:"container"`
+	// Live export. May be omitted; defaults to `created`.
+	State VersionExportsState `json:"state"`
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage VersionExportsStorage `json:"storage"`
+	// The source script name to receive the namespace from. Must be in the same
+	// account and dispatch-namespace context. Present on reads for
+	// `expecting-transfer` entries.
+	TransferFrom string            `json:"transfer_from"`
+	JSON         versionExportJSON `json:"-"`
+	union        VersionExportsUnion
+}
+
+// versionExportJSON contains the JSON metadata for the struct [VersionExport]
+type versionExportJSON struct {
+	Type         apijson.Field
+	Cache        apijson.Field
+	Container    apijson.Field
+	State        apijson.Field
+	Storage      apijson.Field
+	TransferFrom apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r versionExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *VersionExport) UnmarshalJSON(data []byte) (err error) {
+	*r = VersionExport{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [VersionExportsUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [VersionExportsWorkersWorkerExport],
+// [VersionExportsWorkersDurableObjectExport],
+// [VersionExportsWorkersDurableObjectDeletedExport],
+// [VersionExportsWorkersDurableObjectRenamedExport],
+// [VersionExportsWorkersDurableObjectTransferredExport],
+// [VersionExportsWorkersDurableObjectExpectingTransferExport].
+func (r VersionExport) AsUnion() VersionExportsUnion {
+	return r.union
+}
+
+// A single entry in the `exports` map, keyed by export name (a `WorkerEntrypoint`
+// class name, a Durable Object class name, or `default` for the Worker's default
+// export). The `type` discriminator selects the top-level shape: `worker`
+// entrypoint entries may carry `cache` configuration, while `durable-object`
+// entries are further refined by the optional `state` field (default `created`).
+// Tombstone states (`deleted`, `renamed`, `transferred`) express destructive
+// lifecycle operations declaratively; `expecting-transfer` is the live target side
+// of a transfer. The server validates the exact per-(type, state) field
+// combinations; fields not listed for a variant are rejected.
+//
+// Union satisfied by [VersionExportsWorkersWorkerExport],
+// [VersionExportsWorkersDurableObjectExport],
+// [VersionExportsWorkersDurableObjectDeletedExport],
+// [VersionExportsWorkersDurableObjectRenamedExport],
+// [VersionExportsWorkersDurableObjectTransferredExport] or
+// [VersionExportsWorkersDurableObjectExpectingTransferExport].
+type VersionExportsUnion interface {
+	implementsVersionExport()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*VersionExportsUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersWorkerExport{}),
+			DiscriminatorValue: "worker",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersDurableObjectExport{}),
+			DiscriminatorValue: "durable-object",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersDurableObjectDeletedExport{}),
+			DiscriminatorValue: "durable-object",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersDurableObjectRenamedExport{}),
+			DiscriminatorValue: "durable-object",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersDurableObjectTransferredExport{}),
+			DiscriminatorValue: "durable-object",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(VersionExportsWorkersDurableObjectExpectingTransferExport{}),
+			DiscriminatorValue: "durable-object",
+		},
+	)
+}
+
+// A named Worker entrypoint export (`type: worker`). Worker entrypoints are always
+// live (`state: created`) and carry no storage or lifecycle fields. The optional
+// `cache` block overrides the Worker's global `cache_options.enabled` for this
+// entrypoint.
+type VersionExportsWorkersWorkerExport struct {
+	// Marks this entry as a Worker entrypoint export.
+	Type VersionExportsWorkersWorkerExportType `json:"type" api:"required"`
+	// Cache override for this entrypoint. Overrides the Worker's global
+	// `cache_options.enabled` for this entrypoint only.
+	Cache VersionExportsWorkersWorkerExportCache `json:"cache"`
+	// Live export. May be omitted; defaults to `created`.
+	State VersionExportsWorkersWorkerExportState `json:"state"`
+	JSON  versionExportsWorkersWorkerExportJSON  `json:"-"`
+}
+
+// versionExportsWorkersWorkerExportJSON contains the JSON metadata for the struct
+// [VersionExportsWorkersWorkerExport]
+type versionExportsWorkersWorkerExportJSON struct {
+	Type        apijson.Field
+	Cache       apijson.Field
+	State       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersWorkerExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersWorkerExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersWorkerExport) implementsVersionExport() {}
+
+// Marks this entry as a Worker entrypoint export.
+type VersionExportsWorkersWorkerExportType string
+
+const (
+	VersionExportsWorkersWorkerExportTypeWorker VersionExportsWorkersWorkerExportType = "worker"
+)
+
+func (r VersionExportsWorkersWorkerExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersWorkerExportTypeWorker:
+		return true
+	}
+	return false
+}
+
+// Cache override for this entrypoint. Overrides the Worker's global
+// `cache_options.enabled` for this entrypoint only.
+type VersionExportsWorkersWorkerExportCache struct {
+	// Whether caching is enabled for this entrypoint.
+	Enabled bool                                       `json:"enabled" api:"required"`
+	JSON    versionExportsWorkersWorkerExportCacheJSON `json:"-"`
+}
+
+// versionExportsWorkersWorkerExportCacheJSON contains the JSON metadata for the
+// struct [VersionExportsWorkersWorkerExportCache]
+type versionExportsWorkersWorkerExportCacheJSON struct {
+	Enabled     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersWorkerExportCache) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersWorkerExportCacheJSON) RawJSON() string {
+	return r.raw
+}
+
+// Live export. May be omitted; defaults to `created`.
+type VersionExportsWorkersWorkerExportState string
+
+const (
+	VersionExportsWorkersWorkerExportStateCreated VersionExportsWorkersWorkerExportState = "created"
+)
+
+func (r VersionExportsWorkersWorkerExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersWorkerExportStateCreated:
+		return true
+	}
+	return false
+}
+
+// A live Durable Object export (`state: created`, the default). The platform
+// auto-provisions the namespace on first deploy, matches it on subsequent deploys,
+// and never mutates or deletes it as a side effect of a code-only change.
+// `storage` is required; `renamed_to`, `transferred_to` and `transfer_from` are
+// not allowed on a live entry.
+type VersionExportsWorkersDurableObjectExport struct {
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage VersionExportsWorkersDurableObjectExportStorage `json:"storage" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type VersionExportsWorkersDurableObjectExportType `json:"type" api:"required"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object. When set, the namespace is container-enabled. Valid
+	// only on live entries.
+	Container string `json:"container"`
+	// Live export. May be omitted; defaults to `created`.
+	State VersionExportsWorkersDurableObjectExportState `json:"state"`
+	JSON  versionExportsWorkersDurableObjectExportJSON  `json:"-"`
+}
+
+// versionExportsWorkersDurableObjectExportJSON contains the JSON metadata for the
+// struct [VersionExportsWorkersDurableObjectExport]
+type versionExportsWorkersDurableObjectExportJSON struct {
+	Storage     apijson.Field
+	Type        apijson.Field
+	Container   apijson.Field
+	State       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersDurableObjectExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersDurableObjectExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersDurableObjectExport) implementsVersionExport() {}
+
+// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+// already exists as KV-backed; the `exports` flow never provisions a new
+// `legacy-kv` namespace.
+type VersionExportsWorkersDurableObjectExportStorage string
+
+const (
+	VersionExportsWorkersDurableObjectExportStorageSqlite   VersionExportsWorkersDurableObjectExportStorage = "sqlite"
+	VersionExportsWorkersDurableObjectExportStorageLegacyKV VersionExportsWorkersDurableObjectExportStorage = "legacy-kv"
+)
+
+func (r VersionExportsWorkersDurableObjectExportStorage) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExportStorageSqlite, VersionExportsWorkersDurableObjectExportStorageLegacyKV:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Durable Object export.
+type VersionExportsWorkersDurableObjectExportType string
+
+const (
+	VersionExportsWorkersDurableObjectExportTypeDurableObject VersionExportsWorkersDurableObjectExportType = "durable-object"
+)
+
+func (r VersionExportsWorkersDurableObjectExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExportTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// Live export. May be omitted; defaults to `created`.
+type VersionExportsWorkersDurableObjectExportState string
+
+const (
+	VersionExportsWorkersDurableObjectExportStateCreated VersionExportsWorkersDurableObjectExportState = "created"
+)
+
+func (r VersionExportsWorkersDurableObjectExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExportStateCreated:
+		return true
+	}
+	return false
+}
+
+// A `deleted` tombstone: retires the provisioned namespace for this class and all
+// of its data. The class must be absent from the uploaded code and no other Worker
+// in the account may bind to the namespace, otherwise the deploy is rejected. No
+// other fields are allowed. Deletion is irreversible.
+type VersionExportsWorkersDurableObjectDeletedExport struct {
+	// Tombstone that deletes the namespace.
+	State VersionExportsWorkersDurableObjectDeletedExportState `json:"state" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type VersionExportsWorkersDurableObjectDeletedExportType `json:"type" api:"required"`
+	JSON versionExportsWorkersDurableObjectDeletedExportJSON `json:"-"`
+}
+
+// versionExportsWorkersDurableObjectDeletedExportJSON contains the JSON metadata
+// for the struct [VersionExportsWorkersDurableObjectDeletedExport]
+type versionExportsWorkersDurableObjectDeletedExportJSON struct {
+	State       apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersDurableObjectDeletedExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersDurableObjectDeletedExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersDurableObjectDeletedExport) implementsVersionExport() {}
+
+// Tombstone that deletes the namespace.
+type VersionExportsWorkersDurableObjectDeletedExportState string
+
+const (
+	VersionExportsWorkersDurableObjectDeletedExportStateDeleted VersionExportsWorkersDurableObjectDeletedExportState = "deleted"
+)
+
+func (r VersionExportsWorkersDurableObjectDeletedExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectDeletedExportStateDeleted:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Durable Object export.
+type VersionExportsWorkersDurableObjectDeletedExportType string
+
+const (
+	VersionExportsWorkersDurableObjectDeletedExportTypeDurableObject VersionExportsWorkersDurableObjectDeletedExportType = "durable-object"
+)
+
+func (r VersionExportsWorkersDurableObjectDeletedExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectDeletedExportTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// A `renamed` tombstone: rewrites the provisioned namespace's class name from this
+// map key to `renamed_to`. The source class may stay in code during the rollout
+// window (an info notice is emitted). `storage`, `transferred_to` and
+// `transfer_from` are not allowed.
+type VersionExportsWorkersDurableObjectRenamedExport struct {
+	// Tombstone that renames the namespace's class.
+	State VersionExportsWorkersDurableObjectRenamedExportState `json:"state" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type VersionExportsWorkersDurableObjectRenamedExportType `json:"type" api:"required"`
+	JSON versionExportsWorkersDurableObjectRenamedExportJSON `json:"-"`
+}
+
+// versionExportsWorkersDurableObjectRenamedExportJSON contains the JSON metadata
+// for the struct [VersionExportsWorkersDurableObjectRenamedExport]
+type versionExportsWorkersDurableObjectRenamedExportJSON struct {
+	State       apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersDurableObjectRenamedExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersDurableObjectRenamedExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersDurableObjectRenamedExport) implementsVersionExport() {}
+
+// Tombstone that renames the namespace's class.
+type VersionExportsWorkersDurableObjectRenamedExportState string
+
+const (
+	VersionExportsWorkersDurableObjectRenamedExportStateRenamed VersionExportsWorkersDurableObjectRenamedExportState = "renamed"
+)
+
+func (r VersionExportsWorkersDurableObjectRenamedExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectRenamedExportStateRenamed:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Durable Object export.
+type VersionExportsWorkersDurableObjectRenamedExportType string
+
+const (
+	VersionExportsWorkersDurableObjectRenamedExportTypeDurableObject VersionExportsWorkersDurableObjectRenamedExportType = "durable-object"
+)
+
+func (r VersionExportsWorkersDurableObjectRenamedExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectRenamedExportTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// A `transferred` tombstone (source side of a two-phase transfer): hands ownership
+// of the provisioned namespace to another script in the same account, named by
+// `transferred_to`. The target must have already deployed a matching
+// `expecting-transfer` entry. The source class may stay in code during the rollout
+// window (an info notice is emitted). `storage`, `renamed_to` and `transfer_from`
+// are not allowed.
+type VersionExportsWorkersDurableObjectTransferredExport struct {
+	// Tombstone that transfers the namespace to another script.
+	State VersionExportsWorkersDurableObjectTransferredExportState `json:"state" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type VersionExportsWorkersDurableObjectTransferredExportType `json:"type" api:"required"`
+	JSON versionExportsWorkersDurableObjectTransferredExportJSON `json:"-"`
+}
+
+// versionExportsWorkersDurableObjectTransferredExportJSON contains the JSON
+// metadata for the struct [VersionExportsWorkersDurableObjectTransferredExport]
+type versionExportsWorkersDurableObjectTransferredExportJSON struct {
+	State       apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersDurableObjectTransferredExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersDurableObjectTransferredExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersDurableObjectTransferredExport) implementsVersionExport() {}
+
+// Tombstone that transfers the namespace to another script.
+type VersionExportsWorkersDurableObjectTransferredExportState string
+
+const (
+	VersionExportsWorkersDurableObjectTransferredExportStateTransferred VersionExportsWorkersDurableObjectTransferredExportState = "transferred"
+)
+
+func (r VersionExportsWorkersDurableObjectTransferredExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectTransferredExportStateTransferred:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Durable Object export.
+type VersionExportsWorkersDurableObjectTransferredExportType string
+
+const (
+	VersionExportsWorkersDurableObjectTransferredExportTypeDurableObject VersionExportsWorkersDurableObjectTransferredExportType = "durable-object"
+)
+
+func (r VersionExportsWorkersDurableObjectTransferredExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectTransferredExportTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// The target side of a two-phase transfer (`state: expecting-transfer`). Declares
+// that this script expects to receive a namespace for this class from the
+// `transfer_from` script. This is a live entry, not a tombstone: bindings resolve
+// through the source's namespace until the source commits with a `transferred`
+// tombstone. `storage` and `transfer_from` are required; `renamed_to` and
+// `transferred_to` are not allowed.
+type VersionExportsWorkersDurableObjectExpectingTransferExport struct {
+	// Target side of a two-phase transfer.
+	State VersionExportsWorkersDurableObjectExpectingTransferExportState `json:"state" api:"required"`
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage VersionExportsWorkersDurableObjectExpectingTransferExportStorage `json:"storage" api:"required"`
+	// The source script name to receive the namespace from. Must be in the same
+	// account and dispatch-namespace context. Present on reads for
+	// `expecting-transfer` entries.
+	TransferFrom string `json:"transfer_from" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type VersionExportsWorkersDurableObjectExpectingTransferExportType `json:"type" api:"required"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object once the transfer settles. Valid only on live entries.
+	Container string                                                        `json:"container"`
+	JSON      versionExportsWorkersDurableObjectExpectingTransferExportJSON `json:"-"`
+}
+
+// versionExportsWorkersDurableObjectExpectingTransferExportJSON contains the JSON
+// metadata for the struct
+// [VersionExportsWorkersDurableObjectExpectingTransferExport]
+type versionExportsWorkersDurableObjectExpectingTransferExportJSON struct {
+	State        apijson.Field
+	Storage      apijson.Field
+	TransferFrom apijson.Field
+	Type         apijson.Field
+	Container    apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *VersionExportsWorkersDurableObjectExpectingTransferExport) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsWorkersDurableObjectExpectingTransferExportJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExport) implementsVersionExport() {}
+
+// Target side of a two-phase transfer.
+type VersionExportsWorkersDurableObjectExpectingTransferExportState string
+
+const (
+	VersionExportsWorkersDurableObjectExpectingTransferExportStateExpectingTransfer VersionExportsWorkersDurableObjectExpectingTransferExportState = "expecting-transfer"
+)
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExportState) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExpectingTransferExportStateExpectingTransfer:
+		return true
+	}
+	return false
+}
+
+// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+// already exists as KV-backed; the `exports` flow never provisions a new
+// `legacy-kv` namespace.
+type VersionExportsWorkersDurableObjectExpectingTransferExportStorage string
+
+const (
+	VersionExportsWorkersDurableObjectExpectingTransferExportStorageSqlite   VersionExportsWorkersDurableObjectExpectingTransferExportStorage = "sqlite"
+	VersionExportsWorkersDurableObjectExpectingTransferExportStorageLegacyKV VersionExportsWorkersDurableObjectExpectingTransferExportStorage = "legacy-kv"
+)
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExportStorage) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExpectingTransferExportStorageSqlite, VersionExportsWorkersDurableObjectExpectingTransferExportStorageLegacyKV:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Durable Object export.
+type VersionExportsWorkersDurableObjectExpectingTransferExportType string
+
+const (
+	VersionExportsWorkersDurableObjectExpectingTransferExportTypeDurableObject VersionExportsWorkersDurableObjectExpectingTransferExportType = "durable-object"
+)
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExportType) IsKnown() bool {
+	switch r {
+	case VersionExportsWorkersDurableObjectExpectingTransferExportTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// Marks this entry as a Worker entrypoint export.
+type VersionExportsType string
+
+const (
+	VersionExportsTypeWorker        VersionExportsType = "worker"
+	VersionExportsTypeDurableObject VersionExportsType = "durable-object"
+)
+
+func (r VersionExportsType) IsKnown() bool {
+	switch r {
+	case VersionExportsTypeWorker, VersionExportsTypeDurableObject:
+		return true
+	}
+	return false
+}
+
+// Live export. May be omitted; defaults to `created`.
+type VersionExportsState string
+
+const (
+	VersionExportsStateCreated           VersionExportsState = "created"
+	VersionExportsStateDeleted           VersionExportsState = "deleted"
+	VersionExportsStateRenamed           VersionExportsState = "renamed"
+	VersionExportsStateTransferred       VersionExportsState = "transferred"
+	VersionExportsStateExpectingTransfer VersionExportsState = "expecting-transfer"
+)
+
+func (r VersionExportsState) IsKnown() bool {
+	switch r {
+	case VersionExportsStateCreated, VersionExportsStateDeleted, VersionExportsStateRenamed, VersionExportsStateTransferred, VersionExportsStateExpectingTransfer:
+		return true
+	}
+	return false
+}
+
+// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+// already exists as KV-backed; the `exports` flow never provisions a new
+// `legacy-kv` namespace.
+type VersionExportsStorage string
+
+const (
+	VersionExportsStorageSqlite   VersionExportsStorage = "sqlite"
+	VersionExportsStorageLegacyKV VersionExportsStorage = "legacy-kv"
+)
+
+func (r VersionExportsStorage) IsKnown() bool {
+	switch r {
+	case VersionExportsStorageSqlite, VersionExportsStorageLegacyKV:
+		return true
+	}
+	return false
+}
+
+// Summary of the declarative exports reconciliation that ran on this upload.
+// Populated only when the uploaded metadata included an `exports` block. Durable
+// Object entries drive reconciliation; `type: worker` entries do not contribute to
+// this summary.
+type VersionExportsReconciliation struct {
+	// Class names for which a new namespace was provisioned.
+	Created []string `json:"created" api:"required"`
+	// Class names whose namespace was deleted by a `deleted` tombstone.
+	Deleted []string `json:"deleted" api:"required"`
+	// Non-blocking info entries (stale tombstones, tombstone applied with class still
+	// in code). See `exports_reconciliation_info`.
+	Info []VersionExportsReconciliationInfo `json:"info" api:"required"`
+	// Source class names whose tombstone entry is now stale and safe to delete from
+	// `exports` (no remaining referencing scripts).
+	RemovableEntries []string `json:"removable_entries" api:"required"`
+	// Applied `renamed` tombstones.
+	Renamed []VersionExportsReconciliationRenamed `json:"renamed" api:"required"`
+	// Phase-1 transfer hints recorded on the target side.
+	TransferPending []VersionExportsReconciliationTransferPending `json:"transfer_pending" api:"required"`
+	// Committed `transferred` tombstones (phase-2).
+	Transferred []VersionExportsReconciliationTransferred `json:"transferred" api:"required"`
+	// Class names whose provisioned namespace was mutated in place.
+	Updated []string `json:"updated" api:"required"`
+	// Non-blocking warnings. See `exports_reconciliation_warning`.
+	Warnings []VersionExportsReconciliationWarning `json:"warnings" api:"required"`
+	JSON     versionExportsReconciliationJSON      `json:"-"`
+}
+
+// versionExportsReconciliationJSON contains the JSON metadata for the struct
+// [VersionExportsReconciliation]
+type versionExportsReconciliationJSON struct {
+	Created          apijson.Field
+	Deleted          apijson.Field
+	Info             apijson.Field
+	RemovableEntries apijson.Field
+	Renamed          apijson.Field
+	TransferPending  apijson.Field
+	Transferred      apijson.Field
+	Updated          apijson.Field
+	Warnings         apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliation) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationJSON) RawJSON() string {
+	return r.raw
+}
+
+// A non-blocking reconciliation info entry. Emitted for stale tombstones (a no-op
+// on this deploy) and for tombstones applied with the source class still in code
+// (the supported zero-downtime rollout pattern).
+type VersionExportsReconciliationInfo struct {
+	// The class name the info entry is about.
+	Class string `json:"class" api:"required"`
+	// Human-readable explanation.
+	Message string `json:"message" api:"required"`
+	// Stable, machine-readable tag identifying which reconciliation scenario produced
+	// an error, warning, or info entry. Clients may branch on this value instead of
+	// parsing `message`.
+	Scenario VersionExportsReconciliationInfoScenario `json:"scenario" api:"required"`
+	// The provisioned namespace the entry relates to, when applicable.
+	NamespaceID string `json:"namespace_id" format:"uuid"`
+	// Other Workers in the account that still bind to the affected class. Advisory:
+	// while non-empty the tombstone is not yet safe to remove — redeploy these Workers
+	// with bindings re-pointed first.
+	ReferencingScripts []string                             `json:"referencing_scripts"`
+	JSON               versionExportsReconciliationInfoJSON `json:"-"`
+}
+
+// versionExportsReconciliationInfoJSON contains the JSON metadata for the struct
+// [VersionExportsReconciliationInfo]
+type versionExportsReconciliationInfoJSON struct {
+	Class              apijson.Field
+	Message            apijson.Field
+	Scenario           apijson.Field
+	NamespaceID        apijson.Field
+	ReferencingScripts apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliationInfo) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationInfoJSON) RawJSON() string {
+	return r.raw
+}
+
+// Stable, machine-readable tag identifying which reconciliation scenario produced
+// an error, warning, or info entry. Clients may branch on this value instead of
+// parsing `message`.
+type VersionExportsReconciliationInfoScenario string
+
+const (
+	VersionExportsReconciliationInfoScenarioCodeClassNotInExports                     VersionExportsReconciliationInfoScenario = "code_class_not_in_exports"
+	VersionExportsReconciliationInfoScenarioProvisionedClassMissingFromConfig         VersionExportsReconciliationInfoScenario = "provisioned_class_missing_from_config"
+	VersionExportsReconciliationInfoScenarioConfigExportNotInCode                     VersionExportsReconciliationInfoScenario = "config_export_not_in_code"
+	VersionExportsReconciliationInfoScenarioConfigReferencesNonexistentClass          VersionExportsReconciliationInfoScenario = "config_references_nonexistent_class"
+	VersionExportsReconciliationInfoScenarioOrphanedProvisionedNamespace              VersionExportsReconciliationInfoScenario = "orphaned_provisioned_namespace"
+	VersionExportsReconciliationInfoScenarioStorageTypeMismatch                       VersionExportsReconciliationInfoScenario = "storage_type_mismatch"
+	VersionExportsReconciliationInfoScenarioFreeTierRequiresSqlite                    VersionExportsReconciliationInfoScenario = "free_tier_requires_sqlite"
+	VersionExportsReconciliationInfoScenarioInvalidExport                             VersionExportsReconciliationInfoScenario = "invalid_export"
+	VersionExportsReconciliationInfoScenarioTombstoneDeleteClassStillInCode           VersionExportsReconciliationInfoScenario = "tombstone_delete_class_still_in_code"
+	VersionExportsReconciliationInfoScenarioTombstoneDeleteBlockedByExternalBindings  VersionExportsReconciliationInfoScenario = "tombstone_delete_blocked_by_external_bindings"
+	VersionExportsReconciliationInfoScenarioTombstoneRenamedToOccupied                VersionExportsReconciliationInfoScenario = "tombstone_renamed_to_occupied"
+	VersionExportsReconciliationInfoScenarioTransferredPendingNotFound                VersionExportsReconciliationInfoScenario = "transferred_pending_not_found"
+	VersionExportsReconciliationInfoScenarioTransferredTargetMissing                  VersionExportsReconciliationInfoScenario = "transferred_target_missing"
+	VersionExportsReconciliationInfoScenarioTransferredTargetMismatch                 VersionExportsReconciliationInfoScenario = "transferred_target_mismatch"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceMissing             VersionExportsReconciliationInfoScenario = "phase_one_transfer_source_missing"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceNamespaceMissing    VersionExportsReconciliationInfoScenario = "phase_one_transfer_source_namespace_missing"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferTargetClassProvisioned    VersionExportsReconciliationInfoScenario = "phase_one_transfer_target_class_provisioned"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferAfterCommitMismatch       VersionExportsReconciliationInfoScenario = "phase_one_transfer_after_commit_mismatch"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferDuplicate                 VersionExportsReconciliationInfoScenario = "phase_one_transfer_duplicate"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferTargetInDispatchNamespace VersionExportsReconciliationInfoScenario = "phase_one_transfer_target_in_dispatch_namespace"
+	VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceInDispatchNamespace VersionExportsReconciliationInfoScenario = "phase_one_transfer_source_in_dispatch_namespace"
+	VersionExportsReconciliationInfoScenarioTransferredSourceInDispatchNamespace      VersionExportsReconciliationInfoScenario = "transferred_source_in_dispatch_namespace"
+	VersionExportsReconciliationInfoScenarioTransferredTargetInDispatchNamespace      VersionExportsReconciliationInfoScenario = "transferred_target_in_dispatch_namespace"
+	VersionExportsReconciliationInfoScenarioContainerUndeclaredReference              VersionExportsReconciliationInfoScenario = "container_undeclared_reference"
+	VersionExportsReconciliationInfoScenarioContainerClassNotDurableObject            VersionExportsReconciliationInfoScenario = "container_class_not_durable_object"
+	VersionExportsReconciliationInfoScenarioContainerWiringInconsistent               VersionExportsReconciliationInfoScenario = "container_wiring_inconsistent"
+	VersionExportsReconciliationInfoScenarioContainerMultipleDurableObjects           VersionExportsReconciliationInfoScenario = "container_multiple_durable_objects"
+	VersionExportsReconciliationInfoScenarioTransferContainerParityMismatch           VersionExportsReconciliationInfoScenario = "transfer_container_parity_mismatch"
+	VersionExportsReconciliationInfoScenarioTransferContainerParityMismatchOnCommit   VersionExportsReconciliationInfoScenario = "transfer_container_parity_mismatch_on_commit"
+	VersionExportsReconciliationInfoScenarioTombstoneClassStillInCode                 VersionExportsReconciliationInfoScenario = "tombstone_class_still_in_code"
+	VersionExportsReconciliationInfoScenarioStaleTombstone                            VersionExportsReconciliationInfoScenario = "stale_tombstone"
+	VersionExportsReconciliationInfoScenarioTransferReceiveAlreadyApplied             VersionExportsReconciliationInfoScenario = "transfer_receive_already_applied"
+	VersionExportsReconciliationInfoScenarioTransferReceiveCleanupComplete            VersionExportsReconciliationInfoScenario = "transfer_receive_cleanup_complete"
+)
+
+func (r VersionExportsReconciliationInfoScenario) IsKnown() bool {
+	switch r {
+	case VersionExportsReconciliationInfoScenarioCodeClassNotInExports, VersionExportsReconciliationInfoScenarioProvisionedClassMissingFromConfig, VersionExportsReconciliationInfoScenarioConfigExportNotInCode, VersionExportsReconciliationInfoScenarioConfigReferencesNonexistentClass, VersionExportsReconciliationInfoScenarioOrphanedProvisionedNamespace, VersionExportsReconciliationInfoScenarioStorageTypeMismatch, VersionExportsReconciliationInfoScenarioFreeTierRequiresSqlite, VersionExportsReconciliationInfoScenarioInvalidExport, VersionExportsReconciliationInfoScenarioTombstoneDeleteClassStillInCode, VersionExportsReconciliationInfoScenarioTombstoneDeleteBlockedByExternalBindings, VersionExportsReconciliationInfoScenarioTombstoneRenamedToOccupied, VersionExportsReconciliationInfoScenarioTransferredPendingNotFound, VersionExportsReconciliationInfoScenarioTransferredTargetMissing, VersionExportsReconciliationInfoScenarioTransferredTargetMismatch, VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceMissing, VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceNamespaceMissing, VersionExportsReconciliationInfoScenarioPhaseOneTransferTargetClassProvisioned, VersionExportsReconciliationInfoScenarioPhaseOneTransferAfterCommitMismatch, VersionExportsReconciliationInfoScenarioPhaseOneTransferDuplicate, VersionExportsReconciliationInfoScenarioPhaseOneTransferTargetInDispatchNamespace, VersionExportsReconciliationInfoScenarioPhaseOneTransferSourceInDispatchNamespace, VersionExportsReconciliationInfoScenarioTransferredSourceInDispatchNamespace, VersionExportsReconciliationInfoScenarioTransferredTargetInDispatchNamespace, VersionExportsReconciliationInfoScenarioContainerUndeclaredReference, VersionExportsReconciliationInfoScenarioContainerClassNotDurableObject, VersionExportsReconciliationInfoScenarioContainerWiringInconsistent, VersionExportsReconciliationInfoScenarioContainerMultipleDurableObjects, VersionExportsReconciliationInfoScenarioTransferContainerParityMismatch, VersionExportsReconciliationInfoScenarioTransferContainerParityMismatchOnCommit, VersionExportsReconciliationInfoScenarioTombstoneClassStillInCode, VersionExportsReconciliationInfoScenarioStaleTombstone, VersionExportsReconciliationInfoScenarioTransferReceiveAlreadyApplied, VersionExportsReconciliationInfoScenarioTransferReceiveCleanupComplete:
+		return true
+	}
+	return false
+}
+
+// A single applied `renamed` tombstone.
+type VersionExportsReconciliationRenamed struct {
+	// The original (source) class name.
+	From string `json:"from" api:"required"`
+	// The new class name (`renamed_to`).
+	To   string                                  `json:"to" api:"required"`
+	JSON versionExportsReconciliationRenamedJSON `json:"-"`
+}
+
+// versionExportsReconciliationRenamedJSON contains the JSON metadata for the
+// struct [VersionExportsReconciliationRenamed]
+type versionExportsReconciliationRenamedJSON struct {
+	From        apijson.Field
+	To          apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliationRenamed) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationRenamedJSON) RawJSON() string {
+	return r.raw
+}
+
+// A single phase-1 transfer hint recorded on the target side (a live
+// `expecting-transfer` entry).
+type VersionExportsReconciliationTransferPending struct {
+	// The target-side class name awaiting transfer.
+	Class string `json:"class" api:"required"`
+	// The source script the namespace will be transferred from.
+	From string                                          `json:"from" api:"required"`
+	JSON versionExportsReconciliationTransferPendingJSON `json:"-"`
+}
+
+// versionExportsReconciliationTransferPendingJSON contains the JSON metadata for
+// the struct [VersionExportsReconciliationTransferPending]
+type versionExportsReconciliationTransferPendingJSON struct {
+	Class       apijson.Field
+	From        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliationTransferPending) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationTransferPendingJSON) RawJSON() string {
+	return r.raw
+}
+
+// A single committed `transferred` tombstone (phase-2 commit).
+type VersionExportsReconciliationTransferred struct {
+	// The source class name that was transferred.
+	Class string `json:"class" api:"required"`
+	// The transfer phase. Currently always `committed`.
+	Phase VersionExportsReconciliationTransferredPhase `json:"phase" api:"required"`
+	// The destination script that now owns the namespace.
+	To   string                                      `json:"to" api:"required"`
+	JSON versionExportsReconciliationTransferredJSON `json:"-"`
+}
+
+// versionExportsReconciliationTransferredJSON contains the JSON metadata for the
+// struct [VersionExportsReconciliationTransferred]
+type versionExportsReconciliationTransferredJSON struct {
+	Class       apijson.Field
+	Phase       apijson.Field
+	To          apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliationTransferred) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationTransferredJSON) RawJSON() string {
+	return r.raw
+}
+
+// The transfer phase. Currently always `committed`.
+type VersionExportsReconciliationTransferredPhase string
+
+const (
+	VersionExportsReconciliationTransferredPhaseCommitted VersionExportsReconciliationTransferredPhase = "committed"
+)
+
+func (r VersionExportsReconciliationTransferredPhase) IsKnown() bool {
+	switch r {
+	case VersionExportsReconciliationTransferredPhaseCommitted:
+		return true
+	}
+	return false
+}
+
+// A non-blocking reconciliation warning. Reserved: no scenario populates this
+// array today (`code_class_not_in_exports` is surfaced as info and
+// `provisioned_class_missing_from_config` is a hard error). Clients should still
+// surface any entries that appear.
+type VersionExportsReconciliationWarning struct {
+	// The class name the warning is about.
+	Class string `json:"class" api:"required"`
+	// Human-readable explanation of the warning.
+	Message string `json:"message" api:"required"`
+	// Stable, machine-readable tag identifying which reconciliation scenario produced
+	// an error, warning, or info entry. Clients may branch on this value instead of
+	// parsing `message`.
+	Scenario VersionExportsReconciliationWarningsScenario `json:"scenario" api:"required"`
+	// The provisioned namespace the warning relates to, when applicable.
+	NamespaceID string                                  `json:"namespace_id" format:"uuid"`
+	JSON        versionExportsReconciliationWarningJSON `json:"-"`
+}
+
+// versionExportsReconciliationWarningJSON contains the JSON metadata for the
+// struct [VersionExportsReconciliationWarning]
+type versionExportsReconciliationWarningJSON struct {
+	Class       apijson.Field
+	Message     apijson.Field
+	Scenario    apijson.Field
+	NamespaceID apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VersionExportsReconciliationWarning) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionExportsReconciliationWarningJSON) RawJSON() string {
+	return r.raw
+}
+
+// Stable, machine-readable tag identifying which reconciliation scenario produced
+// an error, warning, or info entry. Clients may branch on this value instead of
+// parsing `message`.
+type VersionExportsReconciliationWarningsScenario string
+
+const (
+	VersionExportsReconciliationWarningsScenarioCodeClassNotInExports                     VersionExportsReconciliationWarningsScenario = "code_class_not_in_exports"
+	VersionExportsReconciliationWarningsScenarioProvisionedClassMissingFromConfig         VersionExportsReconciliationWarningsScenario = "provisioned_class_missing_from_config"
+	VersionExportsReconciliationWarningsScenarioConfigExportNotInCode                     VersionExportsReconciliationWarningsScenario = "config_export_not_in_code"
+	VersionExportsReconciliationWarningsScenarioConfigReferencesNonexistentClass          VersionExportsReconciliationWarningsScenario = "config_references_nonexistent_class"
+	VersionExportsReconciliationWarningsScenarioOrphanedProvisionedNamespace              VersionExportsReconciliationWarningsScenario = "orphaned_provisioned_namespace"
+	VersionExportsReconciliationWarningsScenarioStorageTypeMismatch                       VersionExportsReconciliationWarningsScenario = "storage_type_mismatch"
+	VersionExportsReconciliationWarningsScenarioFreeTierRequiresSqlite                    VersionExportsReconciliationWarningsScenario = "free_tier_requires_sqlite"
+	VersionExportsReconciliationWarningsScenarioInvalidExport                             VersionExportsReconciliationWarningsScenario = "invalid_export"
+	VersionExportsReconciliationWarningsScenarioTombstoneDeleteClassStillInCode           VersionExportsReconciliationWarningsScenario = "tombstone_delete_class_still_in_code"
+	VersionExportsReconciliationWarningsScenarioTombstoneDeleteBlockedByExternalBindings  VersionExportsReconciliationWarningsScenario = "tombstone_delete_blocked_by_external_bindings"
+	VersionExportsReconciliationWarningsScenarioTombstoneRenamedToOccupied                VersionExportsReconciliationWarningsScenario = "tombstone_renamed_to_occupied"
+	VersionExportsReconciliationWarningsScenarioTransferredPendingNotFound                VersionExportsReconciliationWarningsScenario = "transferred_pending_not_found"
+	VersionExportsReconciliationWarningsScenarioTransferredTargetMissing                  VersionExportsReconciliationWarningsScenario = "transferred_target_missing"
+	VersionExportsReconciliationWarningsScenarioTransferredTargetMismatch                 VersionExportsReconciliationWarningsScenario = "transferred_target_mismatch"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceMissing             VersionExportsReconciliationWarningsScenario = "phase_one_transfer_source_missing"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceNamespaceMissing    VersionExportsReconciliationWarningsScenario = "phase_one_transfer_source_namespace_missing"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferTargetClassProvisioned    VersionExportsReconciliationWarningsScenario = "phase_one_transfer_target_class_provisioned"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferAfterCommitMismatch       VersionExportsReconciliationWarningsScenario = "phase_one_transfer_after_commit_mismatch"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferDuplicate                 VersionExportsReconciliationWarningsScenario = "phase_one_transfer_duplicate"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferTargetInDispatchNamespace VersionExportsReconciliationWarningsScenario = "phase_one_transfer_target_in_dispatch_namespace"
+	VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceInDispatchNamespace VersionExportsReconciliationWarningsScenario = "phase_one_transfer_source_in_dispatch_namespace"
+	VersionExportsReconciliationWarningsScenarioTransferredSourceInDispatchNamespace      VersionExportsReconciliationWarningsScenario = "transferred_source_in_dispatch_namespace"
+	VersionExportsReconciliationWarningsScenarioTransferredTargetInDispatchNamespace      VersionExportsReconciliationWarningsScenario = "transferred_target_in_dispatch_namespace"
+	VersionExportsReconciliationWarningsScenarioContainerUndeclaredReference              VersionExportsReconciliationWarningsScenario = "container_undeclared_reference"
+	VersionExportsReconciliationWarningsScenarioContainerClassNotDurableObject            VersionExportsReconciliationWarningsScenario = "container_class_not_durable_object"
+	VersionExportsReconciliationWarningsScenarioContainerWiringInconsistent               VersionExportsReconciliationWarningsScenario = "container_wiring_inconsistent"
+	VersionExportsReconciliationWarningsScenarioContainerMultipleDurableObjects           VersionExportsReconciliationWarningsScenario = "container_multiple_durable_objects"
+	VersionExportsReconciliationWarningsScenarioTransferContainerParityMismatch           VersionExportsReconciliationWarningsScenario = "transfer_container_parity_mismatch"
+	VersionExportsReconciliationWarningsScenarioTransferContainerParityMismatchOnCommit   VersionExportsReconciliationWarningsScenario = "transfer_container_parity_mismatch_on_commit"
+	VersionExportsReconciliationWarningsScenarioTombstoneClassStillInCode                 VersionExportsReconciliationWarningsScenario = "tombstone_class_still_in_code"
+	VersionExportsReconciliationWarningsScenarioStaleTombstone                            VersionExportsReconciliationWarningsScenario = "stale_tombstone"
+	VersionExportsReconciliationWarningsScenarioTransferReceiveAlreadyApplied             VersionExportsReconciliationWarningsScenario = "transfer_receive_already_applied"
+	VersionExportsReconciliationWarningsScenarioTransferReceiveCleanupComplete            VersionExportsReconciliationWarningsScenario = "transfer_receive_cleanup_complete"
+)
+
+func (r VersionExportsReconciliationWarningsScenario) IsKnown() bool {
+	switch r {
+	case VersionExportsReconciliationWarningsScenarioCodeClassNotInExports, VersionExportsReconciliationWarningsScenarioProvisionedClassMissingFromConfig, VersionExportsReconciliationWarningsScenarioConfigExportNotInCode, VersionExportsReconciliationWarningsScenarioConfigReferencesNonexistentClass, VersionExportsReconciliationWarningsScenarioOrphanedProvisionedNamespace, VersionExportsReconciliationWarningsScenarioStorageTypeMismatch, VersionExportsReconciliationWarningsScenarioFreeTierRequiresSqlite, VersionExportsReconciliationWarningsScenarioInvalidExport, VersionExportsReconciliationWarningsScenarioTombstoneDeleteClassStillInCode, VersionExportsReconciliationWarningsScenarioTombstoneDeleteBlockedByExternalBindings, VersionExportsReconciliationWarningsScenarioTombstoneRenamedToOccupied, VersionExportsReconciliationWarningsScenarioTransferredPendingNotFound, VersionExportsReconciliationWarningsScenarioTransferredTargetMissing, VersionExportsReconciliationWarningsScenarioTransferredTargetMismatch, VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceMissing, VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceNamespaceMissing, VersionExportsReconciliationWarningsScenarioPhaseOneTransferTargetClassProvisioned, VersionExportsReconciliationWarningsScenarioPhaseOneTransferAfterCommitMismatch, VersionExportsReconciliationWarningsScenarioPhaseOneTransferDuplicate, VersionExportsReconciliationWarningsScenarioPhaseOneTransferTargetInDispatchNamespace, VersionExportsReconciliationWarningsScenarioPhaseOneTransferSourceInDispatchNamespace, VersionExportsReconciliationWarningsScenarioTransferredSourceInDispatchNamespace, VersionExportsReconciliationWarningsScenarioTransferredTargetInDispatchNamespace, VersionExportsReconciliationWarningsScenarioContainerUndeclaredReference, VersionExportsReconciliationWarningsScenarioContainerClassNotDurableObject, VersionExportsReconciliationWarningsScenarioContainerWiringInconsistent, VersionExportsReconciliationWarningsScenarioContainerMultipleDurableObjects, VersionExportsReconciliationWarningsScenarioTransferContainerParityMismatch, VersionExportsReconciliationWarningsScenarioTransferContainerParityMismatchOnCommit, VersionExportsReconciliationWarningsScenarioTombstoneClassStillInCode, VersionExportsReconciliationWarningsScenarioStaleTombstone, VersionExportsReconciliationWarningsScenarioTransferReceiveAlreadyApplied, VersionExportsReconciliationWarningsScenarioTransferReceiveCleanupComplete:
+		return true
+	}
+	return false
 }
 
 // Resource limits enforced at runtime.
@@ -2912,6 +4219,34 @@ func (r versionModuleJSON) RawJSON() string {
 	return r.raw
 }
 
+type VersionPackageDependency struct {
+	// The exact version that was resolved and installed by the package manager.
+	InstalledVersion string `json:"installedVersion" api:"required"`
+	// The npm package name.
+	Name string `json:"name" api:"required"`
+	// The version constraint as written in package.json.
+	PackageJsonVersion string                       `json:"packageJsonVersion" api:"required"`
+	JSON               versionPackageDependencyJSON `json:"-"`
+}
+
+// versionPackageDependencyJSON contains the JSON metadata for the struct
+// [VersionPackageDependency]
+type versionPackageDependencyJSON struct {
+	InstalledVersion   apijson.Field
+	Name               apijson.Field
+	PackageJsonVersion apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *VersionPackageDependency) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r versionPackageDependencyJSON) RawJSON() string {
+	return r.raw
+}
+
 // Configuration for
 // [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
 // Specify mode='smart' for Smart Placement, or one of region/hostname/host.
@@ -2922,7 +4257,7 @@ type VersionPlacement struct {
 	Hostname string `json:"hostname"`
 	// Enables
 	// [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
-	Mode VersionPlacementModeMode `json:"mode"`
+	Mode VersionPlacementMode `json:"mode"`
 	// Cloud region for targeted placement in format 'provider:region'.
 	Region string `json:"region"`
 	// This field can have the runtime type of [[]VersionPlacementObjectTarget].
@@ -3204,6 +4539,10 @@ type VersionParam struct {
 	// docs:
 	// https://developers.cloudflare.com/workers/configuration/multipart-upload-metadata/#bindings.
 	Bindings param.Field[[]VersionBindingsUnionParam] `json:"bindings"`
+	// Global CacheW configuration for the Worker. When caching is on, the platform
+	// provisions a `cloudflare.app` zone for the Worker. A `type: worker` entry in the
+	// `exports` map can override this value for a single entrypoint.
+	CacheOptions param.Field[VersionCacheOptionsParam] `json:"cache_options"`
 	// Date indicating targeted support in the Workers runtime. Backwards incompatible
 	// fixes to the runtime following this date will not affect this Worker.
 	CompatibilityDate param.Field[string] `json:"compatibility_date"`
@@ -3214,6 +4553,12 @@ type VersionParam struct {
 	// List of containers attached to a Worker. Containers can only be attached to
 	// Durable Object classes of this Worker script.
 	Containers param.Field[[]VersionContainerParam] `json:"containers"`
+	// Declarative exports for the version, including Durable Object classes (with
+	// their `storage` backend) and named Worker entrypoints. On reads, tombstoned
+	// lifecycle entries are omitted, so only live exports (`created` and
+	// `expecting-transfer`) are returned. `exports` and `migrations` are mutually
+	// exclusive on upload.
+	Exports param.Field[map[string]VersionExportsUnionParam] `json:"exports"`
 	// Resource limits enforced at runtime.
 	Limits param.Field[VersionLimitsParam] `json:"limits"`
 	// The name of the main module in the `modules` array (e.g. the name of the module
@@ -3233,6 +4578,9 @@ type VersionParam struct {
 	// `_headers` and `_redirects` files should be included as modules named `_headers`
 	// and `_redirects` with content type `text/plain`.
 	Modules param.Field[[]VersionModuleParam] `json:"modules"`
+	// The list of npm packages that were installed and used when this Worker version
+	// was built.
+	PackageDependencies param.Field[[]VersionPackageDependencyParam] `json:"package_dependencies"`
 	// Configuration for
 	// [Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement).
 	// Specify mode='smart' for Smart Placement, or one of region/hostname/host.
@@ -3279,6 +4627,11 @@ func (r VersionAssetsParam) MarshalJSON() (data []byte, err error) {
 
 // Configuration for assets within a Worker.
 type VersionAssetsConfigParam struct {
+	// The public URL path prefix under which assets are served. A null request value
+	// resets it to `/`; responses represent the root as `/`. All versions in a gradual
+	// deployment must use the same canonical value. To change it, first deploy the
+	// version containing the change at 100%.
+	BasePath param.Field[string] `json:"base_path"`
 	// Determines the redirects and rewrites of requests for HTML content.
 	HTMLHandling param.Field[VersionAssetsConfigHTMLHandling] `json:"html_handling"`
 	// Determines the response when a request does not match a static asset, and there
@@ -3347,6 +4700,9 @@ type VersionBindingParam struct {
 	// Data format of the key.
 	// [Learn more](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#format).
 	Format param.Field[VersionBindingsFormat] `json:"format"`
+	// Enables Gateway identity for the binding. Requires network_id to be
+	// "cf1:network" and cannot be combined with tunnel_id.
+	Identity param.Field[VersionBindingsIdentity] `json:"identity"`
 	// Name of the Vectorize index to bind to.
 	IndexName param.Field[string] `json:"index_name"`
 	// The user-chosen instance name. Must exist at deploy time. The worker can search,
@@ -3379,7 +4735,8 @@ type VersionBindingParam struct {
 	// Name of the Pipeline to bind to.
 	Pipeline param.Field[string] `json:"pipeline"`
 	// Name of the Queue to bind to.
-	QueueName param.Field[string] `json:"queue_name"`
+	QueueName param.Field[string]      `json:"queue_name"`
+	Retry     param.Field[interface{}] `json:"retry"`
 	// The script where the Durable Object is defined, if it is external to this
 	// Worker.
 	ScriptName param.Field[string] `json:"script_name"`
@@ -3392,6 +4749,8 @@ type VersionBindingParam struct {
 	Simple    param.Field[interface{}] `json:"simple"`
 	// ID of the store containing the secret.
 	StoreID param.Field[string] `json:"store_id"`
+	// ID of a K2 stream owned by the account deploying the Worker.
+	Stream param.Field[string] `json:"stream"`
 	// The text value to use.
 	Text param.Field[string] `json:"text"`
 	// UUID of the Cloudflare Tunnel to bind to. Mutually exclusive with network_id.
@@ -3416,7 +4775,9 @@ func (r VersionBindingParam) implementsVersionBindingsUnionParam() {}
 // Satisfied by [workers.VersionBindingsWorkersBindingKindAIParam],
 // [workers.VersionBindingsWorkersBindingKindAISearchParam],
 // [workers.VersionBindingsWorkersBindingKindAISearchNamespaceParam],
+// [workers.VersionBindingsWorkersBindingKindMessagingParam],
 // [workers.VersionBindingsWorkersBindingKindAnalyticsEngineParam],
+// [workers.VersionBindingsWorkersBindingKindArtifactsParam],
 // [workers.VersionBindingsWorkersBindingKindAssetsParam],
 // [workers.VersionBindingsWorkersBindingKindBrowserParam],
 // [workers.VersionBindingsWorkersBindingKindD1Param],
@@ -3432,6 +4793,7 @@ func (r VersionBindingParam) implementsVersionBindingsUnionParam() {}
 // [workers.VersionBindingsWorkersBindingKindMTLSCertificateParam],
 // [workers.VersionBindingsWorkersBindingKindPlainTextParam],
 // [workers.VersionBindingsWorkersBindingKindPipelinesParam],
+// [workers.VersionBindingsWorkersBindingKindK2Param],
 // [workers.VersionBindingsWorkersBindingKindQueueParam],
 // [workers.VersionBindingsWorkersBindingKindRatelimitParam],
 // [workers.VersionBindingsWorkersBindingKindR2BucketParam],
@@ -3504,6 +4866,21 @@ func (r VersionBindingsWorkersBindingKindAISearchNamespaceParam) MarshalJSON() (
 func (r VersionBindingsWorkersBindingKindAISearchNamespaceParam) implementsVersionBindingsUnionParam() {
 }
 
+type VersionBindingsWorkersBindingKindMessagingParam struct {
+	// A JavaScript variable name for the binding.
+	Name param.Field[string] `json:"name" api:"required"`
+	// The Messaging namespace to bind to.
+	Namespace param.Field[string] `json:"namespace" api:"required"`
+	// The kind of resource that the binding provides.
+	Type param.Field[VersionBindingsWorkersBindingKindMessagingType] `json:"type" api:"required"`
+}
+
+func (r VersionBindingsWorkersBindingKindMessagingParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionBindingsWorkersBindingKindMessagingParam) implementsVersionBindingsUnionParam() {}
+
 type VersionBindingsWorkersBindingKindAnalyticsEngineParam struct {
 	// The name of the dataset to bind to.
 	Dataset param.Field[string] `json:"dataset" api:"required"`
@@ -3519,6 +4896,24 @@ func (r VersionBindingsWorkersBindingKindAnalyticsEngineParam) MarshalJSON() (da
 
 func (r VersionBindingsWorkersBindingKindAnalyticsEngineParam) implementsVersionBindingsUnionParam() {
 }
+
+type VersionBindingsWorkersBindingKindArtifactsParam struct {
+	// A JavaScript variable name for the binding.
+	Name param.Field[string] `json:"name" api:"required"`
+	// The Artifacts namespace exposed to the Worker in the Worker's account. Must be
+	// 2-63 characters, start with an ASCII alphanumeric character, contain only ASCII
+	// alphanumeric characters, dots, underscores, and hyphens, and must not end with a
+	// hyphen. The namespace does not need to be created before binding it.
+	Namespace param.Field[string] `json:"namespace" api:"required"`
+	// The kind of resource that the binding provides.
+	Type param.Field[VersionBindingsWorkersBindingKindArtifactsType] `json:"type" api:"required"`
+}
+
+func (r VersionBindingsWorkersBindingKindArtifactsParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionBindingsWorkersBindingKindArtifactsParam) implementsVersionBindingsUnionParam() {}
 
 type VersionBindingsWorkersBindingKindAssetsParam struct {
 	// A JavaScript variable name for the binding.
@@ -3614,6 +5009,10 @@ type VersionBindingsWorkersBindingKindDurableObjectNamespaceParam struct {
 	Environment param.Field[string] `json:"environment"`
 	// Namespace identifier tag.
 	NamespaceID param.Field[string] `json:"namespace_id"`
+	// Retry policy for calls made to the Durable Object through this binding. Omitted
+	// or null properties use the runtime defaults. These limits are upper bounds and
+	// do not enable retries for otherwise ineligible calls.
+	Retry param.Field[VersionBindingsWorkersBindingKindDurableObjectNamespaceRetryParam] `json:"retry"`
 	// The script where the Durable Object is defined, if it is external to this
 	// Worker.
 	ScriptName param.Field[string] `json:"script_name"`
@@ -3624,6 +5023,24 @@ func (r VersionBindingsWorkersBindingKindDurableObjectNamespaceParam) MarshalJSO
 }
 
 func (r VersionBindingsWorkersBindingKindDurableObjectNamespaceParam) implementsVersionBindingsUnionParam() {
+}
+
+// Retry policy for calls made to the Durable Object through this binding. Omitted
+// or null properties use the runtime defaults. These limits are upper bounds and
+// do not enable retries for otherwise ineligible calls.
+type VersionBindingsWorkersBindingKindDurableObjectNamespaceRetryParam struct {
+	// Maximum number of retries after the initial request, not the total number of
+	// attempts. Defaults to 4. Zero disables retries.
+	MaxAttempts param.Field[int64] `json:"max_attempts"`
+	// Retry timeout in milliseconds, measured from the start of the call. No retry
+	// starts after it expires, and a retry still running when it expires is cancelled.
+	// This is not a request timeout; it does not limit the initial request, which is
+	// still subject to any timeouts set by your Worker. Defaults to 10000.
+	TimeoutMs param.Field[int64] `json:"timeout_ms"`
+}
+
+func (r VersionBindingsWorkersBindingKindDurableObjectNamespaceRetryParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type VersionBindingsWorkersBindingKindHyperdriveParam struct {
@@ -3763,6 +5180,22 @@ func (r VersionBindingsWorkersBindingKindPipelinesParam) MarshalJSON() (data []b
 }
 
 func (r VersionBindingsWorkersBindingKindPipelinesParam) implementsVersionBindingsUnionParam() {}
+
+// A K2 stream binding. Available only to accounts enabled for K2.
+type VersionBindingsWorkersBindingKindK2Param struct {
+	// A JavaScript variable name for the binding.
+	Name param.Field[string] `json:"name" api:"required"`
+	// ID of a K2 stream owned by the account deploying the Worker.
+	Stream param.Field[string] `json:"stream" api:"required"`
+	// The kind of resource that the binding provides.
+	Type param.Field[VersionBindingsWorkersBindingKindK2Type] `json:"type" api:"required"`
+}
+
+func (r VersionBindingsWorkersBindingKindK2Param) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionBindingsWorkersBindingKindK2Param) implementsVersionBindingsUnionParam() {}
 
 type VersionBindingsWorkersBindingKindQueueParam struct {
 	// A JavaScript variable name for the binding.
@@ -4051,6 +5484,9 @@ type VersionBindingsWorkersBindingKindVPCNetworkParam struct {
 	Name param.Field[string] `json:"name" api:"required"`
 	// The kind of resource that the binding provides.
 	Type param.Field[VersionBindingsWorkersBindingKindVPCNetworkType] `json:"type" api:"required"`
+	// Enables Gateway identity for the binding. Requires network_id to be
+	// "cf1:network" and cannot be combined with tunnel_id.
+	Identity param.Field[VersionBindingsWorkersBindingKindVPCNetworkIdentity] `json:"identity"`
 	// Identifier of the network to bind to. Only "cf1:network" is currently supported.
 	// Mutually exclusive with tunnel_id.
 	NetworkID param.Field[string] `json:"network_id"`
@@ -4064,6 +5500,22 @@ func (r VersionBindingsWorkersBindingKindVPCNetworkParam) MarshalJSON() (data []
 
 func (r VersionBindingsWorkersBindingKindVPCNetworkParam) implementsVersionBindingsUnionParam() {}
 
+// Global CacheW configuration for the Worker. When caching is on, the platform
+// provisions a `cloudflare.app` zone for the Worker. A `type: worker` entry in the
+// `exports` map can override this value for a single entrypoint.
+type VersionCacheOptionsParam struct {
+	// Whether caching is enabled for this Worker.
+	Enabled param.Field[bool] `json:"enabled" api:"required"`
+	// Whether cached responses are shared across Worker version uploads. This is
+	// independent of `enabled`. It can stay true while caching is off, so the
+	// preference survives turning caching off and back on.
+	CrossVersionCache param.Field[bool] `json:"cross_version_cache"`
+}
+
+func (r VersionCacheOptionsParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
 // Container configuration for a Worker.
 type VersionContainerParam struct {
 	// Select which Durable Object class should get this container attached.
@@ -4071,6 +5523,338 @@ type VersionContainerParam struct {
 }
 
 func (r VersionContainerParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A single entry in the `exports` map, keyed by export name (a `WorkerEntrypoint`
+// class name, a Durable Object class name, or `default` for the Worker's default
+// export). The `type` discriminator selects the top-level shape: `worker`
+// entrypoint entries may carry `cache` configuration, while `durable-object`
+// entries are further refined by the optional `state` field (default `created`).
+// Tombstone states (`deleted`, `renamed`, `transferred`) express destructive
+// lifecycle operations declaratively; `expecting-transfer` is the live target side
+// of a transfer. The server validates the exact per-(type, state) field
+// combinations; fields not listed for a variant are rejected.
+type VersionExportParam struct {
+	// Marks this entry as a Worker entrypoint export.
+	Type  param.Field[VersionExportsType] `json:"type" api:"required"`
+	Cache param.Field[interface{}]        `json:"cache"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object. When set, the namespace is container-enabled. Valid
+	// only on live entries.
+	Container param.Field[string] `json:"container"`
+	// The destination class name. Must differ from the source class (the map key) and
+	// must be declared as a live (`created`) entry in the same `exports` map.
+	// Write-only: never present in GET responses.
+	RenamedTo param.Field[string] `json:"renamed_to"`
+	// Live export. May be omitted; defaults to `created`.
+	State param.Field[VersionExportsState] `json:"state"`
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage param.Field[VersionExportsStorage] `json:"storage"`
+	// The source script name to receive the namespace from. Must be in the same
+	// account and dispatch-namespace context. Present on reads for
+	// `expecting-transfer` entries.
+	TransferFrom param.Field[string] `json:"transfer_from"`
+	// The destination script name. Must be in the same account and the same
+	// dispatch-namespace context (or both non-dispatch). Cross-dispatch-namespace
+	// transfers are rejected. Write-only: never present in GET responses.
+	TransferredTo param.Field[string] `json:"transferred_to"`
+}
+
+func (r VersionExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportParam) implementsVersionExportsUnionParam() {}
+
+// A single entry in the `exports` map, keyed by export name (a `WorkerEntrypoint`
+// class name, a Durable Object class name, or `default` for the Worker's default
+// export). The `type` discriminator selects the top-level shape: `worker`
+// entrypoint entries may carry `cache` configuration, while `durable-object`
+// entries are further refined by the optional `state` field (default `created`).
+// Tombstone states (`deleted`, `renamed`, `transferred`) express destructive
+// lifecycle operations declaratively; `expecting-transfer` is the live target side
+// of a transfer. The server validates the exact per-(type, state) field
+// combinations; fields not listed for a variant are rejected.
+//
+// Satisfied by [workers.VersionExportsWorkersWorkerExportParam],
+// [workers.VersionExportsWorkersDurableObjectExportParam],
+// [workers.VersionExportsWorkersDurableObjectDeletedExportParam],
+// [workers.VersionExportsWorkersDurableObjectRenamedExportParam],
+// [workers.VersionExportsWorkersDurableObjectTransferredExportParam],
+// [workers.VersionExportsWorkersDurableObjectExpectingTransferExportParam],
+// [VersionExportParam].
+type VersionExportsUnionParam interface {
+	implementsVersionExportsUnionParam()
+}
+
+// A named Worker entrypoint export (`type: worker`). Worker entrypoints are always
+// live (`state: created`) and carry no storage or lifecycle fields. The optional
+// `cache` block overrides the Worker's global `cache_options.enabled` for this
+// entrypoint.
+type VersionExportsWorkersWorkerExportParam struct {
+	// Marks this entry as a Worker entrypoint export.
+	Type param.Field[VersionExportsWorkersWorkerExportType] `json:"type" api:"required"`
+	// Cache override for this entrypoint. Overrides the Worker's global
+	// `cache_options.enabled` for this entrypoint only.
+	Cache param.Field[VersionExportsWorkersWorkerExportCacheParam] `json:"cache"`
+	// Live export. May be omitted; defaults to `created`.
+	State param.Field[VersionExportsWorkersWorkerExportState] `json:"state"`
+}
+
+func (r VersionExportsWorkersWorkerExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersWorkerExportParam) implementsVersionExportsUnionParam() {}
+
+// Cache override for this entrypoint. Overrides the Worker's global
+// `cache_options.enabled` for this entrypoint only.
+type VersionExportsWorkersWorkerExportCacheParam struct {
+	// Whether caching is enabled for this entrypoint.
+	Enabled param.Field[bool] `json:"enabled" api:"required"`
+}
+
+func (r VersionExportsWorkersWorkerExportCacheParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A live Durable Object export (`state: created`, the default). The platform
+// auto-provisions the namespace on first deploy, matches it on subsequent deploys,
+// and never mutates or deletes it as a side effect of a code-only change.
+// `storage` is required; `renamed_to`, `transferred_to` and `transfer_from` are
+// not allowed on a live entry.
+type VersionExportsWorkersDurableObjectExportParam struct {
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage param.Field[VersionExportsWorkersDurableObjectExportStorage] `json:"storage" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type param.Field[VersionExportsWorkersDurableObjectExportType] `json:"type" api:"required"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object. When set, the namespace is container-enabled. Valid
+	// only on live entries.
+	Container param.Field[string] `json:"container"`
+	// Live export. May be omitted; defaults to `created`.
+	State param.Field[VersionExportsWorkersDurableObjectExportState] `json:"state"`
+}
+
+func (r VersionExportsWorkersDurableObjectExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersDurableObjectExportParam) implementsVersionExportsUnionParam() {}
+
+// A `deleted` tombstone: retires the provisioned namespace for this class and all
+// of its data. The class must be absent from the uploaded code and no other Worker
+// in the account may bind to the namespace, otherwise the deploy is rejected. No
+// other fields are allowed. Deletion is irreversible.
+type VersionExportsWorkersDurableObjectDeletedExportParam struct {
+	// Tombstone that deletes the namespace.
+	State param.Field[VersionExportsWorkersDurableObjectDeletedExportState] `json:"state" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type param.Field[VersionExportsWorkersDurableObjectDeletedExportType] `json:"type" api:"required"`
+}
+
+func (r VersionExportsWorkersDurableObjectDeletedExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersDurableObjectDeletedExportParam) implementsVersionExportsUnionParam() {}
+
+// A `renamed` tombstone: rewrites the provisioned namespace's class name from this
+// map key to `renamed_to`. The source class may stay in code during the rollout
+// window (an info notice is emitted). `storage`, `transferred_to` and
+// `transfer_from` are not allowed.
+type VersionExportsWorkersDurableObjectRenamedExportParam struct {
+	// The destination class name. Must differ from the source class (the map key) and
+	// must be declared as a live (`created`) entry in the same `exports` map.
+	// Write-only: never present in GET responses.
+	RenamedTo param.Field[string] `json:"renamed_to" api:"required"`
+	// Tombstone that renames the namespace's class.
+	State param.Field[VersionExportsWorkersDurableObjectRenamedExportState] `json:"state" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type param.Field[VersionExportsWorkersDurableObjectRenamedExportType] `json:"type" api:"required"`
+}
+
+func (r VersionExportsWorkersDurableObjectRenamedExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersDurableObjectRenamedExportParam) implementsVersionExportsUnionParam() {}
+
+// A `transferred` tombstone (source side of a two-phase transfer): hands ownership
+// of the provisioned namespace to another script in the same account, named by
+// `transferred_to`. The target must have already deployed a matching
+// `expecting-transfer` entry. The source class may stay in code during the rollout
+// window (an info notice is emitted). `storage`, `renamed_to` and `transfer_from`
+// are not allowed.
+type VersionExportsWorkersDurableObjectTransferredExportParam struct {
+	// Tombstone that transfers the namespace to another script.
+	State param.Field[VersionExportsWorkersDurableObjectTransferredExportState] `json:"state" api:"required"`
+	// The destination script name. Must be in the same account and the same
+	// dispatch-namespace context (or both non-dispatch). Cross-dispatch-namespace
+	// transfers are rejected. Write-only: never present in GET responses.
+	TransferredTo param.Field[string] `json:"transferred_to" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type param.Field[VersionExportsWorkersDurableObjectTransferredExportType] `json:"type" api:"required"`
+}
+
+func (r VersionExportsWorkersDurableObjectTransferredExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersDurableObjectTransferredExportParam) implementsVersionExportsUnionParam() {
+}
+
+// The target side of a two-phase transfer (`state: expecting-transfer`). Declares
+// that this script expects to receive a namespace for this class from the
+// `transfer_from` script. This is a live entry, not a tombstone: bindings resolve
+// through the source's namespace until the source commits with a `transferred`
+// tombstone. `storage` and `transfer_from` are required; `renamed_to` and
+// `transferred_to` are not allowed.
+type VersionExportsWorkersDurableObjectExpectingTransferExportParam struct {
+	// Target side of a two-phase transfer.
+	State param.Field[VersionExportsWorkersDurableObjectExpectingTransferExportState] `json:"state" api:"required"`
+	// Durable Object storage backend. `sqlite` is the recommended (and only) backend
+	// for new namespaces. `legacy-kv` is accepted only for a class whose namespace
+	// already exists as KV-backed; the `exports` flow never provisions a new
+	// `legacy-kv` namespace.
+	Storage param.Field[VersionExportsWorkersDurableObjectExpectingTransferExportStorage] `json:"storage" api:"required"`
+	// The source script name to receive the namespace from. Must be in the same
+	// account and dispatch-namespace context. Present on reads for
+	// `expecting-transfer` entries.
+	TransferFrom param.Field[string] `json:"transfer_from" api:"required"`
+	// Marks this entry as a Durable Object export.
+	Type param.Field[VersionExportsWorkersDurableObjectExpectingTransferExportType] `json:"type" api:"required"`
+	// Name of the container (declared in the upload's `metadata.containers`) that
+	// backs this Durable Object once the transfer settles. Valid only on live entries.
+	Container param.Field[string] `json:"container"`
+}
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExportParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r VersionExportsWorkersDurableObjectExpectingTransferExportParam) implementsVersionExportsUnionParam() {
+}
+
+// Summary of the declarative exports reconciliation that ran on this upload.
+// Populated only when the uploaded metadata included an `exports` block. Durable
+// Object entries drive reconciliation; `type: worker` entries do not contribute to
+// this summary.
+type VersionExportsReconciliationParam struct {
+	// Class names for which a new namespace was provisioned.
+	Created param.Field[[]string] `json:"created" api:"required"`
+	// Class names whose namespace was deleted by a `deleted` tombstone.
+	Deleted param.Field[[]string] `json:"deleted" api:"required"`
+	// Non-blocking info entries (stale tombstones, tombstone applied with class still
+	// in code). See `exports_reconciliation_info`.
+	Info param.Field[[]VersionExportsReconciliationInfoParam] `json:"info" api:"required"`
+	// Source class names whose tombstone entry is now stale and safe to delete from
+	// `exports` (no remaining referencing scripts).
+	RemovableEntries param.Field[[]string] `json:"removable_entries" api:"required"`
+	// Applied `renamed` tombstones.
+	Renamed param.Field[[]VersionExportsReconciliationRenamedParam] `json:"renamed" api:"required"`
+	// Phase-1 transfer hints recorded on the target side.
+	TransferPending param.Field[[]VersionExportsReconciliationTransferPendingParam] `json:"transfer_pending" api:"required"`
+	// Committed `transferred` tombstones (phase-2).
+	Transferred param.Field[[]VersionExportsReconciliationTransferredParam] `json:"transferred" api:"required"`
+	// Class names whose provisioned namespace was mutated in place.
+	Updated param.Field[[]string] `json:"updated" api:"required"`
+	// Non-blocking warnings. See `exports_reconciliation_warning`.
+	Warnings param.Field[[]VersionExportsReconciliationWarningParam] `json:"warnings" api:"required"`
+}
+
+func (r VersionExportsReconciliationParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A non-blocking reconciliation info entry. Emitted for stale tombstones (a no-op
+// on this deploy) and for tombstones applied with the source class still in code
+// (the supported zero-downtime rollout pattern).
+type VersionExportsReconciliationInfoParam struct {
+	// The class name the info entry is about.
+	Class param.Field[string] `json:"class" api:"required"`
+	// Human-readable explanation.
+	Message param.Field[string] `json:"message" api:"required"`
+	// Stable, machine-readable tag identifying which reconciliation scenario produced
+	// an error, warning, or info entry. Clients may branch on this value instead of
+	// parsing `message`.
+	Scenario param.Field[VersionExportsReconciliationInfoScenario] `json:"scenario" api:"required"`
+	// The provisioned namespace the entry relates to, when applicable.
+	NamespaceID param.Field[string] `json:"namespace_id" format:"uuid"`
+	// Other Workers in the account that still bind to the affected class. Advisory:
+	// while non-empty the tombstone is not yet safe to remove — redeploy these Workers
+	// with bindings re-pointed first.
+	ReferencingScripts param.Field[[]string] `json:"referencing_scripts"`
+}
+
+func (r VersionExportsReconciliationInfoParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A single applied `renamed` tombstone.
+type VersionExportsReconciliationRenamedParam struct {
+	// The original (source) class name.
+	From param.Field[string] `json:"from" api:"required"`
+	// The new class name (`renamed_to`).
+	To param.Field[string] `json:"to" api:"required"`
+}
+
+func (r VersionExportsReconciliationRenamedParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A single phase-1 transfer hint recorded on the target side (a live
+// `expecting-transfer` entry).
+type VersionExportsReconciliationTransferPendingParam struct {
+	// The target-side class name awaiting transfer.
+	Class param.Field[string] `json:"class" api:"required"`
+	// The source script the namespace will be transferred from.
+	From param.Field[string] `json:"from" api:"required"`
+}
+
+func (r VersionExportsReconciliationTransferPendingParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A single committed `transferred` tombstone (phase-2 commit).
+type VersionExportsReconciliationTransferredParam struct {
+	// The source class name that was transferred.
+	Class param.Field[string] `json:"class" api:"required"`
+	// The transfer phase. Currently always `committed`.
+	Phase param.Field[VersionExportsReconciliationTransferredPhase] `json:"phase" api:"required"`
+	// The destination script that now owns the namespace.
+	To param.Field[string] `json:"to" api:"required"`
+}
+
+func (r VersionExportsReconciliationTransferredParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// A non-blocking reconciliation warning. Reserved: no scenario populates this
+// array today (`code_class_not_in_exports` is surfaced as info and
+// `provisioned_class_missing_from_config` is a hard error). Clients should still
+// surface any entries that appear.
+type VersionExportsReconciliationWarningParam struct {
+	// The class name the warning is about.
+	Class param.Field[string] `json:"class" api:"required"`
+	// Human-readable explanation of the warning.
+	Message param.Field[string] `json:"message" api:"required"`
+	// Stable, machine-readable tag identifying which reconciliation scenario produced
+	// an error, warning, or info entry. Clients may branch on this value instead of
+	// parsing `message`.
+	Scenario param.Field[VersionExportsReconciliationWarningsScenario] `json:"scenario" api:"required"`
+	// The provisioned namespace the warning relates to, when applicable.
+	NamespaceID param.Field[string] `json:"namespace_id" format:"uuid"`
+}
+
+func (r VersionExportsReconciliationWarningParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
@@ -4145,6 +5929,19 @@ type VersionModuleParam struct {
 }
 
 func (r VersionModuleParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type VersionPackageDependencyParam struct {
+	// The exact version that was resolved and installed by the package manager.
+	InstalledVersion param.Field[string] `json:"installedVersion" api:"required"`
+	// The npm package name.
+	Name param.Field[string] `json:"name" api:"required"`
+	// The version constraint as written in package.json.
+	PackageJsonVersion param.Field[string] `json:"packageJsonVersion" api:"required"`
+}
+
+func (r VersionPackageDependencyParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
@@ -4731,6 +6528,40 @@ const (
 func (r BetaWorkerVersionGetResponseEnvelopeSuccess) IsKnown() bool {
 	switch r {
 	case BetaWorkerVersionGetResponseEnvelopeSuccessTrue:
+		return true
+	}
+	return false
+}
+
+type BetaWorkerVersionProfileParams struct {
+	// Identifier.
+	AccountID param.Field[string] `path:"account_id" api:"required"`
+	// Profile duration in milliseconds.
+	DurationMs param.Field[int64] `json:"duration_ms" api:"required"`
+	// Identifies the exact Durable Object actor to profile. Must be specified together
+	// with namespace_id. The actor must currently be active and running the requested
+	// Worker version.
+	ActorID param.Field[string] `json:"actor_id"`
+	// Identifies the Durable Object namespace containing the actor to profile. Must be
+	// specified together with actor_id.
+	NamespaceID param.Field[string]                                    `json:"namespace_id"`
+	ProfileType param.Field[BetaWorkerVersionProfileParamsProfileType] `json:"profile_type"`
+}
+
+func (r BetaWorkerVersionProfileParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type BetaWorkerVersionProfileParamsProfileType string
+
+const (
+	BetaWorkerVersionProfileParamsProfileTypeCPU  BetaWorkerVersionProfileParamsProfileType = "cpu"
+	BetaWorkerVersionProfileParamsProfileTypeHeap BetaWorkerVersionProfileParamsProfileType = "heap"
+)
+
+func (r BetaWorkerVersionProfileParamsProfileType) IsKnown() bool {
+	switch r {
+	case BetaWorkerVersionProfileParamsProfileTypeCPU, BetaWorkerVersionProfileParamsProfileTypeHeap:
 		return true
 	}
 	return false

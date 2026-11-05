@@ -16,7 +16,7 @@ import (
 )
 
 func TestSessionGenerateSummaryOfTranscripts(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -30,9 +30,9 @@ func TestSessionGenerateSummaryOfTranscripts(t *testing.T) {
 		option.WithAPIKey("144c9defac04969c7bfad8efaa8ea194"),
 		option.WithAPIEmail("user@example.com"),
 	)
-	err := client.RealtimeKit.Sessions.GenerateSummaryOfTranscripts(
+	_, err := client.RealtimeKit.Sessions.GenerateSummaryOfTranscripts(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGenerateSummaryOfTranscriptsParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -48,7 +48,7 @@ func TestSessionGenerateSummaryOfTranscripts(t *testing.T) {
 }
 
 func TestSessionGetParticipantDataFromPeerIDWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -64,11 +64,12 @@ func TestSessionGetParticipantDataFromPeerIDWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetParticipantDataFromPeerID(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetParticipantDataFromPeerIDParams{
-			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
-			Filters:   cloudflare.F(realtime_kit.SessionGetParticipantDataFromPeerIDParamsFiltersDeviceInfo),
+			AccountID:         cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			Filters:           cloudflare.F(realtime_kit.SessionGetParticipantDataFromPeerIDParamsFiltersDeviceInfo),
+			IncludePeerEvents: cloudflare.F(true),
 		},
 	)
 	if err != nil {
@@ -81,7 +82,7 @@ func TestSessionGetParticipantDataFromPeerIDWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionGetSessionChat(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -97,7 +98,7 @@ func TestSessionGetSessionChat(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionChat(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionChatParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -113,7 +114,7 @@ func TestSessionGetSessionChat(t *testing.T) {
 }
 
 func TestSessionGetSessionDetailsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -129,7 +130,7 @@ func TestSessionGetSessionDetailsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionDetails(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionDetailsParams{
 			AccountID:            cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -146,7 +147,7 @@ func TestSessionGetSessionDetailsWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionGetSessionParticipantDetailsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -162,12 +163,11 @@ func TestSessionGetSessionParticipantDetailsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionParticipantDetails(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionParticipantDetailsParams{
 			AccountID:         cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
-			Filters:           cloudflare.F(realtime_kit.SessionGetSessionParticipantDetailsParamsFiltersDeviceInfo),
 			IncludePeerEvents: cloudflare.F(true),
 		},
 	)
@@ -181,7 +181,7 @@ func TestSessionGetSessionParticipantDetailsWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionGetSessionParticipantsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -197,13 +197,13 @@ func TestSessionGetSessionParticipantsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionParticipants(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionParticipantsParams{
 			AccountID:         cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			IncludePeerEvents: cloudflare.F(true),
 			PageNo:            cloudflare.F(0.000000),
-			PerPage:           cloudflare.F(0.000000),
+			PerPage:           cloudflare.F(int64(1)),
 			Search:            cloudflare.F("search"),
 			SortBy:            cloudflare.F(realtime_kit.SessionGetSessionParticipantsParamsSortByJoinedAt),
 			SortOrder:         cloudflare.F(realtime_kit.SessionGetSessionParticipantsParamsSortOrderAsc),
@@ -220,7 +220,7 @@ func TestSessionGetSessionParticipantsWithOptionalParams(t *testing.T) {
 }
 
 func TestSessionGetSessionSummary(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -236,7 +236,7 @@ func TestSessionGetSessionSummary(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionSummary(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionSummaryParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
@@ -251,8 +251,8 @@ func TestSessionGetSessionSummary(t *testing.T) {
 	}
 }
 
-func TestSessionGetSessionTranscripts(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+func TestSessionGetSessionTranscriptsWithOptionalParams(t *testing.T) {
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -268,10 +268,11 @@ func TestSessionGetSessionTranscripts(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessionTranscripts(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		"182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e",
 		realtime_kit.SessionGetSessionTranscriptsParams{
 			AccountID: cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
+			Format:    cloudflare.F(realtime_kit.SessionGetSessionTranscriptsParamsFormatSrt),
 		},
 	)
 	if err != nil {
@@ -284,7 +285,7 @@ func TestSessionGetSessionTranscripts(t *testing.T) {
 }
 
 func TestSessionGetSessionsWithOptionalParams(t *testing.T) {
-	t.Skip("TODO: HTTP 401 from prism, support api tokens")
+	t.Skip("requires completed session with participant data")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -300,7 +301,7 @@ func TestSessionGetSessionsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.RealtimeKit.Sessions.GetSessions(
 		context.TODO(),
-		"app_id",
+		"14a396e7-ca44-4937-bf1f-050a69118543",
 		realtime_kit.SessionGetSessionsParams{
 			AccountID:    cloudflare.F("023e105f4ecef8ad9ca31a8372d0c353"),
 			AssociatedID: cloudflare.F("182bd5e5-6e1a-4fe4-a799-aa6d9a6ab26e"),

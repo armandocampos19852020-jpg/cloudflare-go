@@ -110,8 +110,8 @@ type ObservabilitySharedQueryGetResponse struct {
 	// Query performance statistics from the database. Includes execution time, rows
 	// scanned, and bytes read. Does not include network latency.
 	Statistics ObservabilitySharedQueryGetResponseStatistics `json:"statistics" api:"required"`
-	// Durable Object agent summaries. Present when the query view is 'agents'. Each
-	// entry represents an agent with its event counts and status.
+	// Agent run summaries. Present when the query view is 'agents'. Each entry
+	// represents one trace containing at least one agent invocation.
 	Agents []ObservabilitySharedQueryGetResponseAgent `json:"agents"`
 	// Aggregated calculation results. Present when the query view is 'calculations'.
 	// Contains computed metrics (count, avg, p99, etc.) with optional group-by
@@ -120,6 +120,9 @@ type ObservabilitySharedQueryGetResponse struct {
 	// Comparison calculation results from the previous time period. Present when the
 	// compare option is enabled. Same structure as calculations.
 	Compare []ObservabilitySharedQueryGetResponseCompare `json:"compare"`
+	// Bucketed 2D histogram of a numeric field over time. Present when chartType is
+	// 'distribution'.
+	Distribution ObservabilitySharedQueryGetResponseDistribution `json:"distribution"`
 	// Individual event results. Present when the query view is 'events'. Contains the
 	// matching log lines and their metadata.
 	Events ObservabilitySharedQueryGetResponseEvents `json:"events"`
@@ -142,6 +145,7 @@ type observabilitySharedQueryGetResponseJSON struct {
 	Agents       apijson.Field
 	Calculations apijson.Field
 	Compare      apijson.Field
+	Distribution apijson.Field
 	Events       apijson.Field
 	Invocations  apijson.Field
 	Traces       apijson.Field
@@ -174,7 +178,8 @@ type ObservabilitySharedQueryGetResponseRun struct {
 	Query ObservabilitySharedQueryGetResponseRunQuery `json:"query" api:"required"`
 	// Current execution status of the query run.
 	Status ObservabilitySharedQueryGetResponseRunStatus `json:"status" api:"required"`
-	// Time range for the query execution
+	// Time range for the query execution. 'from' must be earlier than 'to'. No
+	// fractional milliseconds.
 	Timeframe ObservabilitySharedQueryGetResponseRunTimeframe `json:"timeframe" api:"required"`
 	// ID of the user who initiated the query run.
 	UserID string `json:"userId" api:"required"`
@@ -219,16 +224,16 @@ func (r observabilitySharedQueryGetResponseRunJSON) RawJSON() string {
 type ObservabilitySharedQueryGetResponseRunQuery struct {
 	ID string `json:"id" api:"required"`
 	// If the query wasn't explcitly saved
-	Adhoc       bool   `json:"adhoc" api:"required"`
-	Created     string `json:"created" api:"required"`
-	CreatedBy   string `json:"createdBy" api:"required"`
-	Description string `json:"description" api:"required,nullable"`
+	Adhoc       bool                                                    `json:"adhoc" api:"required"`
+	Created     ObservabilitySharedQueryGetResponseRunQueryCreatedUnion `json:"created" api:"required" format:"date-time"`
+	CreatedBy   string                                                  `json:"createdBy" api:"required"`
+	Description string                                                  `json:"description" api:"required,nullable"`
 	// Query name
-	Name       string                                                `json:"name" api:"required"`
-	Parameters ObservabilitySharedQueryGetResponseRunQueryParameters `json:"parameters" api:"required"`
-	Updated    string                                                `json:"updated" api:"required"`
-	UpdatedBy  string                                                `json:"updatedBy" api:"required"`
-	JSON       observabilitySharedQueryGetResponseRunQueryJSON       `json:"-"`
+	Name       string                                                  `json:"name" api:"required"`
+	Parameters ObservabilitySharedQueryGetResponseRunQueryParameters   `json:"parameters" api:"required"`
+	Updated    ObservabilitySharedQueryGetResponseRunQueryUpdatedUnion `json:"updated" api:"required" format:"date-time"`
+	UpdatedBy  string                                                  `json:"updatedBy" api:"required"`
+	JSON       observabilitySharedQueryGetResponseRunQueryJSON         `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseRunQueryJSON contains the JSON metadata for
@@ -253,6 +258,26 @@ func (r *ObservabilitySharedQueryGetResponseRunQuery) UnmarshalJSON(data []byte)
 
 func (r observabilitySharedQueryGetResponseRunQueryJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString] or [shared.UnionTime].
+type ObservabilitySharedQueryGetResponseRunQueryCreatedUnion interface {
+	ImplementsObservabilitySharedQueryGetResponseRunQueryCreatedUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilitySharedQueryGetResponseRunQueryCreatedUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionTime(shared.UnionTime{})),
+		},
+	)
 }
 
 type ObservabilitySharedQueryGetResponseRunQueryParameters struct {
@@ -308,6 +333,7 @@ type ObservabilitySharedQueryGetResponseRunQueryParametersCalculation struct {
 	Key      string                                                                    `json:"key"`
 	KeyType  ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsKeyType  `json:"keyType"`
 	JSON     observabilitySharedQueryGetResponseRunQueryParametersCalculationJSON      `json:"-"`
+	union    ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsUnion
 }
 
 // observabilitySharedQueryGetResponseRunQueryParametersCalculationJSON contains
@@ -322,19 +348,302 @@ type observabilitySharedQueryGetResponseRunQueryParametersCalculationJSON struct
 	ExtraFields map[string]apijson.Field
 }
 
+func (r observabilitySharedQueryGetResponseRunQueryParametersCalculationJSON) RawJSON() string {
+	return r.raw
+}
+
 func (r *ObservabilitySharedQueryGetResponseRunQueryParametersCalculation) UnmarshalJSON(data []byte) (err error) {
+	*r = ObservabilitySharedQueryGetResponseRunQueryParametersCalculation{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsUnion]
+// interface which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject],
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject].
+func (r ObservabilitySharedQueryGetResponseRunQueryParametersCalculation) AsUnion() ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsUnion {
+	return r.union
+}
+
+// Union satisfied by
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject] or
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject].
+type ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsUnion interface {
+	implementsObservabilitySharedQueryGetResponseRunQueryParametersCalculation()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsUnion)(nil)).Elem(),
+		"operator",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "count",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "COUNT",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "uniq",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "max",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "min",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "sum",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "avg",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "median",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p001",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p01",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p05",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p10",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p25",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p75",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p90",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p95",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p99",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "p999",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "stddev",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "variance",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "COUNT_DISTINCT",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MAX",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MIN",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "SUM",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "AVG",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "MEDIAN",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P001",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P01",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P05",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P10",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P25",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P75",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P90",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P95",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P99",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "P999",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "STDDEV",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject{}),
+			DiscriminatorValue: "VARIANCE",
+		},
+	)
+}
+
+type ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject struct {
+	Operator ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperator `json:"operator" api:"required"`
+	Alias    string                                                                          `json:"alias"`
+	Key      string                                                                          `json:"key"`
+	KeyType  ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType  `json:"keyType"`
+	JSON     observabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectJSON     `json:"-"`
+}
+
+// observabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectJSON
+// contains the JSON metadata for the struct
+// [ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject]
+type observabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectJSON struct {
+	Operator    apijson.Field
+	Alias       apijson.Field
+	Key         apijson.Field
+	KeyType     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r observabilitySharedQueryGetResponseRunQueryParametersCalculationJSON) RawJSON() string {
+func (r observabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectJSON) RawJSON() string {
 	return r.raw
+}
+
+func (r ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObject) implementsObservabilitySharedQueryGetResponseRunQueryParametersCalculation() {
+}
+
+type ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperator string
+
+const (
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperatorCount          ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperator = "count"
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperatorCountUppercase ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperator = "COUNT"
+)
+
+func (r ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperator) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperatorCount, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectOperatorCountUppercase:
+		return true
+	}
+	return false
+}
+
+type ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType string
+
+const (
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeString  ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType = "string"
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeNumber  ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType = "number"
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeBoolean ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType = "boolean"
+)
+
+func (r ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyType) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeString, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeNumber, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsObjectKeyTypeBoolean:
+		return true
+	}
+	return false
 }
 
 type ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator string
 
 const (
-	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorUniq              ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "uniq"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCount             ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "count"
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountUppercase    ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "COUNT"
+	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorUniq              ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "uniq"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMax               ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "max"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMin               ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "min"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSum               ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "sum"
@@ -353,7 +662,6 @@ const (
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorStddev            ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "stddev"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorVariance          ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "variance"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountDistinct     ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "COUNT_DISTINCT"
-	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountUppercase    ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "COUNT"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMaxUppercase      ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "MAX"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMinUppercase      ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "MIN"
 	ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSumUppercase      ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator = "SUM"
@@ -375,7 +683,7 @@ const (
 
 func (r ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperator) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorUniq, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCount, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMax, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMin, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSum, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorAvg, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMedian, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP001, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP01, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP05, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP10, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP25, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP75, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP90, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP95, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP99, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP999, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorStddev, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorVariance, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountDistinct, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMaxUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMinUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSumUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorAvgUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMedianUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP001Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP01Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP05Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP10Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP25Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP75Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP90Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP95Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP99Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP999Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorStddevUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorVarianceUppercase:
+	case ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCount, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorUniq, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMax, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMin, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSum, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorAvg, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMedian, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP001, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP01, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP05, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP10, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP25, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP75, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP90, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP95, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP99, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP999, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorStddev, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorVariance, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorCountDistinct, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMaxUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMinUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorSumUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorAvgUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorMedianUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP001Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP01Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP05Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP10Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP25Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP75Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP90Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP95Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP99Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorP999Uppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorStddevUppercase, ObservabilitySharedQueryGetResponseRunQueryParametersCalculationsOperatorVarianceUppercase:
 		return true
 	}
 	return false
@@ -996,6 +1304,26 @@ func (r ObservabilitySharedQueryGetResponseRunQueryParametersOrderByOrder) IsKno
 	return false
 }
 
+// Union satisfied by [shared.UnionString] or [shared.UnionTime].
+type ObservabilitySharedQueryGetResponseRunQueryUpdatedUnion interface {
+	ImplementsObservabilitySharedQueryGetResponseRunQueryUpdatedUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ObservabilitySharedQueryGetResponseRunQueryUpdatedUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionTime(shared.UnionTime{})),
+		},
+	)
+}
+
 // Current execution status of the query run.
 type ObservabilitySharedQueryGetResponseRunStatus string
 
@@ -1012,12 +1340,13 @@ func (r ObservabilitySharedQueryGetResponseRunStatus) IsKnown() bool {
 	return false
 }
 
-// Time range for the query execution
+// Time range for the query execution. 'from' must be earlier than 'to'. No
+// fractional milliseconds.
 type ObservabilitySharedQueryGetResponseRunTimeframe struct {
-	// Start timestamp for the query timeframe (Unix timestamp in milliseconds)
-	From float64 `json:"from" api:"required"`
-	// End timestamp for the query timeframe (Unix timestamp in milliseconds)
-	To   float64                                             `json:"to" api:"required"`
+	// Start timestamp for the query timeframe. Unix timestamp in milliseconds
+	From int64 `json:"from" api:"required"`
+	// End timestamp for the query timeframe. Unix timestamp in milliseconds
+	To   int64                                               `json:"to" api:"required"`
 	JSON observabilitySharedQueryGetResponseRunTimeframeJSON `json:"-"`
 }
 
@@ -1107,37 +1436,62 @@ func (r observabilitySharedQueryGetResponseStatisticsJSON) RawJSON() string {
 }
 
 type ObservabilitySharedQueryGetResponseAgent struct {
-	// Class name of the Durable Object agent.
-	AgentClass string `json:"agentClass" api:"required"`
-	// Breakdown of event counts by event type.
-	EventTypeCounts map[string]float64 `json:"eventTypeCounts" api:"required"`
-	// Timestamp of the earliest event from this agent in the queried window (Unix
-	// epoch ms).
-	FirstEventMs float64 `json:"firstEventMs" api:"required"`
-	// Whether the agent emitted any error events in the queried window.
-	HasErrors bool `json:"hasErrors" api:"required"`
-	// Timestamp of the most recent event from this agent (Unix epoch ms).
-	LastEventMs float64 `json:"lastEventMs" api:"required"`
-	// Durable Object namespace the agent belongs to.
-	Namespace string `json:"namespace" api:"required"`
-	// Worker service name that hosts this agent.
-	Service string `json:"service" api:"required"`
-	// Total number of events emitted by this agent in the queried window.
-	TotalEvents float64                                      `json:"totalEvents" api:"required"`
-	JSON        observabilitySharedQueryGetResponseAgentJSON `json:"-"`
+	// Stable pagination cursor for this agent run.
+	ID string `json:"id" api:"required"`
+	// Distinct errors reported by spans in the run.
+	Errors []string `json:"errors" api:"required"`
+	// Distinct models reported by chat spans across the run's trace.
+	Models []string `json:"models" api:"required"`
+	// Distinct GenAI providers reported by chat spans in the run.
+	Providers []string `json:"providers" api:"required"`
+	// Worker services represented in the run's trace.
+	Services []string `json:"services" api:"required"`
+	// Number of spans in the run's trace.
+	Spans float64 `json:"spans" api:"required"`
+	// Observed run status.
+	Status ObservabilitySharedQueryGetResponseAgentsStatus `json:"status" api:"required"`
+	// Total trace duration in milliseconds.
+	TraceDurationMs float64 `json:"traceDurationMs" api:"required"`
+	// End of the run's trace as a Unix epoch in milliseconds.
+	TraceEndMs float64 `json:"traceEndMs" api:"required"`
+	// Trace identifier for this agent run.
+	TraceID string `json:"traceId" api:"required"`
+	// Start of the run's trace as a Unix epoch in milliseconds.
+	TraceStartMs float64 `json:"traceStartMs" api:"required"`
+	// ID from the earliest agent invocation that provides one.
+	AgentID string `json:"agentId"`
+	// Name from the earliest agent invocation that provides one.
+	AgentName string `json:"agentName"`
+	// Conversation ID from the earliest invocation that provides one.
+	ConversationID string `json:"conversationId"`
+	// Input tokens summed across chat spans in the run's trace; informational, not
+	// billing data.
+	InputTokens float64 `json:"inputTokens"`
+	// Output tokens summed across chat spans in the run's trace; informational, not
+	// billing data.
+	OutputTokens float64                                      `json:"outputTokens"`
+	JSON         observabilitySharedQueryGetResponseAgentJSON `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseAgentJSON contains the JSON metadata for the
 // struct [ObservabilitySharedQueryGetResponseAgent]
 type observabilitySharedQueryGetResponseAgentJSON struct {
-	AgentClass      apijson.Field
-	EventTypeCounts apijson.Field
-	FirstEventMs    apijson.Field
-	HasErrors       apijson.Field
-	LastEventMs     apijson.Field
-	Namespace       apijson.Field
-	Service         apijson.Field
-	TotalEvents     apijson.Field
+	ID              apijson.Field
+	Errors          apijson.Field
+	Models          apijson.Field
+	Providers       apijson.Field
+	Services        apijson.Field
+	Spans           apijson.Field
+	Status          apijson.Field
+	TraceDurationMs apijson.Field
+	TraceEndMs      apijson.Field
+	TraceID         apijson.Field
+	TraceStartMs    apijson.Field
+	AgentID         apijson.Field
+	AgentName       apijson.Field
+	ConversationID  apijson.Field
+	InputTokens     apijson.Field
+	OutputTokens    apijson.Field
 	raw             string
 	ExtraFields     map[string]apijson.Field
 }
@@ -1148,6 +1502,22 @@ func (r *ObservabilitySharedQueryGetResponseAgent) UnmarshalJSON(data []byte) (e
 
 func (r observabilitySharedQueryGetResponseAgentJSON) RawJSON() string {
 	return r.raw
+}
+
+// Observed run status.
+type ObservabilitySharedQueryGetResponseAgentsStatus string
+
+const (
+	ObservabilitySharedQueryGetResponseAgentsStatusCompleted ObservabilitySharedQueryGetResponseAgentsStatus = "completed"
+	ObservabilitySharedQueryGetResponseAgentsStatusError     ObservabilitySharedQueryGetResponseAgentsStatus = "error"
+)
+
+func (r ObservabilitySharedQueryGetResponseAgentsStatus) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryGetResponseAgentsStatusCompleted, ObservabilitySharedQueryGetResponseAgentsStatusError:
+		return true
+	}
+	return false
 }
 
 type ObservabilitySharedQueryGetResponseCalculation struct {
@@ -1178,12 +1548,26 @@ func (r observabilitySharedQueryGetResponseCalculationJSON) RawJSON() string {
 }
 
 type ObservabilitySharedQueryGetResponseCalculationsAggregate struct {
-	Count          float64                                                          `json:"count" api:"required"`
-	Interval       float64                                                          `json:"interval" api:"required"`
-	SampleInterval float64                                                          `json:"sampleInterval" api:"required"`
-	Value          float64                                                          `json:"value" api:"required"`
-	Groups         []ObservabilitySharedQueryGetResponseCalculationsAggregatesGroup `json:"groups"`
-	JSON           observabilitySharedQueryGetResponseCalculationsAggregateJSON     `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value  float64                                                          `json:"value" api:"required"`
+	Groups []ObservabilitySharedQueryGetResponseCalculationsAggregatesGroup `json:"groups"`
+	JSON   observabilitySharedQueryGetResponseCalculationsAggregateJSON     `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseCalculationsAggregateJSON contains the JSON
@@ -1284,14 +1668,28 @@ func (r observabilitySharedQueryGetResponseCalculationsSeriesJSON) RawJSON() str
 }
 
 type ObservabilitySharedQueryGetResponseCalculationsSeriesData struct {
-	Count          float64                                                          `json:"count" api:"required"`
-	Interval       float64                                                          `json:"interval" api:"required"`
-	SampleInterval float64                                                          `json:"sampleInterval" api:"required"`
-	Value          float64                                                          `json:"value" api:"required"`
-	FirstSeen      string                                                           `json:"firstSeen"`
-	Groups         []ObservabilitySharedQueryGetResponseCalculationsSeriesDataGroup `json:"groups"`
-	LastSeen       string                                                           `json:"lastSeen"`
-	JSON           observabilitySharedQueryGetResponseCalculationsSeriesDataJSON    `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value     float64                                                          `json:"value" api:"required"`
+	FirstSeen string                                                           `json:"firstSeen"`
+	Groups    []ObservabilitySharedQueryGetResponseCalculationsSeriesDataGroup `json:"groups"`
+	LastSeen  string                                                           `json:"lastSeen"`
+	JSON      observabilitySharedQueryGetResponseCalculationsSeriesDataJSON    `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseCalculationsSeriesDataJSON contains the JSON
@@ -1398,12 +1796,26 @@ func (r observabilitySharedQueryGetResponseCompareJSON) RawJSON() string {
 }
 
 type ObservabilitySharedQueryGetResponseCompareAggregate struct {
-	Count          float64                                                     `json:"count" api:"required"`
-	Interval       float64                                                     `json:"interval" api:"required"`
-	SampleInterval float64                                                     `json:"sampleInterval" api:"required"`
-	Value          float64                                                     `json:"value" api:"required"`
-	Groups         []ObservabilitySharedQueryGetResponseCompareAggregatesGroup `json:"groups"`
-	JSON           observabilitySharedQueryGetResponseCompareAggregateJSON     `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value  float64                                                     `json:"value" api:"required"`
+	Groups []ObservabilitySharedQueryGetResponseCompareAggregatesGroup `json:"groups"`
+	JSON   observabilitySharedQueryGetResponseCompareAggregateJSON     `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseCompareAggregateJSON contains the JSON
@@ -1503,14 +1915,28 @@ func (r observabilitySharedQueryGetResponseCompareSeriesJSON) RawJSON() string {
 }
 
 type ObservabilitySharedQueryGetResponseCompareSeriesData struct {
-	Count          float64                                                     `json:"count" api:"required"`
-	Interval       float64                                                     `json:"interval" api:"required"`
-	SampleInterval float64                                                     `json:"sampleInterval" api:"required"`
-	Value          float64                                                     `json:"value" api:"required"`
-	FirstSeen      string                                                      `json:"firstSeen"`
-	Groups         []ObservabilitySharedQueryGetResponseCompareSeriesDataGroup `json:"groups"`
-	LastSeen       string                                                      `json:"lastSeen"`
-	JSON           observabilitySharedQueryGetResponseCompareSeriesDataJSON    `json:"-"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	// Result of the calculation. count, sum, avg, median, and percentiles are weighted
+	// by each event's sample interval
+	Value     float64                                                     `json:"value" api:"required"`
+	FirstSeen string                                                      `json:"firstSeen"`
+	Groups    []ObservabilitySharedQueryGetResponseCompareSeriesDataGroup `json:"groups"`
+	LastSeen  string                                                      `json:"lastSeen"`
+	JSON      observabilitySharedQueryGetResponseCompareSeriesDataJSON    `json:"-"`
 }
 
 // observabilitySharedQueryGetResponseCompareSeriesDataJSON contains the JSON
@@ -1586,6 +2012,62 @@ func init() {
 			Type:       reflect.TypeOf(shared.UnionBool(false)),
 		},
 	)
+}
+
+// Bucketed 2D histogram of a numeric field over time. Present when chartType is
+// 'distribution'.
+type ObservabilitySharedQueryGetResponseDistribution struct {
+	// Time-bucket labels (ISO-8601 strings), one per matrix column.
+	Bins []string `json:"bins" api:"required"`
+	// Raw bucket edges in the value's native unit, length buckets.length + 1. Used for
+	// the colour scale and percentile mapping.
+	BucketBoundaries []float64 `json:"bucketBoundaries" api:"required"`
+	// Bucketing scheme used to derive the boundaries. 'log' produces geometric edges;
+	// 'linear' produces fixed-width edges.
+	BucketMode ObservabilitySharedQueryGetResponseDistributionBucketMode `json:"bucketMode" api:"required"`
+	// Value-range labels, one per matrix row (e.g. '50–100ms').
+	Buckets []string `json:"buckets" api:"required"`
+	// Sampling-corrected counts. matrix[bucketIdx][binIdx] is the estimated number of
+	// events in value-bucket 'bucketIdx' during time-bin 'binIdx'.
+	Matrix [][]float64                                         `json:"matrix" api:"required"`
+	JSON   observabilitySharedQueryGetResponseDistributionJSON `json:"-"`
+}
+
+// observabilitySharedQueryGetResponseDistributionJSON contains the JSON metadata
+// for the struct [ObservabilitySharedQueryGetResponseDistribution]
+type observabilitySharedQueryGetResponseDistributionJSON struct {
+	Bins             apijson.Field
+	BucketBoundaries apijson.Field
+	BucketMode       apijson.Field
+	Buckets          apijson.Field
+	Matrix           apijson.Field
+	raw              string
+	ExtraFields      map[string]apijson.Field
+}
+
+func (r *ObservabilitySharedQueryGetResponseDistribution) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r observabilitySharedQueryGetResponseDistributionJSON) RawJSON() string {
+	return r.raw
+}
+
+// Bucketing scheme used to derive the boundaries. 'log' produces geometric edges;
+// 'linear' produces fixed-width edges.
+type ObservabilitySharedQueryGetResponseDistributionBucketMode string
+
+const (
+	ObservabilitySharedQueryGetResponseDistributionBucketModeLog    ObservabilitySharedQueryGetResponseDistributionBucketMode = "log"
+	ObservabilitySharedQueryGetResponseDistributionBucketModeLinear ObservabilitySharedQueryGetResponseDistributionBucketMode = "linear"
+)
+
+func (r ObservabilitySharedQueryGetResponseDistributionBucketMode) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryGetResponseDistributionBucketModeLog, ObservabilitySharedQueryGetResponseDistributionBucketModeLinear:
+		return true
+	}
+	return false
 }
 
 // Individual event results. Present when the query view is 'events'. Contains the
@@ -1682,10 +2164,14 @@ type ObservabilitySharedQueryGetResponseEventsEventsMetadata struct {
 	Duration int64 `json:"duration"`
 	// Span end time as a Unix epoch in milliseconds.
 	EndTime int64 `json:"endTime"`
+	// Span end time as a Unix epoch in nanoseconds.
+	EndTimeNS string `json:"endTimeNs"`
 	// Error message, present when the log represents an error.
 	Error string `json:"error"`
 	// Templatized version of the error message used for grouping similar errors.
 	ErrorTemplate string `json:"errorTemplate"`
+	// Size of the stored telemetry event in bytes.
+	EventSize int64 `json:"eventSize"`
 	// Content-based fingerprint used to group similar events.
 	Fingerprint string `json:"fingerprint"`
 	// Log level (e.g. log, debug, info, warn, error).
@@ -1702,6 +2188,9 @@ type ObservabilitySharedQueryGetResponseEventsEventsMetadata struct {
 	ParentSpanID string `json:"parentSpanId"`
 	// Infrastructure provider identifier.
 	Provider string `json:"provider"`
+	// Cloudflare Ray ID from the `cf-ray` header of the request that triggered the
+	// invocation.
+	RayID string `json:"rayId"`
 	// Cloudflare data center / region that handled the request.
 	Region string `json:"region"`
 	// Cloudflare request ID that ties all logs from a single invocation together.
@@ -1716,8 +2205,12 @@ type ObservabilitySharedQueryGetResponseEventsEventsMetadata struct {
 	StackID string `json:"stackId"`
 	// Span start time as a Unix epoch in milliseconds.
 	StartTime int64 `json:"startTime"`
+	// Span start time as a Unix epoch in nanoseconds.
+	StartTimeNS string `json:"startTimeNs"`
 	// HTTP response status code returned by the Worker.
 	StatusCode int64 `json:"statusCode"`
+	// Event time as a Unix epoch in nanoseconds.
+	TimestampNS string `json:"timestampNs"`
 	// Total duration of the entire trace in milliseconds.
 	TraceDuration int64 `json:"traceDuration"`
 	// Distributed trace ID linking spans across services.
@@ -1744,8 +2237,10 @@ type observabilitySharedQueryGetResponseEventsEventsMetadataJSON struct {
 	Cost            apijson.Field
 	Duration        apijson.Field
 	EndTime         apijson.Field
+	EndTimeNS       apijson.Field
 	Error           apijson.Field
 	ErrorTemplate   apijson.Field
+	EventSize       apijson.Field
 	Fingerprint     apijson.Field
 	Level           apijson.Field
 	Message         apijson.Field
@@ -1754,6 +2249,7 @@ type observabilitySharedQueryGetResponseEventsEventsMetadataJSON struct {
 	Origin          apijson.Field
 	ParentSpanID    apijson.Field
 	Provider        apijson.Field
+	RayID           apijson.Field
 	Region          apijson.Field
 	RequestID       apijson.Field
 	Service         apijson.Field
@@ -1761,7 +2257,9 @@ type observabilitySharedQueryGetResponseEventsEventsMetadataJSON struct {
 	SpanName        apijson.Field
 	StackID         apijson.Field
 	StartTime       apijson.Field
+	StartTimeNS     apijson.Field
 	StatusCode      apijson.Field
+	TimestampNS     apijson.Field
 	TraceDuration   apijson.Field
 	TraceID         apijson.Field
 	TransactionName apijson.Field
@@ -1813,7 +2311,6 @@ func (r ObservabilitySharedQueryGetResponseEventsEventsSourceMap) ImplementsObse
 // debugging issues.
 type ObservabilitySharedQueryGetResponseEventsEventsWorkers struct {
 	EventType  ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType `json:"eventType" api:"required"`
-	RequestID  string                                                          `json:"requestId" api:"required"`
 	ScriptName string                                                          `json:"scriptName" api:"required"`
 	CPUTimeMs  float64                                                         `json:"cpuTimeMs"`
 	// This field can have the runtime type of
@@ -1828,7 +2325,8 @@ type ObservabilitySharedQueryGetResponseEventsEventsWorkers struct {
 	Outcome        string                                                               `json:"outcome"`
 	// This field can have the runtime type of
 	// [ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectPreview].
-	Preview interface{} `json:"preview"`
+	Preview   interface{} `json:"preview"`
+	RequestID string      `json:"requestId"`
 	// This field can have the runtime type of
 	// [ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectScriptVersion].
 	ScriptVersion interface{}                                                `json:"scriptVersion"`
@@ -1844,7 +2342,6 @@ type ObservabilitySharedQueryGetResponseEventsEventsWorkers struct {
 // metadata for the struct [ObservabilitySharedQueryGetResponseEventsEventsWorkers]
 type observabilitySharedQueryGetResponseEventsEventsWorkersJSON struct {
 	EventType                apijson.Field
-	RequestID                apijson.Field
 	ScriptName               apijson.Field
 	CPUTimeMs                apijson.Field
 	DiagnosticsChannelEvents apijson.Field
@@ -1855,6 +2352,7 @@ type observabilitySharedQueryGetResponseEventsEventsWorkersJSON struct {
 	ExecutionModel           apijson.Field
 	Outcome                  apijson.Field
 	Preview                  apijson.Field
+	RequestID                apijson.Field
 	ScriptVersion            apijson.Field
 	SpanID                   apijson.Field
 	TraceID                  apijson.Field
@@ -1914,7 +2412,6 @@ func init() {
 
 type ObservabilitySharedQueryGetResponseEventsEventsWorkersObject struct {
 	EventType       ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType      `json:"eventType" api:"required"`
-	RequestID       string                                                                     `json:"requestId" api:"required"`
 	ScriptName      string                                                                     `json:"scriptName" api:"required"`
 	DurableObjectID string                                                                     `json:"durableObjectId"`
 	Entrypoint      string                                                                     `json:"entrypoint"`
@@ -1922,6 +2419,7 @@ type ObservabilitySharedQueryGetResponseEventsEventsWorkersObject struct {
 	ExecutionModel  ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectExecutionModel `json:"executionModel"`
 	Outcome         string                                                                     `json:"outcome"`
 	Preview         ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectPreview        `json:"preview"`
+	RequestID       string                                                                     `json:"requestId"`
 	ScriptVersion   ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectScriptVersion  `json:"scriptVersion"`
 	SpanID          string                                                                     `json:"spanId"`
 	TraceID         string                                                                     `json:"traceId"`
@@ -1934,7 +2432,6 @@ type ObservabilitySharedQueryGetResponseEventsEventsWorkersObject struct {
 // [ObservabilitySharedQueryGetResponseEventsEventsWorkersObject]
 type observabilitySharedQueryGetResponseEventsEventsWorkersObjectJSON struct {
 	EventType       apijson.Field
-	RequestID       apijson.Field
 	ScriptName      apijson.Field
 	DurableObjectID apijson.Field
 	Entrypoint      apijson.Field
@@ -1942,6 +2439,7 @@ type observabilitySharedQueryGetResponseEventsEventsWorkersObjectJSON struct {
 	ExecutionModel  apijson.Field
 	Outcome         apijson.Field
 	Preview         apijson.Field
+	RequestID       apijson.Field
 	ScriptVersion   apijson.Field
 	SpanID          apijson.Field
 	TraceID         apijson.Field
@@ -1972,6 +2470,7 @@ const (
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeEmail     ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "email"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeTail      ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "tail"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeRpc       ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "rpc"
+	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeJsrpc     ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "jsrpc"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWebsocket ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "websocket"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWorkflow  ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "workflow"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeUnknown   ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType = "unknown"
@@ -1979,7 +2478,7 @@ const (
 
 func (r ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventType) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeFetch, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeScheduled, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeAlarm, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeCron, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeQueue, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeEmail, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeTail, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeRpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWebsocket, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWorkflow, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeUnknown:
+	case ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeFetch, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeScheduled, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeAlarm, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeCron, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeQueue, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeEmail, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeTail, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeRpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeJsrpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWebsocket, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeWorkflow, ObservabilitySharedQueryGetResponseEventsEventsWorkersObjectEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2063,6 +2562,7 @@ const (
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeEmail     ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "email"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeTail      ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "tail"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeRpc       ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "rpc"
+	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeJsrpc     ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "jsrpc"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWebsocket ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "websocket"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWorkflow  ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "workflow"
 	ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeUnknown   ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType = "unknown"
@@ -2070,7 +2570,7 @@ const (
 
 func (r ObservabilitySharedQueryGetResponseEventsEventsWorkersEventType) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeFetch, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeScheduled, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeAlarm, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeCron, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeQueue, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeEmail, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeTail, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeRpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWebsocket, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWorkflow, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeUnknown:
+	case ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeFetch, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeScheduled, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeAlarm, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeCron, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeQueue, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeEmail, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeTail, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeRpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeJsrpc, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWebsocket, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeWorkflow, ObservabilitySharedQueryGetResponseEventsEventsWorkersEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2140,11 +2640,23 @@ func (r observabilitySharedQueryGetResponseEventsSeriesJSON) RawJSON() string {
 }
 
 type ObservabilitySharedQueryGetResponseEventsSeriesData struct {
-	Aggregates     ObservabilitySharedQueryGetResponseEventsSeriesDataAggregates `json:"aggregates" api:"required"`
-	Count          float64                                                       `json:"count" api:"required"`
-	Interval       float64                                                       `json:"interval" api:"required"`
-	SampleInterval float64                                                       `json:"sampleInterval" api:"required"`
-	Errors         float64                                                       `json:"errors"`
+	Aggregates ObservabilitySharedQueryGetResponseEventsSeriesDataAggregates `json:"aggregates" api:"required"`
+	// Estimated number of matching events: the sum of the sample intervals of the
+	// stored events. It equals the number of stored events when sampleInterval is 1.
+	Count float64 `json:"count" api:"required"`
+	// Deprecated alias of sampleInterval. Always has the same value; use
+	// sampleInterval instead.
+	//
+	// Deprecated: deprecated
+	Interval float64 `json:"interval" api:"required"`
+	// Average sample interval of the matched events. Each stored event has a sample
+	// interval of 1 / (the sampling rate applied when it was ingested): the Worker's
+	// head_sampling_rate multiplied by any platform sampling applied to the account or
+	// script. A value of 1 means none of the matched events were sampled. A value
+	// above 1 means count and value are estimated from sampled data, not exact. This
+	// is independent of statistics.abr_level.
+	SampleInterval float64 `json:"sampleInterval" api:"required"`
+	Errors         float64 `json:"errors"`
 	// Groups in the query results.
 	Groups map[string]ObservabilitySharedQueryGetResponseEventsSeriesDataGroupsUnion `json:"groups"`
 	JSON   observabilitySharedQueryGetResponseEventsSeriesDataJSON                   `json:"-"`
@@ -2294,10 +2806,14 @@ type ObservabilitySharedQueryGetResponseInvocationsMetadata struct {
 	Duration int64 `json:"duration"`
 	// Span end time as a Unix epoch in milliseconds.
 	EndTime int64 `json:"endTime"`
+	// Span end time as a Unix epoch in nanoseconds.
+	EndTimeNS string `json:"endTimeNs"`
 	// Error message, present when the log represents an error.
 	Error string `json:"error"`
 	// Templatized version of the error message used for grouping similar errors.
 	ErrorTemplate string `json:"errorTemplate"`
+	// Size of the stored telemetry event in bytes.
+	EventSize int64 `json:"eventSize"`
 	// Content-based fingerprint used to group similar events.
 	Fingerprint string `json:"fingerprint"`
 	// Log level (e.g. log, debug, info, warn, error).
@@ -2314,6 +2830,9 @@ type ObservabilitySharedQueryGetResponseInvocationsMetadata struct {
 	ParentSpanID string `json:"parentSpanId"`
 	// Infrastructure provider identifier.
 	Provider string `json:"provider"`
+	// Cloudflare Ray ID from the `cf-ray` header of the request that triggered the
+	// invocation.
+	RayID string `json:"rayId"`
 	// Cloudflare data center / region that handled the request.
 	Region string `json:"region"`
 	// Cloudflare request ID that ties all logs from a single invocation together.
@@ -2328,8 +2847,12 @@ type ObservabilitySharedQueryGetResponseInvocationsMetadata struct {
 	StackID string `json:"stackId"`
 	// Span start time as a Unix epoch in milliseconds.
 	StartTime int64 `json:"startTime"`
+	// Span start time as a Unix epoch in nanoseconds.
+	StartTimeNS string `json:"startTimeNs"`
 	// HTTP response status code returned by the Worker.
 	StatusCode int64 `json:"statusCode"`
+	// Event time as a Unix epoch in nanoseconds.
+	TimestampNS string `json:"timestampNs"`
 	// Total duration of the entire trace in milliseconds.
 	TraceDuration int64 `json:"traceDuration"`
 	// Distributed trace ID linking spans across services.
@@ -2355,8 +2878,10 @@ type observabilitySharedQueryGetResponseInvocationsMetadataJSON struct {
 	Cost            apijson.Field
 	Duration        apijson.Field
 	EndTime         apijson.Field
+	EndTimeNS       apijson.Field
 	Error           apijson.Field
 	ErrorTemplate   apijson.Field
+	EventSize       apijson.Field
 	Fingerprint     apijson.Field
 	Level           apijson.Field
 	Message         apijson.Field
@@ -2365,6 +2890,7 @@ type observabilitySharedQueryGetResponseInvocationsMetadataJSON struct {
 	Origin          apijson.Field
 	ParentSpanID    apijson.Field
 	Provider        apijson.Field
+	RayID           apijson.Field
 	Region          apijson.Field
 	RequestID       apijson.Field
 	Service         apijson.Field
@@ -2372,7 +2898,9 @@ type observabilitySharedQueryGetResponseInvocationsMetadataJSON struct {
 	SpanName        apijson.Field
 	StackID         apijson.Field
 	StartTime       apijson.Field
+	StartTimeNS     apijson.Field
 	StatusCode      apijson.Field
+	TimestampNS     apijson.Field
 	TraceDuration   apijson.Field
 	TraceID         apijson.Field
 	TransactionName apijson.Field
@@ -2424,7 +2952,6 @@ func (r ObservabilitySharedQueryGetResponseInvocationsSourceMap) ImplementsObser
 // debugging issues.
 type ObservabilitySharedQueryGetResponseInvocationsWorkers struct {
 	EventType  ObservabilitySharedQueryGetResponseInvocationsWorkersEventType `json:"eventType" api:"required"`
-	RequestID  string                                                         `json:"requestId" api:"required"`
 	ScriptName string                                                         `json:"scriptName" api:"required"`
 	CPUTimeMs  float64                                                        `json:"cpuTimeMs"`
 	// This field can have the runtime type of
@@ -2439,7 +2966,8 @@ type ObservabilitySharedQueryGetResponseInvocationsWorkers struct {
 	Outcome        string                                                              `json:"outcome"`
 	// This field can have the runtime type of
 	// [ObservabilitySharedQueryGetResponseInvocationsWorkersObjectPreview].
-	Preview interface{} `json:"preview"`
+	Preview   interface{} `json:"preview"`
+	RequestID string      `json:"requestId"`
 	// This field can have the runtime type of
 	// [ObservabilitySharedQueryGetResponseInvocationsWorkersObjectScriptVersion].
 	ScriptVersion interface{}                                               `json:"scriptVersion"`
@@ -2455,7 +2983,6 @@ type ObservabilitySharedQueryGetResponseInvocationsWorkers struct {
 // metadata for the struct [ObservabilitySharedQueryGetResponseInvocationsWorkers]
 type observabilitySharedQueryGetResponseInvocationsWorkersJSON struct {
 	EventType                apijson.Field
-	RequestID                apijson.Field
 	ScriptName               apijson.Field
 	CPUTimeMs                apijson.Field
 	DiagnosticsChannelEvents apijson.Field
@@ -2466,6 +2993,7 @@ type observabilitySharedQueryGetResponseInvocationsWorkersJSON struct {
 	ExecutionModel           apijson.Field
 	Outcome                  apijson.Field
 	Preview                  apijson.Field
+	RequestID                apijson.Field
 	ScriptVersion            apijson.Field
 	SpanID                   apijson.Field
 	TraceID                  apijson.Field
@@ -2524,7 +3052,6 @@ func init() {
 
 type ObservabilitySharedQueryGetResponseInvocationsWorkersObject struct {
 	EventType       ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType      `json:"eventType" api:"required"`
-	RequestID       string                                                                    `json:"requestId" api:"required"`
 	ScriptName      string                                                                    `json:"scriptName" api:"required"`
 	DurableObjectID string                                                                    `json:"durableObjectId"`
 	Entrypoint      string                                                                    `json:"entrypoint"`
@@ -2532,6 +3059,7 @@ type ObservabilitySharedQueryGetResponseInvocationsWorkersObject struct {
 	ExecutionModel  ObservabilitySharedQueryGetResponseInvocationsWorkersObjectExecutionModel `json:"executionModel"`
 	Outcome         string                                                                    `json:"outcome"`
 	Preview         ObservabilitySharedQueryGetResponseInvocationsWorkersObjectPreview        `json:"preview"`
+	RequestID       string                                                                    `json:"requestId"`
 	ScriptVersion   ObservabilitySharedQueryGetResponseInvocationsWorkersObjectScriptVersion  `json:"scriptVersion"`
 	SpanID          string                                                                    `json:"spanId"`
 	TraceID         string                                                                    `json:"traceId"`
@@ -2544,7 +3072,6 @@ type ObservabilitySharedQueryGetResponseInvocationsWorkersObject struct {
 // [ObservabilitySharedQueryGetResponseInvocationsWorkersObject]
 type observabilitySharedQueryGetResponseInvocationsWorkersObjectJSON struct {
 	EventType       apijson.Field
-	RequestID       apijson.Field
 	ScriptName      apijson.Field
 	DurableObjectID apijson.Field
 	Entrypoint      apijson.Field
@@ -2552,6 +3079,7 @@ type observabilitySharedQueryGetResponseInvocationsWorkersObjectJSON struct {
 	ExecutionModel  apijson.Field
 	Outcome         apijson.Field
 	Preview         apijson.Field
+	RequestID       apijson.Field
 	ScriptVersion   apijson.Field
 	SpanID          apijson.Field
 	TraceID         apijson.Field
@@ -2582,6 +3110,7 @@ const (
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeEmail     ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "email"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeTail      ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "tail"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeRpc       ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "rpc"
+	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeJsrpc     ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "jsrpc"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWebsocket ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "websocket"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWorkflow  ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "workflow"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeUnknown   ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType = "unknown"
@@ -2589,7 +3118,7 @@ const (
 
 func (r ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventType) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeFetch, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeScheduled, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeAlarm, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeCron, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeQueue, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeEmail, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeTail, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeRpc, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWebsocket, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWorkflow, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeUnknown:
+	case ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeFetch, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeScheduled, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeAlarm, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeCron, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeQueue, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeEmail, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeTail, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeRpc, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeJsrpc, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWebsocket, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeWorkflow, ObservabilitySharedQueryGetResponseInvocationsWorkersObjectEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2673,6 +3202,7 @@ const (
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeEmail     ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "email"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeTail      ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "tail"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeRpc       ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "rpc"
+	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeJsrpc     ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "jsrpc"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWebsocket ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "websocket"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWorkflow  ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "workflow"
 	ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeUnknown   ObservabilitySharedQueryGetResponseInvocationsWorkersEventType = "unknown"
@@ -2680,7 +3210,7 @@ const (
 
 func (r ObservabilitySharedQueryGetResponseInvocationsWorkersEventType) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeFetch, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeScheduled, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeAlarm, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeCron, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeQueue, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeEmail, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeTail, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeRpc, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWebsocket, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWorkflow, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeUnknown:
+	case ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeFetch, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeScheduled, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeAlarm, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeCron, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeQueue, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeEmail, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeTail, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeRpc, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeJsrpc, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWebsocket, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeWorkflow, ObservabilitySharedQueryGetResponseInvocationsWorkersEventTypeUnknown:
 		return true
 	}
 	return false
@@ -2753,14 +3283,27 @@ type ObservabilitySharedQueryNewParams struct {
 	// previously saved query's parameters. When providing parameters inline, pass any
 	// identifier (e.g. an ad-hoc ID).
 	QueryID param.Field[string] `json:"queryId" api:"required"`
-	// Timeframe for the query using Unix timestamps in milliseconds. Narrower
-	// timeframes produce faster responses and more specific results.
+	// Timeframe for the query using Unix timestamps in milliseconds. 'from' must be
+	// earlier than 'to'. Narrower timeframes produce faster responses and more
+	// specific results.
 	Timeframe param.Field[ObservabilitySharedQueryNewParamsTimeframe] `json:"timeframe" api:"required"`
 	// When true, includes time-series data in the response.
 	Chart param.Field[bool] `json:"chart"`
+	// Controls the SQL shape and response payload for the 'calculations' view. Omitted
+	// or 'timeseries_and_aggregate': current behaviour — both the time-series and
+	// aggregate queries. 'timeseries': time-series only. 'aggregate': aggregate only.
+	// 'distribution': a bucketed 2D histogram (time × value buckets) returned in
+	// 'distribution' instead of 'calculations'. 'distribution' is not compatible with
+	// 'compare' — combining them returns a 400.
+	ChartType param.Field[ObservabilitySharedQueryNewParamsChartType] `json:"chartType"`
 	// When true, includes a comparison dataset from the previous time period of equal
 	// length.
 	Compare param.Field[bool] `json:"compare"`
+	// Value-axis bucketing for chartType 'distribution'. Omitted or 'log': geometric
+	// buckets, best for heavy-tailed latency. 'linear': fixed-width buckets, clearer
+	// for narrow or additive ranges. Ignored for other chartTypes. The response echoes
+	// the scheme used in distribution.bucketMode.
+	DistributionScale param.Field[ObservabilitySharedQueryNewParamsDistributionScale] `json:"distributionScale"`
 	// When true, executes the query without persisting the results. Useful for
 	// validation or previewing.
 	Dry param.Field[bool] `json:"dry"`
@@ -2773,8 +3316,9 @@ type ObservabilitySharedQueryNewParams struct {
 	// Maximum number of events to return when view is 'events'. Also controls the
 	// number of group-by rows when view is 'calculations'.
 	Limit param.Field[float64] `json:"limit"`
-	// Cursor for pagination in event, trace, and invocation views. Pass the
-	// $metadata.id of the last returned item to fetch the next page.
+	// Cursor for pagination in event, trace, invocation, and agent views. Pass the
+	// $metadata.id of the last event, the trace cursor, or AgentRun.id to fetch the
+	// next page.
 	Offset param.Field[string] `json:"offset"`
 	// Numeric offset for paginating grouped/pattern results (top-N lists). Use
 	// together with limit. Not used by cursor-based pagination.
@@ -2789,7 +3333,7 @@ type ObservabilitySharedQueryNewParams struct {
 	// Controls the shape of the response. 'events': individual log lines matching the
 	// query. 'calculations': aggregated metrics (count, avg, p99, etc.) with optional
 	// group-by breakdowns and time-series. 'invocations': events grouped by request
-	// ID. 'traces': distributed trace summaries. 'agents': Durable Object agent
+	// ID. 'traces': distributed trace summaries. 'agents': agent-specific trace
 	// summaries.
 	View param.Field[ObservabilitySharedQueryNewParamsView] `json:"view"`
 }
@@ -2798,17 +3342,60 @@ func (r ObservabilitySharedQueryNewParams) MarshalJSON() (data []byte, err error
 	return apijson.MarshalRoot(r)
 }
 
-// Timeframe for the query using Unix timestamps in milliseconds. Narrower
-// timeframes produce faster responses and more specific results.
+// Timeframe for the query using Unix timestamps in milliseconds. 'from' must be
+// earlier than 'to'. Narrower timeframes produce faster responses and more
+// specific results.
 type ObservabilitySharedQueryNewParamsTimeframe struct {
-	// Start timestamp for the query timeframe (Unix timestamp in milliseconds)
-	From param.Field[float64] `json:"from" api:"required"`
-	// End timestamp for the query timeframe (Unix timestamp in milliseconds)
-	To param.Field[float64] `json:"to" api:"required"`
+	// Start timestamp for the query timeframe. Unix timestamp in milliseconds
+	From param.Field[int64] `json:"from" api:"required"`
+	// End timestamp for the query timeframe. Unix timestamp in milliseconds
+	To param.Field[int64] `json:"to" api:"required"`
 }
 
 func (r ObservabilitySharedQueryNewParamsTimeframe) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Controls the SQL shape and response payload for the 'calculations' view. Omitted
+// or 'timeseries_and_aggregate': current behaviour — both the time-series and
+// aggregate queries. 'timeseries': time-series only. 'aggregate': aggregate only.
+// 'distribution': a bucketed 2D histogram (time × value buckets) returned in
+// 'distribution' instead of 'calculations'. 'distribution' is not compatible with
+// 'compare' — combining them returns a 400.
+type ObservabilitySharedQueryNewParamsChartType string
+
+const (
+	ObservabilitySharedQueryNewParamsChartTypeTimeseriesAndAggregate ObservabilitySharedQueryNewParamsChartType = "timeseries_and_aggregate"
+	ObservabilitySharedQueryNewParamsChartTypeTimeseries             ObservabilitySharedQueryNewParamsChartType = "timeseries"
+	ObservabilitySharedQueryNewParamsChartTypeAggregate              ObservabilitySharedQueryNewParamsChartType = "aggregate"
+	ObservabilitySharedQueryNewParamsChartTypeDistribution           ObservabilitySharedQueryNewParamsChartType = "distribution"
+)
+
+func (r ObservabilitySharedQueryNewParamsChartType) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryNewParamsChartTypeTimeseriesAndAggregate, ObservabilitySharedQueryNewParamsChartTypeTimeseries, ObservabilitySharedQueryNewParamsChartTypeAggregate, ObservabilitySharedQueryNewParamsChartTypeDistribution:
+		return true
+	}
+	return false
+}
+
+// Value-axis bucketing for chartType 'distribution'. Omitted or 'log': geometric
+// buckets, best for heavy-tailed latency. 'linear': fixed-width buckets, clearer
+// for narrow or additive ranges. Ignored for other chartTypes. The response echoes
+// the scheme used in distribution.bucketMode.
+type ObservabilitySharedQueryNewParamsDistributionScale string
+
+const (
+	ObservabilitySharedQueryNewParamsDistributionScaleLog    ObservabilitySharedQueryNewParamsDistributionScale = "log"
+	ObservabilitySharedQueryNewParamsDistributionScaleLinear ObservabilitySharedQueryNewParamsDistributionScale = "linear"
+)
+
+func (r ObservabilitySharedQueryNewParamsDistributionScale) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryNewParamsDistributionScaleLog, ObservabilitySharedQueryNewParamsDistributionScaleLinear:
+		return true
+	}
+	return false
 }
 
 // Query parameters defining what data to retrieve — filters, calculations,
@@ -2818,7 +3405,7 @@ func (r ObservabilitySharedQueryNewParamsTimeframe) MarshalJSON() (data []byte, 
 type ObservabilitySharedQueryNewParamsParameters struct {
 	// Aggregation calculations to compute (e.g. count, avg, p99). Each calculation
 	// produces aggregate values and optional time-series data.
-	Calculations param.Field[[]ObservabilitySharedQueryNewParamsParametersCalculation] `json:"calculations"`
+	Calculations param.Field[[]ObservabilitySharedQueryNewParamsParametersCalculationUnion] `json:"calculations"`
 	// Datasets to query. Leave empty to query all available datasets.
 	Datasets param.Field[[]string] `json:"datasets"`
 	// Logical operator for combining top-level filters: 'and' (all must match) or 'or'
@@ -2856,8 +3443,9 @@ type ObservabilitySharedQueryNewParamsParametersCalculation struct {
 	// Custom label for this calculation in the results. Useful for distinguishing
 	// multiple calculations.
 	Alias param.Field[string] `json:"alias"`
-	// Field name to calculate over. Must exist in the data — verify with the keys
-	// endpoint. Omit for operators that don't require a key (e.g. count).
+	// Field name to calculate over. Must exist in the data. Verify with the keys
+	// endpoint. Required for every operator except `count`, which aggregates whole
+	// rows and may omit it.
 	Key param.Field[string] `json:"key"`
 	// Data type of the key. Required when key is provided to ensure correct
 	// aggregation.
@@ -2868,13 +3456,83 @@ func (r ObservabilitySharedQueryNewParamsParametersCalculation) MarshalJSON() (d
 	return apijson.MarshalRoot(r)
 }
 
+func (r ObservabilitySharedQueryNewParamsParametersCalculation) implementsObservabilitySharedQueryNewParamsParametersCalculationUnion() {
+}
+
+// Satisfied by
+// [workers.ObservabilitySharedQueryNewParamsParametersCalculationsObject],
+// [workers.ObservabilitySharedQueryNewParamsParametersCalculationsObject],
+// [ObservabilitySharedQueryNewParamsParametersCalculation].
+type ObservabilitySharedQueryNewParamsParametersCalculationUnion interface {
+	implementsObservabilitySharedQueryNewParamsParametersCalculationUnion()
+}
+
+type ObservabilitySharedQueryNewParamsParametersCalculationsObject struct {
+	// Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
+	// p95, p99, uniq, stddev, variance.
+	Operator param.Field[ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperator] `json:"operator" api:"required"`
+	// Custom label for this calculation in the results. Useful for distinguishing
+	// multiple calculations.
+	Alias param.Field[string] `json:"alias"`
+	// Field name to calculate over. Must exist in the data. Verify with the keys
+	// endpoint. Required for every operator except `count`, which aggregates whole
+	// rows and may omit it.
+	Key param.Field[string] `json:"key"`
+	// Data type of the key. Required when key is provided to ensure correct
+	// aggregation.
+	KeyType param.Field[ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType] `json:"keyType"`
+}
+
+func (r ObservabilitySharedQueryNewParamsParametersCalculationsObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ObservabilitySharedQueryNewParamsParametersCalculationsObject) implementsObservabilitySharedQueryNewParamsParametersCalculationUnion() {
+}
+
+// Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
+// p95, p99, uniq, stddev, variance.
+type ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperator string
+
+const (
+	ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperatorCount          ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperator = "count"
+	ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperatorCountUppercase ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperator = "COUNT"
+)
+
+func (r ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperator) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperatorCount, ObservabilitySharedQueryNewParamsParametersCalculationsObjectOperatorCountUppercase:
+		return true
+	}
+	return false
+}
+
+// Data type of the key. Required when key is provided to ensure correct
+// aggregation.
+type ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType string
+
+const (
+	ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeString  ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType = "string"
+	ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeNumber  ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType = "number"
+	ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeBoolean ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType = "boolean"
+)
+
+func (r ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyType) IsKnown() bool {
+	switch r {
+	case ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeString, ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeNumber, ObservabilitySharedQueryNewParamsParametersCalculationsObjectKeyTypeBoolean:
+		return true
+	}
+	return false
+}
+
 // Aggregation operator to apply. Examples: count, avg, sum, min, max, median, p90,
 // p95, p99, uniq, stddev, variance.
 type ObservabilitySharedQueryNewParamsParametersCalculationsOperator string
 
 const (
-	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorUniq              ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "uniq"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCount             ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "count"
+	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountUppercase    ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "COUNT"
+	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorUniq              ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "uniq"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMax               ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "max"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMin               ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "min"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSum               ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "sum"
@@ -2893,7 +3551,6 @@ const (
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorStddev            ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "stddev"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorVariance          ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "variance"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountDistinct     ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "COUNT_DISTINCT"
-	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountUppercase    ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "COUNT"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMaxUppercase      ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "MAX"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMinUppercase      ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "MIN"
 	ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSumUppercase      ObservabilitySharedQueryNewParamsParametersCalculationsOperator = "SUM"
@@ -2915,7 +3572,7 @@ const (
 
 func (r ObservabilitySharedQueryNewParamsParametersCalculationsOperator) IsKnown() bool {
 	switch r {
-	case ObservabilitySharedQueryNewParamsParametersCalculationsOperatorUniq, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCount, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMax, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMin, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSum, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorAvg, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMedian, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP001, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP01, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP05, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP10, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP25, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP75, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP90, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP95, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP99, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP999, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorStddev, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorVariance, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountDistinct, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMaxUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMinUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSumUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorAvgUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMedianUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP001Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP01Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP05Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP10Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP25Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP75Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP90Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP95Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP99Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP999Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorStddevUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorVarianceUppercase:
+	case ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCount, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorUniq, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMax, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMin, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSum, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorAvg, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMedian, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP001, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP01, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP05, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP10, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP25, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP75, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP90, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP95, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP99, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP999, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorStddev, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorVariance, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorCountDistinct, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMaxUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMinUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorSumUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorAvgUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorMedianUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP001Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP01Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP05Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP10Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP25Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP75Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP90Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP95Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP99Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorP999Uppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorStddevUppercase, ObservabilitySharedQueryNewParamsParametersCalculationsOperatorVarianceUppercase:
 		return true
 	}
 	return false
@@ -3667,7 +4324,7 @@ func (r ObservabilitySharedQueryNewParamsParametersOrderByOrder) IsKnown() bool 
 // Controls the shape of the response. 'events': individual log lines matching the
 // query. 'calculations': aggregated metrics (count, avg, p99, etc.) with optional
 // group-by breakdowns and time-series. 'invocations': events grouped by request
-// ID. 'traces': distributed trace summaries. 'agents': Durable Object agent
+// ID. 'traces': distributed trace summaries. 'agents': agent-specific trace
 // summaries.
 type ObservabilitySharedQueryNewParamsView string
 

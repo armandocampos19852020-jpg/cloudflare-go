@@ -78,6 +78,7 @@ func TestGatewayRuleNewWithOptionalParams(t *testing.T) {
 				Duration: cloudflare.F("300s"),
 				Enforce:  cloudflare.F(true),
 			}),
+			DeleteHeaders: cloudflare.F([]string{"X-Old-Header", "X-Remove-Me"}),
 			DNSResolvers: cloudflare.F(zero_trust.RuleSettingDNSResolversParam{
 				IPV4: cloudflare.F([]zero_trust.DNSResolverSettingsV4Param{{
 					IP:                         cloudflare.F("2.2.2.2"),
@@ -132,6 +133,9 @@ func TestGatewayRuleNewWithOptionalParams(t *testing.T) {
 				ViewID:   cloudflare.F("view_id"),
 			}),
 			ResolveDNSThroughCloudflare: cloudflare.F(true),
+			SetHeaders: cloudflare.F(map[string][]string{
+				"X-User-Identity": {"user=@{identity.name}"},
+			}),
 			UntrustedCERT: cloudflare.F(zero_trust.RuleSettingUntrustedCERTParam{
 				Action: cloudflare.F(zero_trust.RuleSettingUntrustedCERTActionError),
 			}),
@@ -223,6 +227,7 @@ func TestGatewayRuleUpdateWithOptionalParams(t *testing.T) {
 					Duration: cloudflare.F("300s"),
 					Enforce:  cloudflare.F(true),
 				}),
+				DeleteHeaders: cloudflare.F([]string{"X-Old-Header", "X-Remove-Me"}),
 				DNSResolvers: cloudflare.F(zero_trust.RuleSettingDNSResolversParam{
 					IPV4: cloudflare.F([]zero_trust.DNSResolverSettingsV4Param{{
 						IP:                         cloudflare.F("2.2.2.2"),
@@ -277,6 +282,9 @@ func TestGatewayRuleUpdateWithOptionalParams(t *testing.T) {
 					ViewID:   cloudflare.F("view_id"),
 				}),
 				ResolveDNSThroughCloudflare: cloudflare.F(true),
+				SetHeaders: cloudflare.F(map[string][]string{
+					"X-User-Identity": {"user=@{identity.name}"},
+				}),
 				UntrustedCERT: cloudflare.F(zero_trust.RuleSettingUntrustedCERTParam{
 					Action: cloudflare.F(zero_trust.RuleSettingUntrustedCERTActionError),
 				}),
@@ -303,7 +311,7 @@ func TestGatewayRuleUpdateWithOptionalParams(t *testing.T) {
 	}
 }
 
-func TestGatewayRuleList(t *testing.T) {
+func TestGatewayRuleListWithOptionalParams(t *testing.T) {
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -319,6 +327,10 @@ func TestGatewayRuleList(t *testing.T) {
 	)
 	_, err := client.ZeroTrust.Gateway.Rules.List(context.TODO(), zero_trust.GatewayRuleListParams{
 		AccountID: cloudflare.F("699d98642c564d2e855e9661899b7252"),
+		Direction: cloudflare.F(zero_trust.GatewayRuleListParamsDirectionAsc),
+		Filter:    cloudflare.F([]string{"string"}),
+		OrderBy:   cloudflare.F(zero_trust.GatewayRuleListParamsOrderByName),
+		Search:    cloudflare.F("search"),
 	})
 	if err != nil {
 		var apierr *cloudflare.Error

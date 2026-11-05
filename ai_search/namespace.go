@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"time"
 
@@ -17,6 +18,8 @@ import (
 	"github.com/cloudflare/cloudflare-go/v7/internal/requestconfig"
 	"github.com/cloudflare/cloudflare-go/v7/option"
 	"github.com/cloudflare/cloudflare-go/v7/packages/pagination"
+	"github.com/cloudflare/cloudflare-go/v7/shared"
+	"github.com/tidwall/gjson"
 )
 
 // NamespaceService contains methods and other services that help with interacting
@@ -40,7 +43,7 @@ func NewNamespaceService(opts ...option.RequestOption) (r *NamespaceService) {
 	return
 }
 
-// Create a new namespace.
+// Create a namespace for organizing AI Search instances.
 func (r *NamespaceService) New(ctx context.Context, params NamespaceNewParams, opts ...option.RequestOption) (res *NamespaceNewResponse, err error) {
 	var env NamespaceNewResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -57,7 +60,9 @@ func (r *NamespaceService) New(ctx context.Context, params NamespaceNewParams, o
 	return res, nil
 }
 
-// Update namespace.
+// Update the description and/or the public endpoint configuration of an existing
+// namespace. The default namespace's description cannot be modified, but its
+// public endpoint can.
 func (r *NamespaceService) Update(ctx context.Context, name string, params NamespaceUpdateParams, opts ...option.RequestOption) (res *NamespaceUpdateResponse, err error) {
 	var env NamespaceUpdateResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -78,7 +83,7 @@ func (r *NamespaceService) Update(ctx context.Context, name string, params Names
 	return res, nil
 }
 
-// List namespaces.
+// List namespaces in the account, including their descriptions and creation times.
 func (r *NamespaceService) List(ctx context.Context, params NamespaceListParams, opts ...option.RequestOption) (res *pagination.V4PagePaginationArray[NamespaceListResponse], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
@@ -100,12 +105,13 @@ func (r *NamespaceService) List(ctx context.Context, params NamespaceListParams,
 	return res, nil
 }
 
-// List namespaces.
+// List namespaces in the account, including their descriptions and creation times.
 func (r *NamespaceService) ListAutoPaging(ctx context.Context, params NamespaceListParams, opts ...option.RequestOption) *pagination.V4PagePaginationArrayAutoPager[NamespaceListResponse] {
 	return pagination.NewV4PagePaginationArrayAutoPager(r.List(ctx, params, opts...))
 }
 
-// Delete namespace.
+// Permanently delete a namespace. The namespace must be empty (no instances), and
+// the default namespace cannot be deleted.
 func (r *NamespaceService) Delete(ctx context.Context, name string, body NamespaceDeleteParams, opts ...option.RequestOption) (res *NamespaceDeleteResponse, err error) {
 	var env NamespaceDeleteResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -143,7 +149,7 @@ func (r *NamespaceService) ChatCompletions(ctx context.Context, name string, par
 	return res, err
 }
 
-// Read namespace.
+// Retrieve a namespace and its description.
 func (r *NamespaceService) Read(ctx context.Context, name string, query NamespaceReadParams, opts ...option.RequestOption) (res *NamespaceReadResponse, err error) {
 	var env NamespaceReadResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -164,7 +170,8 @@ func (r *NamespaceService) Read(ctx context.Context, name string, query Namespac
 	return res, nil
 }
 
-// Multi-Instance Search
+// Performs a semantic search query against multiple AI Search instances in
+// parallel, merging the retrieved results into a single ranked response.
 func (r *NamespaceService) Search(ctx context.Context, name string, params NamespaceSearchParams, opts ...option.RequestOption) (res *NamespaceSearchResponse, err error) {
 	var env NamespaceSearchResponseEnvelope
 	opts = slices.Concat(r.Options, opts)
@@ -186,21 +193,25 @@ func (r *NamespaceService) Search(ctx context.Context, name string, params Names
 }
 
 type NamespaceNewResponse struct {
-	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	CreatedAt time.Time `json:"created_at" api:"required,nullable" format:"date-time"`
 	Name      string    `json:"name" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description string                   `json:"description" api:"nullable"`
-	JSON        namespaceNewResponseJSON `json:"-"`
+	Description          string                                   `json:"description" api:"nullable"`
+	PublicEndpointID     string                                   `json:"public_endpoint_id" api:"nullable"`
+	PublicEndpointParams NamespaceNewResponsePublicEndpointParams `json:"public_endpoint_params" api:"nullable"`
+	JSON                 namespaceNewResponseJSON                 `json:"-"`
 }
 
 // namespaceNewResponseJSON contains the JSON metadata for the struct
 // [NamespaceNewResponse]
 type namespaceNewResponseJSON struct {
-	CreatedAt   apijson.Field
-	Name        apijson.Field
-	Description apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	CreatedAt            apijson.Field
+	Name                 apijson.Field
+	Description          apijson.Field
+	PublicEndpointID     apijson.Field
+	PublicEndpointParams apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
 }
 
 func (r *NamespaceNewResponse) UnmarshalJSON(data []byte) (err error) {
@@ -211,22 +222,184 @@ func (r namespaceNewResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+type NamespaceNewResponsePublicEndpointParams struct {
+	AuthorizedHosts         []string                                                        `json:"authorized_hosts"`
+	ChatCompletionsEndpoint NamespaceNewResponsePublicEndpointParamsChatCompletionsEndpoint `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains []string `json:"custom_domains" api:"nullable"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled bool `json:"default_domain_enabled"`
+	Enabled              bool `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed []string                                               `json:"instances_allowed"`
+	Mcp              NamespaceNewResponsePublicEndpointParamsMcp            `json:"mcp"`
+	RateLimit        NamespaceNewResponsePublicEndpointParamsRateLimit      `json:"rate_limit"`
+	SearchEndpoint   NamespaceNewResponsePublicEndpointParamsSearchEndpoint `json:"search_endpoint"`
+	JSON             namespaceNewResponsePublicEndpointParamsJSON           `json:"-"`
+}
+
+// namespaceNewResponsePublicEndpointParamsJSON contains the JSON metadata for the
+// struct [NamespaceNewResponsePublicEndpointParams]
+type namespaceNewResponsePublicEndpointParamsJSON struct {
+	AuthorizedHosts         apijson.Field
+	ChatCompletionsEndpoint apijson.Field
+	CustomDomains           apijson.Field
+	DefaultDomainEnabled    apijson.Field
+	Enabled                 apijson.Field
+	InstancesAllowed        apijson.Field
+	Mcp                     apijson.Field
+	RateLimit               apijson.Field
+	SearchEndpoint          apijson.Field
+	raw                     string
+	ExtraFields             map[string]apijson.Field
+}
+
+func (r *NamespaceNewResponsePublicEndpointParams) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceNewResponsePublicEndpointParamsJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceNewResponsePublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled bool                                                                `json:"disabled"`
+	JSON     namespaceNewResponsePublicEndpointParamsChatCompletionsEndpointJSON `json:"-"`
+}
+
+// namespaceNewResponsePublicEndpointParamsChatCompletionsEndpointJSON contains the
+// JSON metadata for the struct
+// [NamespaceNewResponsePublicEndpointParamsChatCompletionsEndpoint]
+type namespaceNewResponsePublicEndpointParamsChatCompletionsEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceNewResponsePublicEndpointParamsChatCompletionsEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceNewResponsePublicEndpointParamsChatCompletionsEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceNewResponsePublicEndpointParamsMcp struct {
+	Description string `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled bool                                            `json:"disabled"`
+	JSON     namespaceNewResponsePublicEndpointParamsMcpJSON `json:"-"`
+}
+
+// namespaceNewResponsePublicEndpointParamsMcpJSON contains the JSON metadata for
+// the struct [NamespaceNewResponsePublicEndpointParamsMcp]
+type namespaceNewResponsePublicEndpointParamsMcpJSON struct {
+	Description apijson.Field
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceNewResponsePublicEndpointParamsMcp) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceNewResponsePublicEndpointParamsMcpJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceNewResponsePublicEndpointParamsRateLimit struct {
+	PeriodMs  int64                                                      `json:"period_ms"`
+	Requests  int64                                                      `json:"requests"`
+	Technique NamespaceNewResponsePublicEndpointParamsRateLimitTechnique `json:"technique"`
+	JSON      namespaceNewResponsePublicEndpointParamsRateLimitJSON      `json:"-"`
+}
+
+// namespaceNewResponsePublicEndpointParamsRateLimitJSON contains the JSON metadata
+// for the struct [NamespaceNewResponsePublicEndpointParamsRateLimit]
+type namespaceNewResponsePublicEndpointParamsRateLimitJSON struct {
+	PeriodMs    apijson.Field
+	Requests    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceNewResponsePublicEndpointParamsRateLimit) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceNewResponsePublicEndpointParamsRateLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceNewResponsePublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceNewResponsePublicEndpointParamsRateLimitTechniqueFixed   NamespaceNewResponsePublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceNewResponsePublicEndpointParamsRateLimitTechniqueSliding NamespaceNewResponsePublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceNewResponsePublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceNewResponsePublicEndpointParamsRateLimitTechniqueFixed, NamespaceNewResponsePublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceNewResponsePublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled bool                                                       `json:"disabled"`
+	JSON     namespaceNewResponsePublicEndpointParamsSearchEndpointJSON `json:"-"`
+}
+
+// namespaceNewResponsePublicEndpointParamsSearchEndpointJSON contains the JSON
+// metadata for the struct [NamespaceNewResponsePublicEndpointParamsSearchEndpoint]
+type namespaceNewResponsePublicEndpointParamsSearchEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceNewResponsePublicEndpointParamsSearchEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceNewResponsePublicEndpointParamsSearchEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
 type NamespaceUpdateResponse struct {
-	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	CreatedAt time.Time `json:"created_at" api:"required,nullable" format:"date-time"`
 	Name      string    `json:"name" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description string                      `json:"description" api:"nullable"`
-	JSON        namespaceUpdateResponseJSON `json:"-"`
+	Description          string                                      `json:"description" api:"nullable"`
+	PublicEndpointID     string                                      `json:"public_endpoint_id" api:"nullable"`
+	PublicEndpointParams NamespaceUpdateResponsePublicEndpointParams `json:"public_endpoint_params" api:"nullable"`
+	JSON                 namespaceUpdateResponseJSON                 `json:"-"`
 }
 
 // namespaceUpdateResponseJSON contains the JSON metadata for the struct
 // [NamespaceUpdateResponse]
 type namespaceUpdateResponseJSON struct {
-	CreatedAt   apijson.Field
-	Name        apijson.Field
-	Description apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	CreatedAt            apijson.Field
+	Name                 apijson.Field
+	Description          apijson.Field
+	PublicEndpointID     apijson.Field
+	PublicEndpointParams apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
 }
 
 func (r *NamespaceUpdateResponse) UnmarshalJSON(data []byte) (err error) {
@@ -237,22 +410,185 @@ func (r namespaceUpdateResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+type NamespaceUpdateResponsePublicEndpointParams struct {
+	AuthorizedHosts         []string                                                           `json:"authorized_hosts"`
+	ChatCompletionsEndpoint NamespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpoint `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains []string `json:"custom_domains" api:"nullable"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled bool `json:"default_domain_enabled"`
+	Enabled              bool `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed []string                                                  `json:"instances_allowed"`
+	Mcp              NamespaceUpdateResponsePublicEndpointParamsMcp            `json:"mcp"`
+	RateLimit        NamespaceUpdateResponsePublicEndpointParamsRateLimit      `json:"rate_limit"`
+	SearchEndpoint   NamespaceUpdateResponsePublicEndpointParamsSearchEndpoint `json:"search_endpoint"`
+	JSON             namespaceUpdateResponsePublicEndpointParamsJSON           `json:"-"`
+}
+
+// namespaceUpdateResponsePublicEndpointParamsJSON contains the JSON metadata for
+// the struct [NamespaceUpdateResponsePublicEndpointParams]
+type namespaceUpdateResponsePublicEndpointParamsJSON struct {
+	AuthorizedHosts         apijson.Field
+	ChatCompletionsEndpoint apijson.Field
+	CustomDomains           apijson.Field
+	DefaultDomainEnabled    apijson.Field
+	Enabled                 apijson.Field
+	InstancesAllowed        apijson.Field
+	Mcp                     apijson.Field
+	RateLimit               apijson.Field
+	SearchEndpoint          apijson.Field
+	raw                     string
+	ExtraFields             map[string]apijson.Field
+}
+
+func (r *NamespaceUpdateResponsePublicEndpointParams) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceUpdateResponsePublicEndpointParamsJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled bool                                                                   `json:"disabled"`
+	JSON     namespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpointJSON `json:"-"`
+}
+
+// namespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpointJSON contains
+// the JSON metadata for the struct
+// [NamespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpoint]
+type namespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceUpdateResponsePublicEndpointParamsChatCompletionsEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceUpdateResponsePublicEndpointParamsMcp struct {
+	Description string `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled bool                                               `json:"disabled"`
+	JSON     namespaceUpdateResponsePublicEndpointParamsMcpJSON `json:"-"`
+}
+
+// namespaceUpdateResponsePublicEndpointParamsMcpJSON contains the JSON metadata
+// for the struct [NamespaceUpdateResponsePublicEndpointParamsMcp]
+type namespaceUpdateResponsePublicEndpointParamsMcpJSON struct {
+	Description apijson.Field
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceUpdateResponsePublicEndpointParamsMcp) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceUpdateResponsePublicEndpointParamsMcpJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceUpdateResponsePublicEndpointParamsRateLimit struct {
+	PeriodMs  int64                                                         `json:"period_ms"`
+	Requests  int64                                                         `json:"requests"`
+	Technique NamespaceUpdateResponsePublicEndpointParamsRateLimitTechnique `json:"technique"`
+	JSON      namespaceUpdateResponsePublicEndpointParamsRateLimitJSON      `json:"-"`
+}
+
+// namespaceUpdateResponsePublicEndpointParamsRateLimitJSON contains the JSON
+// metadata for the struct [NamespaceUpdateResponsePublicEndpointParamsRateLimit]
+type namespaceUpdateResponsePublicEndpointParamsRateLimitJSON struct {
+	PeriodMs    apijson.Field
+	Requests    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceUpdateResponsePublicEndpointParamsRateLimit) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceUpdateResponsePublicEndpointParamsRateLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceUpdateResponsePublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceUpdateResponsePublicEndpointParamsRateLimitTechniqueFixed   NamespaceUpdateResponsePublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceUpdateResponsePublicEndpointParamsRateLimitTechniqueSliding NamespaceUpdateResponsePublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceUpdateResponsePublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceUpdateResponsePublicEndpointParamsRateLimitTechniqueFixed, NamespaceUpdateResponsePublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceUpdateResponsePublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled bool                                                          `json:"disabled"`
+	JSON     namespaceUpdateResponsePublicEndpointParamsSearchEndpointJSON `json:"-"`
+}
+
+// namespaceUpdateResponsePublicEndpointParamsSearchEndpointJSON contains the JSON
+// metadata for the struct
+// [NamespaceUpdateResponsePublicEndpointParamsSearchEndpoint]
+type namespaceUpdateResponsePublicEndpointParamsSearchEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceUpdateResponsePublicEndpointParamsSearchEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceUpdateResponsePublicEndpointParamsSearchEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
 type NamespaceListResponse struct {
-	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	CreatedAt time.Time `json:"created_at" api:"required,nullable" format:"date-time"`
 	Name      string    `json:"name" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description string                    `json:"description" api:"nullable"`
-	JSON        namespaceListResponseJSON `json:"-"`
+	Description          string                                    `json:"description" api:"nullable"`
+	PublicEndpointID     string                                    `json:"public_endpoint_id" api:"nullable"`
+	PublicEndpointParams NamespaceListResponsePublicEndpointParams `json:"public_endpoint_params" api:"nullable"`
+	JSON                 namespaceListResponseJSON                 `json:"-"`
 }
 
 // namespaceListResponseJSON contains the JSON metadata for the struct
 // [NamespaceListResponse]
 type namespaceListResponseJSON struct {
-	CreatedAt   apijson.Field
-	Name        apijson.Field
-	Description apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	CreatedAt            apijson.Field
+	Name                 apijson.Field
+	Description          apijson.Field
+	PublicEndpointID     apijson.Field
+	PublicEndpointParams apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
 }
 
 func (r *NamespaceListResponse) UnmarshalJSON(data []byte) (err error) {
@@ -260,6 +596,165 @@ func (r *NamespaceListResponse) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r namespaceListResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceListResponsePublicEndpointParams struct {
+	AuthorizedHosts         []string                                                         `json:"authorized_hosts"`
+	ChatCompletionsEndpoint NamespaceListResponsePublicEndpointParamsChatCompletionsEndpoint `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains []string `json:"custom_domains" api:"nullable"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled bool `json:"default_domain_enabled"`
+	Enabled              bool `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed []string                                                `json:"instances_allowed"`
+	Mcp              NamespaceListResponsePublicEndpointParamsMcp            `json:"mcp"`
+	RateLimit        NamespaceListResponsePublicEndpointParamsRateLimit      `json:"rate_limit"`
+	SearchEndpoint   NamespaceListResponsePublicEndpointParamsSearchEndpoint `json:"search_endpoint"`
+	JSON             namespaceListResponsePublicEndpointParamsJSON           `json:"-"`
+}
+
+// namespaceListResponsePublicEndpointParamsJSON contains the JSON metadata for the
+// struct [NamespaceListResponsePublicEndpointParams]
+type namespaceListResponsePublicEndpointParamsJSON struct {
+	AuthorizedHosts         apijson.Field
+	ChatCompletionsEndpoint apijson.Field
+	CustomDomains           apijson.Field
+	DefaultDomainEnabled    apijson.Field
+	Enabled                 apijson.Field
+	InstancesAllowed        apijson.Field
+	Mcp                     apijson.Field
+	RateLimit               apijson.Field
+	SearchEndpoint          apijson.Field
+	raw                     string
+	ExtraFields             map[string]apijson.Field
+}
+
+func (r *NamespaceListResponsePublicEndpointParams) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceListResponsePublicEndpointParamsJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceListResponsePublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled bool                                                                 `json:"disabled"`
+	JSON     namespaceListResponsePublicEndpointParamsChatCompletionsEndpointJSON `json:"-"`
+}
+
+// namespaceListResponsePublicEndpointParamsChatCompletionsEndpointJSON contains
+// the JSON metadata for the struct
+// [NamespaceListResponsePublicEndpointParamsChatCompletionsEndpoint]
+type namespaceListResponsePublicEndpointParamsChatCompletionsEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceListResponsePublicEndpointParamsChatCompletionsEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceListResponsePublicEndpointParamsChatCompletionsEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceListResponsePublicEndpointParamsMcp struct {
+	Description string `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled bool                                             `json:"disabled"`
+	JSON     namespaceListResponsePublicEndpointParamsMcpJSON `json:"-"`
+}
+
+// namespaceListResponsePublicEndpointParamsMcpJSON contains the JSON metadata for
+// the struct [NamespaceListResponsePublicEndpointParamsMcp]
+type namespaceListResponsePublicEndpointParamsMcpJSON struct {
+	Description apijson.Field
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceListResponsePublicEndpointParamsMcp) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceListResponsePublicEndpointParamsMcpJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceListResponsePublicEndpointParamsRateLimit struct {
+	PeriodMs  int64                                                       `json:"period_ms"`
+	Requests  int64                                                       `json:"requests"`
+	Technique NamespaceListResponsePublicEndpointParamsRateLimitTechnique `json:"technique"`
+	JSON      namespaceListResponsePublicEndpointParamsRateLimitJSON      `json:"-"`
+}
+
+// namespaceListResponsePublicEndpointParamsRateLimitJSON contains the JSON
+// metadata for the struct [NamespaceListResponsePublicEndpointParamsRateLimit]
+type namespaceListResponsePublicEndpointParamsRateLimitJSON struct {
+	PeriodMs    apijson.Field
+	Requests    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceListResponsePublicEndpointParamsRateLimit) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceListResponsePublicEndpointParamsRateLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceListResponsePublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceListResponsePublicEndpointParamsRateLimitTechniqueFixed   NamespaceListResponsePublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceListResponsePublicEndpointParamsRateLimitTechniqueSliding NamespaceListResponsePublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceListResponsePublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceListResponsePublicEndpointParamsRateLimitTechniqueFixed, NamespaceListResponsePublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceListResponsePublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled bool                                                        `json:"disabled"`
+	JSON     namespaceListResponsePublicEndpointParamsSearchEndpointJSON `json:"-"`
+}
+
+// namespaceListResponsePublicEndpointParamsSearchEndpointJSON contains the JSON
+// metadata for the struct
+// [NamespaceListResponsePublicEndpointParamsSearchEndpoint]
+type namespaceListResponsePublicEndpointParamsSearchEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceListResponsePublicEndpointParamsSearchEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceListResponsePublicEndpointParamsSearchEndpointJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -321,10 +816,10 @@ func (r namespaceChatCompletionsResponseChoiceJSON) RawJSON() string {
 }
 
 type NamespaceChatCompletionsResponseChoicesMessage struct {
-	Content     string                                             `json:"content" api:"required,nullable"`
-	Role        NamespaceChatCompletionsResponseChoicesMessageRole `json:"role" api:"required"`
-	ExtraFields map[string]interface{}                             `json:"-" api:"extrafields"`
-	JSON        namespaceChatCompletionsResponseChoicesMessageJSON `json:"-"`
+	Content     NamespaceChatCompletionsResponseChoicesMessageContentUnion `json:"content" api:"required"`
+	Role        NamespaceChatCompletionsResponseChoicesMessageRole         `json:"role" api:"required"`
+	ExtraFields map[string]interface{}                                     `json:"-" api:"extrafields"`
+	JSON        namespaceChatCompletionsResponseChoicesMessageJSON         `json:"-"`
 }
 
 // namespaceChatCompletionsResponseChoicesMessageJSON contains the JSON metadata
@@ -342,6 +837,171 @@ func (r *NamespaceChatCompletionsResponseChoicesMessage) UnmarshalJSON(data []by
 
 func (r namespaceChatCompletionsResponseChoicesMessageJSON) RawJSON() string {
 	return r.raw
+}
+
+// Union satisfied by [shared.UnionString],
+// [NamespaceChatCompletionsResponseChoicesMessageContentArray] or
+// [shared.UnionString].
+type NamespaceChatCompletionsResponseChoicesMessageContentUnion interface {
+	ImplementsNamespaceChatCompletionsResponseChoicesMessageContentUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceChatCompletionsResponseChoicesMessageContentUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceChatCompletionsResponseChoicesMessageContentArray{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+	)
+}
+
+type NamespaceChatCompletionsResponseChoicesMessageContentArray []NamespaceChatCompletionsResponseChoicesMessageContentArrayItem
+
+func (r NamespaceChatCompletionsResponseChoicesMessageContentArray) ImplementsNamespaceChatCompletionsResponseChoicesMessageContentUnion() {
+}
+
+type NamespaceChatCompletionsResponseChoicesMessageContentArrayItem struct {
+	Type NamespaceChatCompletionsResponseChoicesMessageContentArrayType `json:"type" api:"required"`
+	// This field can have the runtime type of
+	// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectFile].
+	File interface{} `json:"file"`
+	// This field can have the runtime type of
+	// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectImageURL].
+	ImageURL interface{}                                                        `json:"image_url"`
+	Text     string                                                             `json:"text"`
+	JSON     namespaceChatCompletionsResponseChoicesMessageContentArrayItemJSON `json:"-"`
+	union    NamespaceChatCompletionsResponseChoicesMessageContentArrayUnionItem
+}
+
+// namespaceChatCompletionsResponseChoicesMessageContentArrayItemJSON contains the
+// JSON metadata for the struct
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayItem]
+type namespaceChatCompletionsResponseChoicesMessageContentArrayItemJSON struct {
+	Type        apijson.Field
+	File        apijson.Field
+	ImageURL    apijson.Field
+	Text        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r namespaceChatCompletionsResponseChoicesMessageContentArrayItemJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *NamespaceChatCompletionsResponseChoicesMessageContentArrayItem) UnmarshalJSON(data []byte) (err error) {
+	*r = NamespaceChatCompletionsResponseChoicesMessageContentArrayItem{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayUnionItem] interface
+// which you can cast to the specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject],
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject],
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject].
+func (r NamespaceChatCompletionsResponseChoicesMessageContentArrayItem) AsUnion() NamespaceChatCompletionsResponseChoicesMessageContentArrayUnionItem {
+	return r.union
+}
+
+// Union satisfied by
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject],
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject] or
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject].
+type NamespaceChatCompletionsResponseChoicesMessageContentArrayUnionItem interface {
+	implementsNamespaceChatCompletionsResponseChoicesMessageContentArrayItem()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*NamespaceChatCompletionsResponseChoicesMessageContentArrayUnionItem)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceChatCompletionsResponseChoicesMessageContentArrayObject{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceChatCompletionsResponseChoicesMessageContentArrayObject{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(NamespaceChatCompletionsResponseChoicesMessageContentArrayObject{}),
+		},
+	)
+}
+
+type NamespaceChatCompletionsResponseChoicesMessageContentArrayObject struct {
+	Text string                                                               `json:"text" api:"required"`
+	Type NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectType `json:"type" api:"required"`
+	JSON namespaceChatCompletionsResponseChoicesMessageContentArrayObjectJSON `json:"-"`
+}
+
+// namespaceChatCompletionsResponseChoicesMessageContentArrayObjectJSON contains
+// the JSON metadata for the struct
+// [NamespaceChatCompletionsResponseChoicesMessageContentArrayObject]
+type namespaceChatCompletionsResponseChoicesMessageContentArrayObjectJSON struct {
+	Text        apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceChatCompletionsResponseChoicesMessageContentArrayObject) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceChatCompletionsResponseChoicesMessageContentArrayObjectJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r NamespaceChatCompletionsResponseChoicesMessageContentArrayObject) implementsNamespaceChatCompletionsResponseChoicesMessageContentArrayItem() {
+}
+
+type NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectType string
+
+const (
+	NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectTypeText NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectType = "text"
+)
+
+func (r NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectType) IsKnown() bool {
+	switch r {
+	case NamespaceChatCompletionsResponseChoicesMessageContentArrayObjectTypeText:
+		return true
+	}
+	return false
+}
+
+type NamespaceChatCompletionsResponseChoicesMessageContentArrayType string
+
+const (
+	NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeText     NamespaceChatCompletionsResponseChoicesMessageContentArrayType = "text"
+	NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeImageURL NamespaceChatCompletionsResponseChoicesMessageContentArrayType = "image_url"
+	NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeFile     NamespaceChatCompletionsResponseChoicesMessageContentArrayType = "file"
+)
+
+func (r NamespaceChatCompletionsResponseChoicesMessageContentArrayType) IsKnown() bool {
+	switch r {
+	case NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeText, NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeImageURL, NamespaceChatCompletionsResponseChoicesMessageContentArrayTypeFile:
+		return true
+	}
+	return false
 }
 
 type NamespaceChatCompletionsResponseChoicesMessageRole string
@@ -490,21 +1150,25 @@ func (r namespaceChatCompletionsResponseErrorJSON) RawJSON() string {
 }
 
 type NamespaceReadResponse struct {
-	CreatedAt time.Time `json:"created_at" api:"required" format:"date-time"`
+	CreatedAt time.Time `json:"created_at" api:"required,nullable" format:"date-time"`
 	Name      string    `json:"name" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description string                    `json:"description" api:"nullable"`
-	JSON        namespaceReadResponseJSON `json:"-"`
+	Description          string                                    `json:"description" api:"nullable"`
+	PublicEndpointID     string                                    `json:"public_endpoint_id" api:"nullable"`
+	PublicEndpointParams NamespaceReadResponsePublicEndpointParams `json:"public_endpoint_params" api:"nullable"`
+	JSON                 namespaceReadResponseJSON                 `json:"-"`
 }
 
 // namespaceReadResponseJSON contains the JSON metadata for the struct
 // [NamespaceReadResponse]
 type namespaceReadResponseJSON struct {
-	CreatedAt   apijson.Field
-	Name        apijson.Field
-	Description apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	CreatedAt            apijson.Field
+	Name                 apijson.Field
+	Description          apijson.Field
+	PublicEndpointID     apijson.Field
+	PublicEndpointParams apijson.Field
+	raw                  string
+	ExtraFields          map[string]apijson.Field
 }
 
 func (r *NamespaceReadResponse) UnmarshalJSON(data []byte) (err error) {
@@ -515,19 +1179,180 @@ func (r namespaceReadResponseJSON) RawJSON() string {
 	return r.raw
 }
 
+type NamespaceReadResponsePublicEndpointParams struct {
+	AuthorizedHosts         []string                                                         `json:"authorized_hosts"`
+	ChatCompletionsEndpoint NamespaceReadResponsePublicEndpointParamsChatCompletionsEndpoint `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains []string `json:"custom_domains" api:"nullable"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled bool `json:"default_domain_enabled"`
+	Enabled              bool `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed []string                                                `json:"instances_allowed"`
+	Mcp              NamespaceReadResponsePublicEndpointParamsMcp            `json:"mcp"`
+	RateLimit        NamespaceReadResponsePublicEndpointParamsRateLimit      `json:"rate_limit"`
+	SearchEndpoint   NamespaceReadResponsePublicEndpointParamsSearchEndpoint `json:"search_endpoint"`
+	JSON             namespaceReadResponsePublicEndpointParamsJSON           `json:"-"`
+}
+
+// namespaceReadResponsePublicEndpointParamsJSON contains the JSON metadata for the
+// struct [NamespaceReadResponsePublicEndpointParams]
+type namespaceReadResponsePublicEndpointParamsJSON struct {
+	AuthorizedHosts         apijson.Field
+	ChatCompletionsEndpoint apijson.Field
+	CustomDomains           apijson.Field
+	DefaultDomainEnabled    apijson.Field
+	Enabled                 apijson.Field
+	InstancesAllowed        apijson.Field
+	Mcp                     apijson.Field
+	RateLimit               apijson.Field
+	SearchEndpoint          apijson.Field
+	raw                     string
+	ExtraFields             map[string]apijson.Field
+}
+
+func (r *NamespaceReadResponsePublicEndpointParams) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceReadResponsePublicEndpointParamsJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceReadResponsePublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled bool                                                                 `json:"disabled"`
+	JSON     namespaceReadResponsePublicEndpointParamsChatCompletionsEndpointJSON `json:"-"`
+}
+
+// namespaceReadResponsePublicEndpointParamsChatCompletionsEndpointJSON contains
+// the JSON metadata for the struct
+// [NamespaceReadResponsePublicEndpointParamsChatCompletionsEndpoint]
+type namespaceReadResponsePublicEndpointParamsChatCompletionsEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceReadResponsePublicEndpointParamsChatCompletionsEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceReadResponsePublicEndpointParamsChatCompletionsEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceReadResponsePublicEndpointParamsMcp struct {
+	Description string `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled bool                                             `json:"disabled"`
+	JSON     namespaceReadResponsePublicEndpointParamsMcpJSON `json:"-"`
+}
+
+// namespaceReadResponsePublicEndpointParamsMcpJSON contains the JSON metadata for
+// the struct [NamespaceReadResponsePublicEndpointParamsMcp]
+type namespaceReadResponsePublicEndpointParamsMcpJSON struct {
+	Description apijson.Field
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceReadResponsePublicEndpointParamsMcp) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceReadResponsePublicEndpointParamsMcpJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceReadResponsePublicEndpointParamsRateLimit struct {
+	PeriodMs  int64                                                       `json:"period_ms"`
+	Requests  int64                                                       `json:"requests"`
+	Technique NamespaceReadResponsePublicEndpointParamsRateLimitTechnique `json:"technique"`
+	JSON      namespaceReadResponsePublicEndpointParamsRateLimitJSON      `json:"-"`
+}
+
+// namespaceReadResponsePublicEndpointParamsRateLimitJSON contains the JSON
+// metadata for the struct [NamespaceReadResponsePublicEndpointParamsRateLimit]
+type namespaceReadResponsePublicEndpointParamsRateLimitJSON struct {
+	PeriodMs    apijson.Field
+	Requests    apijson.Field
+	Technique   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceReadResponsePublicEndpointParamsRateLimit) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceReadResponsePublicEndpointParamsRateLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+type NamespaceReadResponsePublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceReadResponsePublicEndpointParamsRateLimitTechniqueFixed   NamespaceReadResponsePublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceReadResponsePublicEndpointParamsRateLimitTechniqueSliding NamespaceReadResponsePublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceReadResponsePublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceReadResponsePublicEndpointParamsRateLimitTechniqueFixed, NamespaceReadResponsePublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceReadResponsePublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled bool                                                        `json:"disabled"`
+	JSON     namespaceReadResponsePublicEndpointParamsSearchEndpointJSON `json:"-"`
+}
+
+// namespaceReadResponsePublicEndpointParamsSearchEndpointJSON contains the JSON
+// metadata for the struct
+// [NamespaceReadResponsePublicEndpointParamsSearchEndpoint]
+type namespaceReadResponsePublicEndpointParamsSearchEndpointJSON struct {
+	Disabled    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *NamespaceReadResponsePublicEndpointParamsSearchEndpoint) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r namespaceReadResponsePublicEndpointParamsSearchEndpointJSON) RawJSON() string {
+	return r.raw
+}
+
 type NamespaceSearchResponse struct {
-	Chunks      []NamespaceSearchResponseChunk `json:"chunks" api:"required"`
-	SearchQuery string                         `json:"search_query" api:"required"`
-	Errors      []NamespaceSearchResponseError `json:"errors"`
-	JSON        namespaceSearchResponseJSON    `json:"-"`
+	Chunks      []NamespaceSearchResponseChunk   `json:"chunks" api:"required"`
+	QueryKind   NamespaceSearchResponseQueryKind `json:"query_kind" api:"required"`
+	Errors      []NamespaceSearchResponseError   `json:"errors"`
+	SearchQuery string                           `json:"search_query"`
+	JSON        namespaceSearchResponseJSON      `json:"-"`
 }
 
 // namespaceSearchResponseJSON contains the JSON metadata for the struct
 // [NamespaceSearchResponse]
 type namespaceSearchResponseJSON struct {
 	Chunks      apijson.Field
-	SearchQuery apijson.Field
+	QueryKind   apijson.Field
 	Errors      apijson.Field
+	SearchQuery apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -644,6 +1469,22 @@ func (r NamespaceSearchResponseChunksScoringDetailsFusionMethod) IsKnown() bool 
 	return false
 }
 
+type NamespaceSearchResponseQueryKind string
+
+const (
+	NamespaceSearchResponseQueryKindText       NamespaceSearchResponseQueryKind = "text"
+	NamespaceSearchResponseQueryKindImage      NamespaceSearchResponseQueryKind = "image"
+	NamespaceSearchResponseQueryKindMultimodal NamespaceSearchResponseQueryKind = "multimodal"
+)
+
+func (r NamespaceSearchResponseQueryKind) IsKnown() bool {
+	switch r {
+	case NamespaceSearchResponseQueryKindText, NamespaceSearchResponseQueryKindImage, NamespaceSearchResponseQueryKindMultimodal:
+		return true
+	}
+	return false
+}
+
 type NamespaceSearchResponseError struct {
 	InstanceID string                           `json:"instance_id" api:"required"`
 	Message    string                           `json:"message" api:"required"`
@@ -671,10 +1512,92 @@ type NamespaceNewParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	Name      param.Field[string] `json:"name" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description param.Field[string] `json:"description"`
+	Description          param.Field[string]                                 `json:"description"`
+	PublicEndpointParams param.Field[NamespaceNewParamsPublicEndpointParams] `json:"public_endpoint_params"`
 }
 
 func (r NamespaceNewParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceNewParamsPublicEndpointParams struct {
+	AuthorizedHosts         param.Field[[]string]                                                      `json:"authorized_hosts"`
+	ChatCompletionsEndpoint param.Field[NamespaceNewParamsPublicEndpointParamsChatCompletionsEndpoint] `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains param.Field[[]string] `json:"custom_domains"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled param.Field[bool] `json:"default_domain_enabled"`
+	Enabled              param.Field[bool] `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed param.Field[[]string]                                             `json:"instances_allowed"`
+	Mcp              param.Field[NamespaceNewParamsPublicEndpointParamsMcp]            `json:"mcp"`
+	RateLimit        param.Field[NamespaceNewParamsPublicEndpointParamsRateLimit]      `json:"rate_limit"`
+	SearchEndpoint   param.Field[NamespaceNewParamsPublicEndpointParamsSearchEndpoint] `json:"search_endpoint"`
+}
+
+func (r NamespaceNewParamsPublicEndpointParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceNewParamsPublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceNewParamsPublicEndpointParamsChatCompletionsEndpoint) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceNewParamsPublicEndpointParamsMcp struct {
+	Description param.Field[string] `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceNewParamsPublicEndpointParamsMcp) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceNewParamsPublicEndpointParamsRateLimit struct {
+	PeriodMs  param.Field[int64]                                                    `json:"period_ms"`
+	Requests  param.Field[int64]                                                    `json:"requests"`
+	Technique param.Field[NamespaceNewParamsPublicEndpointParamsRateLimitTechnique] `json:"technique"`
+}
+
+func (r NamespaceNewParamsPublicEndpointParamsRateLimit) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceNewParamsPublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceNewParamsPublicEndpointParamsRateLimitTechniqueFixed   NamespaceNewParamsPublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceNewParamsPublicEndpointParamsRateLimitTechniqueSliding NamespaceNewParamsPublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceNewParamsPublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceNewParamsPublicEndpointParamsRateLimitTechniqueFixed, NamespaceNewParamsPublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceNewParamsPublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceNewParamsPublicEndpointParamsSearchEndpoint) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
@@ -718,10 +1641,92 @@ func (r NamespaceNewResponseEnvelopeSuccess) IsKnown() bool {
 type NamespaceUpdateParams struct {
 	AccountID param.Field[string] `path:"account_id" api:"required"`
 	// Optional description for the namespace. Max 256 characters.
-	Description param.Field[string] `json:"description"`
+	Description          param.Field[string]                                    `json:"description"`
+	PublicEndpointParams param.Field[NamespaceUpdateParamsPublicEndpointParams] `json:"public_endpoint_params"`
 }
 
 func (r NamespaceUpdateParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceUpdateParamsPublicEndpointParams struct {
+	AuthorizedHosts         param.Field[[]string]                                                         `json:"authorized_hosts"`
+	ChatCompletionsEndpoint param.Field[NamespaceUpdateParamsPublicEndpointParamsChatCompletionsEndpoint] `json:"chat_completions_endpoint"`
+	// Custom domain hostnames that alias this public endpoint. GET and create
+	// responses return the current set; on update (PUT) this field is only echoed back
+	// when supplied in the request body, otherwise it is null (omit it to leave
+	// domains unchanged).
+	CustomDomains param.Field[[]string] `json:"custom_domains"`
+	// When false, the instance is reachable only via a registered custom domain and
+	// the default <public_endpoint_id>.search.ai.cloudflare.com host returns 404.
+	// Requires at least one custom domain. Defaults to true. public_endpoint_params is
+	// replaced wholesale on update, so resend default_domain_enabled on every update
+	// to keep the default host off — omitting it resets to true.
+	DefaultDomainEnabled param.Field[bool] `json:"default_domain_enabled"`
+	Enabled              param.Field[bool] `json:"enabled"`
+	// Instance IDs exposed through the namespace public endpoint. Empty means nothing
+	// is searchable. Every ID must be an existing instance in this namespace, and the
+	// list cannot exceed the account's multi-instance search limit.
+	InstancesAllowed param.Field[[]string]                                                `json:"instances_allowed"`
+	Mcp              param.Field[NamespaceUpdateParamsPublicEndpointParamsMcp]            `json:"mcp"`
+	RateLimit        param.Field[NamespaceUpdateParamsPublicEndpointParamsRateLimit]      `json:"rate_limit"`
+	SearchEndpoint   param.Field[NamespaceUpdateParamsPublicEndpointParamsSearchEndpoint] `json:"search_endpoint"`
+}
+
+func (r NamespaceUpdateParamsPublicEndpointParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceUpdateParamsPublicEndpointParamsChatCompletionsEndpoint struct {
+	// Disable chat completions endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceUpdateParamsPublicEndpointParamsChatCompletionsEndpoint) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceUpdateParamsPublicEndpointParamsMcp struct {
+	Description param.Field[string] `json:"description"`
+	// Disable MCP endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceUpdateParamsPublicEndpointParamsMcp) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceUpdateParamsPublicEndpointParamsRateLimit struct {
+	PeriodMs  param.Field[int64]                                                       `json:"period_ms"`
+	Requests  param.Field[int64]                                                       `json:"requests"`
+	Technique param.Field[NamespaceUpdateParamsPublicEndpointParamsRateLimitTechnique] `json:"technique"`
+}
+
+func (r NamespaceUpdateParamsPublicEndpointParamsRateLimit) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type NamespaceUpdateParamsPublicEndpointParamsRateLimitTechnique string
+
+const (
+	NamespaceUpdateParamsPublicEndpointParamsRateLimitTechniqueFixed   NamespaceUpdateParamsPublicEndpointParamsRateLimitTechnique = "fixed"
+	NamespaceUpdateParamsPublicEndpointParamsRateLimitTechniqueSliding NamespaceUpdateParamsPublicEndpointParamsRateLimitTechnique = "sliding"
+)
+
+func (r NamespaceUpdateParamsPublicEndpointParamsRateLimitTechnique) IsKnown() bool {
+	switch r {
+	case NamespaceUpdateParamsPublicEndpointParamsRateLimitTechniqueFixed, NamespaceUpdateParamsPublicEndpointParamsRateLimitTechniqueSliding:
+		return true
+	}
+	return false
+}
+
+type NamespaceUpdateParamsPublicEndpointParamsSearchEndpoint struct {
+	// Disable search endpoint for this public endpoint
+	Disabled param.Field[bool] `json:"disabled"`
+}
+
+func (r NamespaceUpdateParamsPublicEndpointParamsSearchEndpoint) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
@@ -826,8 +1831,10 @@ type NamespaceChatCompletionsParams struct {
 	AccountID       param.Field[string]                                        `path:"account_id" api:"required"`
 	AISearchOptions param.Field[NamespaceChatCompletionsParamsAISearchOptions] `json:"ai_search_options" api:"required"`
 	Messages        param.Field[[]NamespaceChatCompletionsParamsMessage]       `json:"messages" api:"required"`
-	Model           param.Field[NamespaceChatCompletionsParamsModel]           `json:"model"`
-	Stream          param.Field[bool]                                          `json:"stream"`
+	// A Workers AI model ID or an AI Gateway model ID compatible with the OpenAI Chat
+	// Completions API. An empty string uses the configured or default model.
+	Model  param.Field[string] `json:"model"`
+	Stream param.Field[bool]   `json:"stream"`
 }
 
 func (r NamespaceChatCompletionsParams) MarshalJSON() (data []byte, err error) {
@@ -835,11 +1842,15 @@ func (r NamespaceChatCompletionsParams) MarshalJSON() (data []byte, err error) {
 }
 
 type NamespaceChatCompletionsParamsAISearchOptions struct {
-	InstanceIDs  param.Field[[]string]                                                  `json:"instance_ids" api:"required"`
-	Cache        param.Field[NamespaceChatCompletionsParamsAISearchOptionsCache]        `json:"cache"`
-	QueryRewrite param.Field[NamespaceChatCompletionsParamsAISearchOptionsQueryRewrite] `json:"query_rewrite"`
-	Reranking    param.Field[NamespaceChatCompletionsParamsAISearchOptionsReranking]    `json:"reranking"`
-	Retrieval    param.Field[NamespaceChatCompletionsParamsAISearchOptionsRetrieval]    `json:"retrieval"`
+	InstanceIDs param.Field[[]string]                                           `json:"instance_ids" api:"required"`
+	Cache       param.Field[NamespaceChatCompletionsParamsAISearchOptionsCache] `json:"cache"`
+	// Metadata added to AI Gateway logs for requests triggered by this operation.
+	// Accepts up to 2 string, number, or boolean entries. Keys 'ai-search', 'task',
+	// 'origin', and keys beginning with 'cf.' are reserved.
+	CustomMetadata param.Field[map[string]NamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion] `json:"custom_metadata"`
+	QueryRewrite   param.Field[NamespaceChatCompletionsParamsAISearchOptionsQueryRewrite]                   `json:"query_rewrite"`
+	Reranking      param.Field[NamespaceChatCompletionsParamsAISearchOptionsReranking]                      `json:"reranking"`
+	Retrieval      param.Field[NamespaceChatCompletionsParamsAISearchOptionsRetrieval]                      `json:"retrieval"`
 }
 
 func (r NamespaceChatCompletionsParamsAISearchOptions) MarshalJSON() (data []byte, err error) {
@@ -872,82 +1883,31 @@ func (r NamespaceChatCompletionsParamsAISearchOptionsCacheCacheThreshold) IsKnow
 	return false
 }
 
+// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
+type NamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion interface {
+	ImplementsNamespaceChatCompletionsParamsAISearchOptionsCustomMetadataUnion()
+}
+
 type NamespaceChatCompletionsParamsAISearchOptionsQueryRewrite struct {
-	Enabled       param.Field[bool]                                                           `json:"enabled"`
-	Model         param.Field[NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel] `json:"model"`
-	RewritePrompt param.Field[string]                                                         `json:"rewrite_prompt"`
+	Enabled param.Field[bool] `json:"enabled"`
+	// A Workers AI model ID or an AI Gateway model ID compatible with the OpenAI Chat
+	// Completions API. An empty string uses the configured or default model.
+	Model         param.Field[string] `json:"model"`
+	RewritePrompt param.Field[string] `json:"rewrite_prompt"`
 }
 
 func (r NamespaceChatCompletionsParamsAISearchOptionsQueryRewrite) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-type NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel string
-
-const (
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_3_70bInstructFp8Fast     NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfZaiOrgGlm4_7Flash                   NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/zai-org/glm-4.7-flash"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFast         NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.1-8b-instruct-fast"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFp8          NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.1-8b-instruct-fp8"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama4Scout17b16eInstruct       NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-4-scout-17b-16e-instruct"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfQwenQwen3_30bA3bFp8                 NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/qwen/qwen3-30b-a3b-fp8"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfDeepseekAIDeepseekR1DistillQwen32b  NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2Instruct            NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/moonshotai/kimi-k2-instruct"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfGoogleGemma3_12bIt                  NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/google/gemma-3-12b-it"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfGoogleGemma4_26bA4bIt               NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/google/gemma-4-26b-a4b-it"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2_5                  NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "@cf/moonshotai/kimi-k2.5"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_7Sonnet              NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-3-7-sonnet"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaudeSonnet4                NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-sonnet-4"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaudeOpus4                  NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-opus-4"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_5Haiku               NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-3-5-haiku"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bInstruct        NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/qwen-3-235b-a22b-instruct"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bThinking        NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/qwen-3-235b-a22b-thinking"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama3_3_70b                  NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-3.3-70b"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Maverick17b128eInstruct NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-4-maverick-17b-128e-instruct"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Scout17b16eInstruct     NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-4-scout-17b-16e-instruct"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasGptOSs120b                    NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "cerebras/gpt-oss-120b"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Flash          NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "google-ai-studio/gemini-2.5-flash"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Pro            NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "google-ai-studio/gemini-2.5-pro"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGrokGrok4                             NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "grok/grok-4"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGroqLlama3_3_70bVersatile             NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "groq/llama-3.3-70b-versatile"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGroqLlama3_1_8bInstant                NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "groq/llama-3.1-8b-instant"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5                            NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Mini                        NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5-mini"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Nano                        NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5-nano"
-	NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelEmpty                                 NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel = ""
-)
-
-func (r NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModel) IsKnown() bool {
-	switch r {
-	case NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_3_70bInstructFp8Fast, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfZaiOrgGlm4_7Flash, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFast, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFp8, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMetaLlama4Scout17b16eInstruct, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfQwenQwen3_30bA3bFp8, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfDeepseekAIDeepseekR1DistillQwen32b, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2Instruct, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfGoogleGemma3_12bIt, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfGoogleGemma4_26bA4bIt, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2_5, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_7Sonnet, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaudeSonnet4, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaudeOpus4, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_5Haiku, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bInstruct, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bThinking, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama3_3_70b, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Maverick17b128eInstruct, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Scout17b16eInstruct, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelCerebrasGptOSs120b, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Flash, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Pro, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGrokGrok4, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGroqLlama3_3_70bVersatile, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelGroqLlama3_1_8bInstant, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Mini, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Nano, NamespaceChatCompletionsParamsAISearchOptionsQueryRewriteModelEmpty:
-		return true
-	}
-	return false
-}
-
 type NamespaceChatCompletionsParamsAISearchOptionsReranking struct {
-	Enabled        param.Field[bool]                                                        `json:"enabled"`
-	MatchThreshold param.Field[float64]                                                     `json:"match_threshold"`
-	Model          param.Field[NamespaceChatCompletionsParamsAISearchOptionsRerankingModel] `json:"model"`
+	Enabled        param.Field[bool]    `json:"enabled"`
+	MatchThreshold param.Field[float64] `json:"match_threshold"`
+	Model          param.Field[string]  `json:"model"`
 }
 
 func (r NamespaceChatCompletionsParamsAISearchOptionsReranking) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type NamespaceChatCompletionsParamsAISearchOptionsRerankingModel string
-
-const (
-	NamespaceChatCompletionsParamsAISearchOptionsRerankingModelCfBaaiBgeRerankerBase NamespaceChatCompletionsParamsAISearchOptionsRerankingModel = "@cf/baai/bge-reranker-base"
-	NamespaceChatCompletionsParamsAISearchOptionsRerankingModelEmpty                 NamespaceChatCompletionsParamsAISearchOptionsRerankingModel = ""
-)
-
-func (r NamespaceChatCompletionsParamsAISearchOptionsRerankingModel) IsKnown() bool {
-	switch r {
-	case NamespaceChatCompletionsParamsAISearchOptionsRerankingModelCfBaaiBgeRerankerBase, NamespaceChatCompletionsParamsAISearchOptionsRerankingModelEmpty:
-		return true
-	}
-	return false
 }
 
 type NamespaceChatCompletionsParamsAISearchOptionsRetrieval struct {
@@ -961,7 +1921,8 @@ type NamespaceChatCompletionsParamsAISearchOptionsRetrieval struct {
 	FusionMethod     param.Field[NamespaceChatCompletionsParamsAISearchOptionsRetrievalFusionMethod] `json:"fusion_method"`
 	// Controls which documents are candidates for BM25 scoring. 'and' restricts
 	// candidates to documents containing all query terms; 'or' includes any document
-	// containing at least one term, ranked by BM25 relevance. Defaults to 'and'.
+	// containing at least one term, ranked by BM25 relevance. When omitted, falls back
+	// to the instance-level retrieval_options.keyword_match_mode, then to 'and'.
 	KeywordMatchMode param.Field[NamespaceChatCompletionsParamsAISearchOptionsRetrievalKeywordMatchMode] `json:"keyword_match_mode"`
 	MatchThreshold   param.Field[float64]                                                                `json:"match_threshold"`
 	MaxNumResults    param.Field[int64]                                                                  `json:"max_num_results"`
@@ -1028,7 +1989,8 @@ func (r NamespaceChatCompletionsParamsAISearchOptionsRetrievalFusionMethod) IsKn
 
 // Controls which documents are candidates for BM25 scoring. 'and' restricts
 // candidates to documents containing all query terms; 'or' includes any document
-// containing at least one term, ranked by BM25 relevance. Defaults to 'and'.
+// containing at least one term, ranked by BM25 relevance. When omitted, falls back
+// to the instance-level retrieval_options.keyword_match_mode, then to 'and'.
 type NamespaceChatCompletionsParamsAISearchOptionsRetrievalKeywordMatchMode string
 
 const (
@@ -1061,13 +2023,90 @@ func (r NamespaceChatCompletionsParamsAISearchOptionsRetrievalRetrievalType) IsK
 }
 
 type NamespaceChatCompletionsParamsMessage struct {
-	Content     param.Field[string]                                     `json:"content" api:"required"`
-	Role        param.Field[NamespaceChatCompletionsParamsMessagesRole] `json:"role" api:"required"`
-	ExtraFields map[string]interface{}                                  `json:"-,extras"`
+	Content     param.Field[NamespaceChatCompletionsParamsMessagesContentUnion] `json:"content" api:"required"`
+	Role        param.Field[NamespaceChatCompletionsParamsMessagesRole]         `json:"role" api:"required"`
+	ExtraFields map[string]interface{}                                          `json:"-,extras"`
 }
 
 func (r NamespaceChatCompletionsParamsMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Satisfied by [shared.UnionString],
+// [ai_search.NamespaceChatCompletionsParamsMessagesContentArray],
+// [shared.UnionString].
+type NamespaceChatCompletionsParamsMessagesContentUnion interface {
+	ImplementsNamespaceChatCompletionsParamsMessagesContentUnion()
+}
+
+type NamespaceChatCompletionsParamsMessagesContentArray []NamespaceChatCompletionsParamsMessagesContentArrayItemUnion
+
+func (r NamespaceChatCompletionsParamsMessagesContentArray) ImplementsNamespaceChatCompletionsParamsMessagesContentUnion() {
+}
+
+type NamespaceChatCompletionsParamsMessagesContentArrayItem struct {
+	Type     param.Field[NamespaceChatCompletionsParamsMessagesContentArrayType] `json:"type" api:"required"`
+	File     param.Field[interface{}]                                            `json:"file"`
+	ImageURL param.Field[interface{}]                                            `json:"image_url"`
+	Text     param.Field[string]                                                 `json:"text"`
+}
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayItem) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayItem) implementsNamespaceChatCompletionsParamsMessagesContentArrayItemUnion() {
+}
+
+// Satisfied by
+// [ai_search.NamespaceChatCompletionsParamsMessagesContentArrayObject],
+// [ai_search.NamespaceChatCompletionsParamsMessagesContentArrayObject],
+// [ai_search.NamespaceChatCompletionsParamsMessagesContentArrayObject],
+// [NamespaceChatCompletionsParamsMessagesContentArrayItem].
+type NamespaceChatCompletionsParamsMessagesContentArrayItemUnion interface {
+	implementsNamespaceChatCompletionsParamsMessagesContentArrayItemUnion()
+}
+
+type NamespaceChatCompletionsParamsMessagesContentArrayObject struct {
+	Text param.Field[string]                                                       `json:"text" api:"required"`
+	Type param.Field[NamespaceChatCompletionsParamsMessagesContentArrayObjectType] `json:"type" api:"required"`
+}
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayObject) implementsNamespaceChatCompletionsParamsMessagesContentArrayItemUnion() {
+}
+
+type NamespaceChatCompletionsParamsMessagesContentArrayObjectType string
+
+const (
+	NamespaceChatCompletionsParamsMessagesContentArrayObjectTypeText NamespaceChatCompletionsParamsMessagesContentArrayObjectType = "text"
+)
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayObjectType) IsKnown() bool {
+	switch r {
+	case NamespaceChatCompletionsParamsMessagesContentArrayObjectTypeText:
+		return true
+	}
+	return false
+}
+
+type NamespaceChatCompletionsParamsMessagesContentArrayType string
+
+const (
+	NamespaceChatCompletionsParamsMessagesContentArrayTypeText     NamespaceChatCompletionsParamsMessagesContentArrayType = "text"
+	NamespaceChatCompletionsParamsMessagesContentArrayTypeImageURL NamespaceChatCompletionsParamsMessagesContentArrayType = "image_url"
+	NamespaceChatCompletionsParamsMessagesContentArrayTypeFile     NamespaceChatCompletionsParamsMessagesContentArrayType = "file"
+)
+
+func (r NamespaceChatCompletionsParamsMessagesContentArrayType) IsKnown() bool {
+	switch r {
+	case NamespaceChatCompletionsParamsMessagesContentArrayTypeText, NamespaceChatCompletionsParamsMessagesContentArrayTypeImageURL, NamespaceChatCompletionsParamsMessagesContentArrayTypeFile:
+		return true
+	}
+	return false
 }
 
 type NamespaceChatCompletionsParamsMessagesRole string
@@ -1083,49 +2122,6 @@ const (
 func (r NamespaceChatCompletionsParamsMessagesRole) IsKnown() bool {
 	switch r {
 	case NamespaceChatCompletionsParamsMessagesRoleSystem, NamespaceChatCompletionsParamsMessagesRoleDeveloper, NamespaceChatCompletionsParamsMessagesRoleUser, NamespaceChatCompletionsParamsMessagesRoleAssistant, NamespaceChatCompletionsParamsMessagesRoleTool:
-		return true
-	}
-	return false
-}
-
-type NamespaceChatCompletionsParamsModel string
-
-const (
-	NamespaceChatCompletionsParamsModelCfMetaLlama3_3_70bInstructFp8Fast     NamespaceChatCompletionsParamsModel = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-	NamespaceChatCompletionsParamsModelCfZaiOrgGlm4_7Flash                   NamespaceChatCompletionsParamsModel = "@cf/zai-org/glm-4.7-flash"
-	NamespaceChatCompletionsParamsModelCfMetaLlama3_1_8bInstructFast         NamespaceChatCompletionsParamsModel = "@cf/meta/llama-3.1-8b-instruct-fast"
-	NamespaceChatCompletionsParamsModelCfMetaLlama3_1_8bInstructFp8          NamespaceChatCompletionsParamsModel = "@cf/meta/llama-3.1-8b-instruct-fp8"
-	NamespaceChatCompletionsParamsModelCfMetaLlama4Scout17b16eInstruct       NamespaceChatCompletionsParamsModel = "@cf/meta/llama-4-scout-17b-16e-instruct"
-	NamespaceChatCompletionsParamsModelCfQwenQwen3_30bA3bFp8                 NamespaceChatCompletionsParamsModel = "@cf/qwen/qwen3-30b-a3b-fp8"
-	NamespaceChatCompletionsParamsModelCfDeepseekAIDeepseekR1DistillQwen32b  NamespaceChatCompletionsParamsModel = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-	NamespaceChatCompletionsParamsModelCfMoonshotaiKimiK2Instruct            NamespaceChatCompletionsParamsModel = "@cf/moonshotai/kimi-k2-instruct"
-	NamespaceChatCompletionsParamsModelCfGoogleGemma3_12bIt                  NamespaceChatCompletionsParamsModel = "@cf/google/gemma-3-12b-it"
-	NamespaceChatCompletionsParamsModelCfGoogleGemma4_26bA4bIt               NamespaceChatCompletionsParamsModel = "@cf/google/gemma-4-26b-a4b-it"
-	NamespaceChatCompletionsParamsModelCfMoonshotaiKimiK2_5                  NamespaceChatCompletionsParamsModel = "@cf/moonshotai/kimi-k2.5"
-	NamespaceChatCompletionsParamsModelAnthropicClaude3_7Sonnet              NamespaceChatCompletionsParamsModel = "anthropic/claude-3-7-sonnet"
-	NamespaceChatCompletionsParamsModelAnthropicClaudeSonnet4                NamespaceChatCompletionsParamsModel = "anthropic/claude-sonnet-4"
-	NamespaceChatCompletionsParamsModelAnthropicClaudeOpus4                  NamespaceChatCompletionsParamsModel = "anthropic/claude-opus-4"
-	NamespaceChatCompletionsParamsModelAnthropicClaude3_5Haiku               NamespaceChatCompletionsParamsModel = "anthropic/claude-3-5-haiku"
-	NamespaceChatCompletionsParamsModelCerebrasQwen3_235bA22bInstruct        NamespaceChatCompletionsParamsModel = "cerebras/qwen-3-235b-a22b-instruct"
-	NamespaceChatCompletionsParamsModelCerebrasQwen3_235bA22bThinking        NamespaceChatCompletionsParamsModel = "cerebras/qwen-3-235b-a22b-thinking"
-	NamespaceChatCompletionsParamsModelCerebrasLlama3_3_70b                  NamespaceChatCompletionsParamsModel = "cerebras/llama-3.3-70b"
-	NamespaceChatCompletionsParamsModelCerebrasLlama4Maverick17b128eInstruct NamespaceChatCompletionsParamsModel = "cerebras/llama-4-maverick-17b-128e-instruct"
-	NamespaceChatCompletionsParamsModelCerebrasLlama4Scout17b16eInstruct     NamespaceChatCompletionsParamsModel = "cerebras/llama-4-scout-17b-16e-instruct"
-	NamespaceChatCompletionsParamsModelCerebrasGptOSs120b                    NamespaceChatCompletionsParamsModel = "cerebras/gpt-oss-120b"
-	NamespaceChatCompletionsParamsModelGoogleAIStudioGemini2_5Flash          NamespaceChatCompletionsParamsModel = "google-ai-studio/gemini-2.5-flash"
-	NamespaceChatCompletionsParamsModelGoogleAIStudioGemini2_5Pro            NamespaceChatCompletionsParamsModel = "google-ai-studio/gemini-2.5-pro"
-	NamespaceChatCompletionsParamsModelGrokGrok4                             NamespaceChatCompletionsParamsModel = "grok/grok-4"
-	NamespaceChatCompletionsParamsModelGroqLlama3_3_70bVersatile             NamespaceChatCompletionsParamsModel = "groq/llama-3.3-70b-versatile"
-	NamespaceChatCompletionsParamsModelGroqLlama3_1_8bInstant                NamespaceChatCompletionsParamsModel = "groq/llama-3.1-8b-instant"
-	NamespaceChatCompletionsParamsModelOpenAIGpt5                            NamespaceChatCompletionsParamsModel = "openai/gpt-5"
-	NamespaceChatCompletionsParamsModelOpenAIGpt5Mini                        NamespaceChatCompletionsParamsModel = "openai/gpt-5-mini"
-	NamespaceChatCompletionsParamsModelOpenAIGpt5Nano                        NamespaceChatCompletionsParamsModel = "openai/gpt-5-nano"
-	NamespaceChatCompletionsParamsModelEmpty                                 NamespaceChatCompletionsParamsModel = ""
-)
-
-func (r NamespaceChatCompletionsParamsModel) IsKnown() bool {
-	switch r {
-	case NamespaceChatCompletionsParamsModelCfMetaLlama3_3_70bInstructFp8Fast, NamespaceChatCompletionsParamsModelCfZaiOrgGlm4_7Flash, NamespaceChatCompletionsParamsModelCfMetaLlama3_1_8bInstructFast, NamespaceChatCompletionsParamsModelCfMetaLlama3_1_8bInstructFp8, NamespaceChatCompletionsParamsModelCfMetaLlama4Scout17b16eInstruct, NamespaceChatCompletionsParamsModelCfQwenQwen3_30bA3bFp8, NamespaceChatCompletionsParamsModelCfDeepseekAIDeepseekR1DistillQwen32b, NamespaceChatCompletionsParamsModelCfMoonshotaiKimiK2Instruct, NamespaceChatCompletionsParamsModelCfGoogleGemma3_12bIt, NamespaceChatCompletionsParamsModelCfGoogleGemma4_26bA4bIt, NamespaceChatCompletionsParamsModelCfMoonshotaiKimiK2_5, NamespaceChatCompletionsParamsModelAnthropicClaude3_7Sonnet, NamespaceChatCompletionsParamsModelAnthropicClaudeSonnet4, NamespaceChatCompletionsParamsModelAnthropicClaudeOpus4, NamespaceChatCompletionsParamsModelAnthropicClaude3_5Haiku, NamespaceChatCompletionsParamsModelCerebrasQwen3_235bA22bInstruct, NamespaceChatCompletionsParamsModelCerebrasQwen3_235bA22bThinking, NamespaceChatCompletionsParamsModelCerebrasLlama3_3_70b, NamespaceChatCompletionsParamsModelCerebrasLlama4Maverick17b128eInstruct, NamespaceChatCompletionsParamsModelCerebrasLlama4Scout17b16eInstruct, NamespaceChatCompletionsParamsModelCerebrasGptOSs120b, NamespaceChatCompletionsParamsModelGoogleAIStudioGemini2_5Flash, NamespaceChatCompletionsParamsModelGoogleAIStudioGemini2_5Pro, NamespaceChatCompletionsParamsModelGrokGrok4, NamespaceChatCompletionsParamsModelGroqLlama3_3_70bVersatile, NamespaceChatCompletionsParamsModelGroqLlama3_1_8bInstant, NamespaceChatCompletionsParamsModelOpenAIGpt5, NamespaceChatCompletionsParamsModelOpenAIGpt5Mini, NamespaceChatCompletionsParamsModelOpenAIGpt5Nano, NamespaceChatCompletionsParamsModelEmpty:
 		return true
 	}
 	return false
@@ -1175,7 +2171,12 @@ func (r NamespaceReadResponseEnvelopeSuccess) IsKnown() bool {
 type NamespaceSearchParams struct {
 	AccountID       param.Field[string]                               `path:"account_id" api:"required"`
 	AISearchOptions param.Field[NamespaceSearchParamsAISearchOptions] `json:"ai_search_options" api:"required"`
-	Messages        param.Field[[]NamespaceSearchParamsMessage]       `json:"messages"`
+	// OpenAI-compatible message array. For multimodal queries, set the last user
+	// message's `content` to an array of typed parts:
+	// `[{type:'text', text:'…'}, {type:'image_url', image_url:{url:'…'}}]`. Image
+	// inputs require the RAG's embedding_model to declare 'image' in
+	// supported_modalities.
+	Messages param.Field[[]NamespaceSearchParamsMessage] `json:"messages"`
 	// A simple text query string. Alternative to 'messages' — provide either this or
 	// 'messages', not both.
 	Query param.Field[string] `json:"query"`
@@ -1186,11 +2187,15 @@ func (r NamespaceSearchParams) MarshalJSON() (data []byte, err error) {
 }
 
 type NamespaceSearchParamsAISearchOptions struct {
-	InstanceIDs  param.Field[[]string]                                         `json:"instance_ids" api:"required"`
-	Cache        param.Field[NamespaceSearchParamsAISearchOptionsCache]        `json:"cache"`
-	QueryRewrite param.Field[NamespaceSearchParamsAISearchOptionsQueryRewrite] `json:"query_rewrite"`
-	Reranking    param.Field[NamespaceSearchParamsAISearchOptionsReranking]    `json:"reranking"`
-	Retrieval    param.Field[NamespaceSearchParamsAISearchOptionsRetrieval]    `json:"retrieval"`
+	InstanceIDs param.Field[[]string]                                  `json:"instance_ids" api:"required"`
+	Cache       param.Field[NamespaceSearchParamsAISearchOptionsCache] `json:"cache"`
+	// Metadata added to AI Gateway logs for requests triggered by this operation.
+	// Accepts up to 2 string, number, or boolean entries. Keys 'ai-search', 'task',
+	// 'origin', and keys beginning with 'cf.' are reserved.
+	CustomMetadata param.Field[map[string]NamespaceSearchParamsAISearchOptionsCustomMetadataUnion] `json:"custom_metadata"`
+	QueryRewrite   param.Field[NamespaceSearchParamsAISearchOptionsQueryRewrite]                   `json:"query_rewrite"`
+	Reranking      param.Field[NamespaceSearchParamsAISearchOptionsReranking]                      `json:"reranking"`
+	Retrieval      param.Field[NamespaceSearchParamsAISearchOptionsRetrieval]                      `json:"retrieval"`
 }
 
 func (r NamespaceSearchParamsAISearchOptions) MarshalJSON() (data []byte, err error) {
@@ -1223,82 +2228,31 @@ func (r NamespaceSearchParamsAISearchOptionsCacheCacheThreshold) IsKnown() bool 
 	return false
 }
 
+// Satisfied by [shared.UnionString], [shared.UnionFloat], [shared.UnionBool].
+type NamespaceSearchParamsAISearchOptionsCustomMetadataUnion interface {
+	ImplementsNamespaceSearchParamsAISearchOptionsCustomMetadataUnion()
+}
+
 type NamespaceSearchParamsAISearchOptionsQueryRewrite struct {
-	Enabled       param.Field[bool]                                                  `json:"enabled"`
-	Model         param.Field[NamespaceSearchParamsAISearchOptionsQueryRewriteModel] `json:"model"`
-	RewritePrompt param.Field[string]                                                `json:"rewrite_prompt"`
+	Enabled param.Field[bool] `json:"enabled"`
+	// A Workers AI model ID or an AI Gateway model ID compatible with the OpenAI Chat
+	// Completions API. An empty string uses the configured or default model.
+	Model         param.Field[string] `json:"model"`
+	RewritePrompt param.Field[string] `json:"rewrite_prompt"`
 }
 
 func (r NamespaceSearchParamsAISearchOptionsQueryRewrite) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-type NamespaceSearchParamsAISearchOptionsQueryRewriteModel string
-
-const (
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_3_70bInstructFp8Fast     NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfZaiOrgGlm4_7Flash                   NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/zai-org/glm-4.7-flash"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFast         NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.1-8b-instruct-fast"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFp8          NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-3.1-8b-instruct-fp8"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama4Scout17b16eInstruct       NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/meta/llama-4-scout-17b-16e-instruct"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfQwenQwen3_30bA3bFp8                 NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/qwen/qwen3-30b-a3b-fp8"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfDeepseekAIDeepseekR1DistillQwen32b  NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/deepseek-ai/deepseek-r1-distill-qwen-32b"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2Instruct            NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/moonshotai/kimi-k2-instruct"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfGoogleGemma3_12bIt                  NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/google/gemma-3-12b-it"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfGoogleGemma4_26bA4bIt               NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/google/gemma-4-26b-a4b-it"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2_5                  NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "@cf/moonshotai/kimi-k2.5"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_7Sonnet              NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-3-7-sonnet"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaudeSonnet4                NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-sonnet-4"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaudeOpus4                  NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-opus-4"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_5Haiku               NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "anthropic/claude-3-5-haiku"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bInstruct        NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/qwen-3-235b-a22b-instruct"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bThinking        NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/qwen-3-235b-a22b-thinking"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama3_3_70b                  NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-3.3-70b"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Maverick17b128eInstruct NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-4-maverick-17b-128e-instruct"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Scout17b16eInstruct     NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/llama-4-scout-17b-16e-instruct"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasGptOSs120b                    NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "cerebras/gpt-oss-120b"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Flash          NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "google-ai-studio/gemini-2.5-flash"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Pro            NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "google-ai-studio/gemini-2.5-pro"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelGrokGrok4                             NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "grok/grok-4"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelGroqLlama3_3_70bVersatile             NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "groq/llama-3.3-70b-versatile"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelGroqLlama3_1_8bInstant                NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "groq/llama-3.1-8b-instant"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5                            NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Mini                        NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5-mini"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Nano                        NamespaceSearchParamsAISearchOptionsQueryRewriteModel = "openai/gpt-5-nano"
-	NamespaceSearchParamsAISearchOptionsQueryRewriteModelEmpty                                 NamespaceSearchParamsAISearchOptionsQueryRewriteModel = ""
-)
-
-func (r NamespaceSearchParamsAISearchOptionsQueryRewriteModel) IsKnown() bool {
-	switch r {
-	case NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_3_70bInstructFp8Fast, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfZaiOrgGlm4_7Flash, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFast, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama3_1_8bInstructFp8, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMetaLlama4Scout17b16eInstruct, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfQwenQwen3_30bA3bFp8, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfDeepseekAIDeepseekR1DistillQwen32b, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2Instruct, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfGoogleGemma3_12bIt, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfGoogleGemma4_26bA4bIt, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCfMoonshotaiKimiK2_5, NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_7Sonnet, NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaudeSonnet4, NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaudeOpus4, NamespaceSearchParamsAISearchOptionsQueryRewriteModelAnthropicClaude3_5Haiku, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bInstruct, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasQwen3_235bA22bThinking, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama3_3_70b, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Maverick17b128eInstruct, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasLlama4Scout17b16eInstruct, NamespaceSearchParamsAISearchOptionsQueryRewriteModelCerebrasGptOSs120b, NamespaceSearchParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Flash, NamespaceSearchParamsAISearchOptionsQueryRewriteModelGoogleAIStudioGemini2_5Pro, NamespaceSearchParamsAISearchOptionsQueryRewriteModelGrokGrok4, NamespaceSearchParamsAISearchOptionsQueryRewriteModelGroqLlama3_3_70bVersatile, NamespaceSearchParamsAISearchOptionsQueryRewriteModelGroqLlama3_1_8bInstant, NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5, NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Mini, NamespaceSearchParamsAISearchOptionsQueryRewriteModelOpenAIGpt5Nano, NamespaceSearchParamsAISearchOptionsQueryRewriteModelEmpty:
-		return true
-	}
-	return false
-}
-
 type NamespaceSearchParamsAISearchOptionsReranking struct {
-	Enabled        param.Field[bool]                                               `json:"enabled"`
-	MatchThreshold param.Field[float64]                                            `json:"match_threshold"`
-	Model          param.Field[NamespaceSearchParamsAISearchOptionsRerankingModel] `json:"model"`
+	Enabled        param.Field[bool]    `json:"enabled"`
+	MatchThreshold param.Field[float64] `json:"match_threshold"`
+	Model          param.Field[string]  `json:"model"`
 }
 
 func (r NamespaceSearchParamsAISearchOptionsReranking) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
-}
-
-type NamespaceSearchParamsAISearchOptionsRerankingModel string
-
-const (
-	NamespaceSearchParamsAISearchOptionsRerankingModelCfBaaiBgeRerankerBase NamespaceSearchParamsAISearchOptionsRerankingModel = "@cf/baai/bge-reranker-base"
-	NamespaceSearchParamsAISearchOptionsRerankingModelEmpty                 NamespaceSearchParamsAISearchOptionsRerankingModel = ""
-)
-
-func (r NamespaceSearchParamsAISearchOptionsRerankingModel) IsKnown() bool {
-	switch r {
-	case NamespaceSearchParamsAISearchOptionsRerankingModelCfBaaiBgeRerankerBase, NamespaceSearchParamsAISearchOptionsRerankingModelEmpty:
-		return true
-	}
-	return false
 }
 
 type NamespaceSearchParamsAISearchOptionsRetrieval struct {
@@ -1312,7 +2266,8 @@ type NamespaceSearchParamsAISearchOptionsRetrieval struct {
 	FusionMethod     param.Field[NamespaceSearchParamsAISearchOptionsRetrievalFusionMethod] `json:"fusion_method"`
 	// Controls which documents are candidates for BM25 scoring. 'and' restricts
 	// candidates to documents containing all query terms; 'or' includes any document
-	// containing at least one term, ranked by BM25 relevance. Defaults to 'and'.
+	// containing at least one term, ranked by BM25 relevance. When omitted, falls back
+	// to the instance-level retrieval_options.keyword_match_mode, then to 'and'.
 	KeywordMatchMode param.Field[NamespaceSearchParamsAISearchOptionsRetrievalKeywordMatchMode] `json:"keyword_match_mode"`
 	MatchThreshold   param.Field[float64]                                                       `json:"match_threshold"`
 	MaxNumResults    param.Field[int64]                                                         `json:"max_num_results"`
@@ -1379,7 +2334,8 @@ func (r NamespaceSearchParamsAISearchOptionsRetrievalFusionMethod) IsKnown() boo
 
 // Controls which documents are candidates for BM25 scoring. 'and' restricts
 // candidates to documents containing all query terms; 'or' includes any document
-// containing at least one term, ranked by BM25 relevance. Defaults to 'and'.
+// containing at least one term, ranked by BM25 relevance. When omitted, falls back
+// to the instance-level retrieval_options.keyword_match_mode, then to 'and'.
 type NamespaceSearchParamsAISearchOptionsRetrievalKeywordMatchMode string
 
 const (
@@ -1412,13 +2368,88 @@ func (r NamespaceSearchParamsAISearchOptionsRetrievalRetrievalType) IsKnown() bo
 }
 
 type NamespaceSearchParamsMessage struct {
-	Content     param.Field[string]                            `json:"content" api:"required"`
-	Role        param.Field[NamespaceSearchParamsMessagesRole] `json:"role" api:"required"`
-	ExtraFields map[string]interface{}                         `json:"-,extras"`
+	Content     param.Field[NamespaceSearchParamsMessagesContentUnion] `json:"content" api:"required"`
+	Role        param.Field[NamespaceSearchParamsMessagesRole]         `json:"role" api:"required"`
+	ExtraFields map[string]interface{}                                 `json:"-,extras"`
 }
 
 func (r NamespaceSearchParamsMessage) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Satisfied by [shared.UnionString],
+// [ai_search.NamespaceSearchParamsMessagesContentArray], [shared.UnionString].
+type NamespaceSearchParamsMessagesContentUnion interface {
+	ImplementsNamespaceSearchParamsMessagesContentUnion()
+}
+
+type NamespaceSearchParamsMessagesContentArray []NamespaceSearchParamsMessagesContentArrayItemUnion
+
+func (r NamespaceSearchParamsMessagesContentArray) ImplementsNamespaceSearchParamsMessagesContentUnion() {
+}
+
+type NamespaceSearchParamsMessagesContentArrayItem struct {
+	Type     param.Field[NamespaceSearchParamsMessagesContentArrayType] `json:"type" api:"required"`
+	File     param.Field[interface{}]                                   `json:"file"`
+	ImageURL param.Field[interface{}]                                   `json:"image_url"`
+	Text     param.Field[string]                                        `json:"text"`
+}
+
+func (r NamespaceSearchParamsMessagesContentArrayItem) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r NamespaceSearchParamsMessagesContentArrayItem) implementsNamespaceSearchParamsMessagesContentArrayItemUnion() {
+}
+
+// Satisfied by [ai_search.NamespaceSearchParamsMessagesContentArrayObject],
+// [ai_search.NamespaceSearchParamsMessagesContentArrayObject],
+// [ai_search.NamespaceSearchParamsMessagesContentArrayObject],
+// [NamespaceSearchParamsMessagesContentArrayItem].
+type NamespaceSearchParamsMessagesContentArrayItemUnion interface {
+	implementsNamespaceSearchParamsMessagesContentArrayItemUnion()
+}
+
+type NamespaceSearchParamsMessagesContentArrayObject struct {
+	Text param.Field[string]                                              `json:"text" api:"required"`
+	Type param.Field[NamespaceSearchParamsMessagesContentArrayObjectType] `json:"type" api:"required"`
+}
+
+func (r NamespaceSearchParamsMessagesContentArrayObject) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r NamespaceSearchParamsMessagesContentArrayObject) implementsNamespaceSearchParamsMessagesContentArrayItemUnion() {
+}
+
+type NamespaceSearchParamsMessagesContentArrayObjectType string
+
+const (
+	NamespaceSearchParamsMessagesContentArrayObjectTypeText NamespaceSearchParamsMessagesContentArrayObjectType = "text"
+)
+
+func (r NamespaceSearchParamsMessagesContentArrayObjectType) IsKnown() bool {
+	switch r {
+	case NamespaceSearchParamsMessagesContentArrayObjectTypeText:
+		return true
+	}
+	return false
+}
+
+type NamespaceSearchParamsMessagesContentArrayType string
+
+const (
+	NamespaceSearchParamsMessagesContentArrayTypeText     NamespaceSearchParamsMessagesContentArrayType = "text"
+	NamespaceSearchParamsMessagesContentArrayTypeImageURL NamespaceSearchParamsMessagesContentArrayType = "image_url"
+	NamespaceSearchParamsMessagesContentArrayTypeFile     NamespaceSearchParamsMessagesContentArrayType = "file"
+)
+
+func (r NamespaceSearchParamsMessagesContentArrayType) IsKnown() bool {
+	switch r {
+	case NamespaceSearchParamsMessagesContentArrayTypeText, NamespaceSearchParamsMessagesContentArrayTypeImageURL, NamespaceSearchParamsMessagesContentArrayTypeFile:
+		return true
+	}
+	return false
 }
 
 type NamespaceSearchParamsMessagesRole string
